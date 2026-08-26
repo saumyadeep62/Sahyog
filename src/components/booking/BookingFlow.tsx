@@ -51,6 +51,7 @@ export const BookingFlow: React.FC = () => {
   const [autoMatch, setAutoMatch] = useState<boolean>(!bookingTargetWorker);
   const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'Card' | 'CashAfterWork'>('UPI');
   const [confirmedBooking, setConfirmedBooking] = useState<Booking | null>(null);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   useEffect(() => {
     if (bookingTargetCategory) {
@@ -79,7 +80,6 @@ export const BookingFlow: React.FC = () => {
   const coopAdminFee = Math.round(workerWage * 0.05);
   const emergencyFee = isEmergency ? 100 : 0;
   const totalAmount = workerWage + welfareContribution + coopAdminFee + emergencyFee;
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   const handleFinalConfirm = async () => {
     setIsProcessingPayment(true);
