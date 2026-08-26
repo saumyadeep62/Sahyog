@@ -14,13 +14,12 @@ import { ServiceBrowser } from './components/services/ServiceBrowser';
 import { AuthPage } from './components/auth/AuthPage';
 import { CustomerDashboard } from './components/dashboard/CustomerDashboard';
 import { WorkerDashboard } from './components/dashboard/WorkerDashboard';
-import { FederationAdminDashboard } from './components/dashboard/FederationAdminDashboard';
-import { SuperAdminDashboard } from './components/dashboard/SuperAdminDashboard';
+import { AdminDashboard } from './components/dashboard/AdminDashboard';
 import { SahyogChatbot } from './components/common/SahyogChatbot';
 import { ServiceCategory, Worker } from './lib/database.types';
 
 const MainAppContent: React.FC = () => {
-  const { currentRole } = useAuth();
+  const { currentUser, currentRole } = useAuth();
   const { openBookingFlow } = useMarketplace();
 
   const [activeTab, setActiveTab] = useState<'home' | 'services' | 'dashboard' | 'auth'>('home');
@@ -78,10 +77,19 @@ const MainAppContent: React.FC = () => {
 
         {activeTab === 'dashboard' && (
           <>
-            {currentRole === 'customer' && <CustomerDashboard />}
-            {currentRole === 'worker' && <WorkerDashboard />}
-            {currentRole === 'federation_admin' && <FederationAdminDashboard />}
-            {currentRole === 'super_admin' && <SuperAdminDashboard />}
+            {!currentUser ? (
+              <AuthPage
+                initialMode="signin"
+                onNavigateHome={() => setActiveTab('home')}
+                onLoginSuccess={handleAuthSuccess}
+              />
+            ) : currentUser.email === 'admin@gmail.com' ? (
+              <AdminDashboard />
+            ) : currentRole === 'worker' ? (
+              <WorkerDashboard />
+            ) : (
+              <CustomerDashboard />
+            )}
           </>
         )}
       </main>

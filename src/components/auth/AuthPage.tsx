@@ -33,7 +33,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
   onNavigateHome,
   onLoginSuccess,
 }) => {
-  const { signInWithSupabase, signUpWithSupabase, signInWithOtp, switchRole, loadingAuth } = useAuth();
+  const { signInWithSupabase, signUpWithSupabase, signInWithOtp, loadingAuth } = useAuth();
 
   const [mode, setMode] = useState<'signin' | 'signup' | 'magic_link'>(initialMode);
   const [email, setEmail] = useState('');
@@ -77,11 +77,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         }, 1500);
       }
     }
-  };
-
-  const handleQuickPersona = (targetRole: UserRole) => {
-    switchRole(targetRole);
-    onLoginSuccess();
   };
 
   return (
@@ -337,47 +332,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   )}
                 </button>
               </form>
-
-              {/* 1-Click Demo Persona Switcher */}
-              <div className="pt-4 border-t border-stone-200 space-y-2">
-                <p className="text-[11px] font-bold text-stone-400 uppercase tracking-wider text-center">
-                  Instant 1-Click Demo Personas
-                </p>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <button
-                    type="button"
-                    onClick={() => handleQuickPersona('customer')}
-                    className="p-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 font-medium text-left transition-colors"
-                  >
-                    <span className="font-bold block">🏠 Customer</span>
-                    <span className="text-[10px] text-stone-500">Saumyadeep Sutradhar</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleQuickPersona('worker')}
-                    className="p-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-medium text-left transition-colors"
-                  >
-                    <span className="font-bold block">⚡ Artisan</span>
-                    <span className="text-[10px] text-stone-500">Rameshwar Patil</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleQuickPersona('federation_admin')}
-                    className="p-2.5 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-900 border border-teal-200 font-medium text-left transition-colors"
-                  >
-                    <span className="font-bold block">🏛️ Admin</span>
-                    <span className="text-[10px] text-stone-500">Balwant Deshmukh</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleQuickPersona('super_admin')}
-                    className="p-2.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200 font-medium text-left transition-colors"
-                  >
-                    <span className="font-bold block">🌐 Super Admin</span>
-                    <span className="text-[10px] text-stone-500">Dr. Arundhati Ghosh</span>
-                  </button>
-                </div>
-              </div>
             </div>
           </TiltCard>
         </div>

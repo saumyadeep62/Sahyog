@@ -25,9 +25,9 @@ export const GrievanceModal: React.FC<GrievanceModalProps> = ({ isOpen, onClose,
     if (!description.trim()) return;
 
     fileGrievance({
-      filed_by_role: currentUser.role === 'worker' ? 'worker' : 'customer',
-      filed_by_id: currentUser.id,
-      filed_by_name: currentUser.name,
+      filed_by_role: currentUser?.role === 'worker' ? 'worker' : 'customer',
+      filed_by_id: currentUser?.id || 'usr-anon',
+      filed_by_name: currentUser?.name || 'Cooperative Member',
       booking_id: defaultBookingId,
       category,
       description,

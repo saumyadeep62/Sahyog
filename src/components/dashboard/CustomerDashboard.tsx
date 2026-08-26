@@ -17,6 +17,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useMarketplace } from '../../context/MarketplaceContext';
 import { Booking, BookingStatus } from '../../lib/database.types';
 import { GrievanceModal } from '../common/GrievanceModal';
+import { GoogleMapViewer } from '../maps/GoogleMapViewer';
 
 export const CustomerDashboard: React.FC = () => {
   const { currentUser } = useAuth();
@@ -34,6 +35,14 @@ export const CustomerDashboard: React.FC = () => {
   const [ratingComment, setRatingComment] = useState('');
   const [isGrievanceOpen, setIsGrievanceOpen] = useState(false);
   const [selectedGrievanceBookingId, setSelectedGrievanceBookingId] = useState<string | undefined>(undefined);
+
+  if (!currentUser) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-16 text-center space-y-4">
+        <p className="text-stone-600 font-medium">Please sign in to view your customer dashboard.</p>
+      </div>
+    );
+  }
 
   // Filter bookings for this customer
   const customerBookings = bookings.filter(
@@ -121,6 +130,45 @@ export const CustomerDashboard: React.FC = () => {
             <span>Urgent SOS</span>
           </button>
         </div>
+      </div>
+
+      {/* LIVE COOPERATIVE LOCATION & RADAR MAP */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-bold text-stone-900 font-['Outfit'] flex items-center gap-2">
+            <span>Live Household GPS & Dispatch Radar</span>
+            {activeBookings.length > 0 && activeBookings[0].worker_name && (
+              <span className="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold border border-emerald-300">
+                ⚡ Artisan Tracking Active
+              </span>
+            )}
+          </h2>
+        </div>
+
+        <GoogleMapViewer
+          customerLocation={{
+            lat: 19.076,
+            lng: 72.8777,
+            label: `${currentUser.name} (Household)`,
+          }}
+          workerLocation={
+            activeBookings.length > 0 && activeBookings[0].worker_name
+              ? {
+                  lat: 19.082,
+                  lng: 72.884,
+                  name: activeBookings[0].worker_name,
+                  contact: activeBookings[0].worker_contact,
+                }
+              : undefined
+          }
+          showRoute={activeBookings.length > 0 && Boolean(activeBookings[0].worker_name)}
+          height="280px"
+          title={
+            activeBookings.length > 0 && activeBookings[0].worker_name
+              ? `Live Route: ${activeBookings[0].worker_name} ➔ Your Home`
+              : 'Cooperative Coverage & Regional Artisan Cluster'
+          }
+        />
       </div>
 
       {/* ACTIVE BOOKINGS SECTION */}

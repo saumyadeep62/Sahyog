@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Briefcase,
   ShieldCheck,
@@ -21,6 +21,9 @@ import {
   Flame,
   ArrowRight,
   Shield,
+  Navigation,
+  Check,
+  ChevronRight,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useAuth } from '../../context/AuthContext';
@@ -28,7 +31,8 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useMarketplace } from '../../context/MarketplaceContext';
 import { GrievanceModal } from '../common/GrievanceModal';
 import { TiltCard } from '../3d/TiltCard';
-import { BookingStatus } from '../../lib/database.types';
+import { BookingStatus, Worker } from '../../lib/database.types';
+import { GoogleMapViewer } from '../maps/GoogleMapViewer';
 
 export const WorkerDashboard: React.FC = () => {
   const { currentUser } = useAuth();
@@ -42,33 +46,62 @@ export const WorkerDashboard: React.FC = () => {
     openInvoiceModal,
     uploadCertification,
     uploadCertificationFile,
+    updateWorkerAvailability,
     claimWelfareEmergency,
   } = useMarketplace();
 
-  // Find worker profile matching current user or default to Rameshwar Patil
-  const worker = workers.find((w) => w.user_id === currentUser.id) || workers[0];
-  const workerCerts = certifications.filter((c) => c.worker_id === worker.id);
-  const welfare = welfareList.find((w) => w.worker_id === worker.id) || welfareList[0];
+  if (!currentUser) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-16 text-center text-stone-600 font-medium">
+        Please sign in to access the Artisan Workstation.
+      </div>
+    );
+  }
 
-  const [dutyStatus, setDutyStatus] = useState<'online' | 'busy' | 'offline'>(worker.availability);
+  // Find worker profile matching current user or fallback to first worker
+  const worker: Worker = workers.find((w) => w.user_id === currentUser.id) || workers[0];
+  const workerCerts = certifications.filter((c) => c.worker_id === worker?.id);
+  const welfare = welfareList.find((w) => w.worker_id === worker?.id) || welfareList[0];
+
+  const [dutyStatus, setDutyStatus] = useState<'online' | 'busy' | 'offline'>(worker?.availability || 'online');
+  const [activeWorkTab, setActiveWorkTab] = useState<'workstation' | 'earnings' | 'certs' | 'welfare'>('workstation');
+  const [selectedDayIdx, setSelectedDayIdx] = useState(0);
+
   const [isGrievanceOpen, setIsGrievanceOpen] = useState(false);
   const [isUploadCertOpen, setIsUploadCertOpen] = useState(false);
   const [newCertName, setNewCertName] = useState('');
   const [newIssuingBody, setNewIssuingBody] = useState('National Skill Development Corporation (NSDC)');
   const [selectedCertFile, setSelectedCertFile] = useState<File | null>(null);
   const [isUploadingCert, setIsUploadingCert] = useState(false);
+
   const [claimAmount, setClaimAmount] = useState('10000');
   const [claimReason, setClaimReason] = useState('');
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
   const [claimSuccess, setClaimSuccess] = useState(false);
 
-  // Incoming jobs
+  useEffect(() => {
+    if (worker) {
+      setDutyStatus(worker.availability);
+    }
+  }, [worker]);
+
+  // Handle duty status toggle
+  const handleToggleDutyStatus = async (newStatus: 'online' | 'offline') => {
+    setDutyStatus(newStatus);
+    if (worker) {
+      await updateWorkerAvailability(worker.id, newStatus);
+    }
+  };
+
+  // Filter jobs assigned to this worker
   const assignedBookings = bookings.filter(
-    (b) => b.worker_id === worker.id || b.worker_name === worker.full_name
+    (b) => b.worker_id === worker?.id || b.worker_name === worker?.full_name
   );
   const pendingJobs = assignedBookings.filter((b) => b.status === 'requested' || b.status === 'confirmed');
   const inProgressJobs = assignedBookings.filter((b) => b.status === 'en_route' || b.status === 'in_progress');
   const completedJobs = assignedBookings.filter((b) => b.status === 'completed');
+
+  const activeJob = inProgressJobs[0] || null;
 
   const handleAcceptJob = (bookingId: string) => {
     updateBookingStatus(bookingId, 'en_route');
@@ -103,7 +136,7 @@ export const WorkerDashboard: React.FC = () => {
 
   const handleUploadCertSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newCertName.trim()) return;
+    if (!newCertName.trim() || !worker) return;
 
     setIsUploadingCert(true);
     try {
@@ -130,7 +163,9 @@ export const WorkerDashboard: React.FC = () => {
 
   const handleClaimSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    claimWelfareEmergency(worker.id, parseInt(claimAmount, 10), claimReason);
+    if (!claimReason.trim() || !worker) return;
+
+    claimWelfareEmergency(worker.id, parseInt(claimAmount) || 10000, claimReason);
     setClaimSuccess(true);
     setTimeout(() => {
       setClaimSuccess(false);
@@ -139,379 +174,499 @@ export const WorkerDashboard: React.FC = () => {
     }, 2000);
   };
 
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* 1. ARTISAN WORKSTATION IDENTITY BANNER */}
-      <div className="bg-gradient-to-r from-[#2C1810] via-[#3E2317] to-[#1E110A] rounded-3xl p-6 sm:p-8 text-white shadow-2xl border border-amber-900/40 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
-        {/* Glow ambient */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+  // Generate 7-day schedule slots (Urban Company Style)
+  const scheduleDays = Array.from({ length: 7 }).map((_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    return {
+      dayName: i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : d.toLocaleDateString('en-US', { weekday: 'short' }),
+      dateNumber: d.getDate(),
+      month: d.toLocaleDateString('en-US', { month: 'short' }),
+      fullDate: d.toISOString().split('T')[0],
+    };
+  });
 
-        <div className="flex items-center gap-4 relative z-10">
+  const timeSlots = [
+    { slot: '08:00 AM - 10:00 AM', status: 'free' },
+    { slot: '10:00 AM - 12:00 PM', status: activeJob ? 'booked' : 'free', label: activeJob?.service_task },
+    { slot: '12:00 PM - 02:00 PM', status: 'free' },
+    { slot: '02:00 PM - 04:00 PM', status: pendingJobs[0] ? 'booked' : 'free', label: pendingJobs[0]?.service_task },
+    { slot: '04:00 PM - 06:00 PM', status: 'free' },
+    { slot: '06:00 PM - 08:00 PM', status: 'free' },
+  ];
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      {/* 1. URBAN COMPANY STYLE TOP COMMAND BAR */}
+      <div className="bg-gradient-to-r from-[#2C1810] via-[#3E2317] to-[#1C3B2E] rounded-3xl p-6 sm:p-8 text-white shadow-2xl border border-amber-900/30 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="flex items-center gap-4">
           <div className="relative">
             <img
-              src={worker.avatar_url}
-              alt={worker.full_name}
-              className="w-18 h-18 sm:w-20 sm:h-20 rounded-3xl object-cover border-2 border-[#D4A373] shadow-xl"
+              src={
+                currentUser.avatar_url ||
+                worker?.avatar_url ||
+                'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=200&auto=format&fit=crop&q=80'
+              }
+              alt={currentUser.name}
+              className="w-16 h-16 rounded-2xl object-cover border-2 border-amber-400 shadow-md"
             />
             <span
-              className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-[#2C1810] ${
-                dutyStatus === 'online'
-                  ? 'bg-emerald-500 animate-pulse'
-                  : dutyStatus === 'busy'
-                  ? 'bg-amber-500'
-                  : 'bg-stone-500'
+              className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[#2C1810] ${
+                dutyStatus === 'online' ? 'bg-emerald-400' : 'bg-stone-400'
               }`}
-              title={`Status: ${dutyStatus}`}
             />
           </div>
 
-          <div className="space-y-1">
+          <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-black font-['Outfit'] text-white">
-                {worker.full_name}
-              </h1>
-              <span className="text-[10px] bg-amber-500/20 text-amber-300 px-2.5 py-0.5 rounded-full font-bold border border-amber-400/30 uppercase tracking-wider">
-                ⚡ Certified Master Artisan
+              <h1 className="text-xl sm:text-2xl font-black font-['Outfit']">{currentUser.name}</h1>
+              <span className="text-[10px] bg-amber-400/20 text-amber-300 px-2.5 py-0.5 rounded-full font-bold border border-amber-400/30 uppercase tracking-wider">
+                Co-op Verified Artisan
               </span>
             </div>
-            <p className="text-xs text-amber-200/80 font-medium">{worker.cooperative_name}</p>
-            <div className="flex flex-wrap items-center gap-3 text-[11px] text-stone-300 pt-0.5">
-              <span>Trade ID: <strong className="text-white font-mono">MSCS-MUM-7421</strong></span>
+            <p className="text-xs text-stone-300 mt-0.5">
+              {worker?.cooperative_name || 'Mumbai Shramik Sahakari Sanstha'} • ₹{worker?.hourly_rate || 350}/hr Floor Rate
+            </p>
+            <div className="flex items-center gap-2 mt-1 text-[11px] text-amber-300 font-semibold">
+              <span>★ {worker?.rating || '4.9'} ({worker?.total_ratings_count || 128} Reviews)</span>
               <span>•</span>
-              <span className="text-emerald-400 font-bold">100% Floor Wage Guarantee</span>
-              <span>•</span>
-              <span className="text-amber-300 font-semibold">{worker.skills.slice(0, 2).join(', ')}</span>
+              <span>{worker?.total_jobs_completed || 86} Completed Jobs</span>
             </div>
           </div>
         </div>
 
-        {/* Duty Status Radar Switcher */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 relative z-10">
-          <div className="bg-[#180C07]/90 p-1.5 rounded-2xl border border-amber-800/60 shadow-inner flex items-center gap-1 text-xs">
-            <button
-              onClick={() => setDutyStatus('online')}
-              className={`px-3.5 py-2 rounded-xl font-bold transition-all flex items-center gap-1.5 ${
-                dutyStatus === 'online'
-                  ? 'bg-emerald-600 text-white shadow-md'
-                  : 'text-stone-400 hover:text-stone-200'
-              }`}
-            >
-              <Radio className="w-3.5 h-3.5 animate-ping text-emerald-300" />
-              <span>Available (Online)</span>
-            </button>
-            <button
-              onClick={() => setDutyStatus('busy')}
-              className={`px-3 py-2 rounded-xl font-bold transition-all ${
-                dutyStatus === 'busy'
-                  ? 'bg-amber-600 text-white shadow-md'
-                  : 'text-stone-400 hover:text-stone-200'
-              }`}
-            >
-              On Job
-            </button>
-            <button
-              onClick={() => setDutyStatus('offline')}
-              className={`px-3 py-2 rounded-xl font-bold transition-all ${
-                dutyStatus === 'offline'
-                  ? 'bg-stone-700 text-white shadow-md'
-                  : 'text-stone-400 hover:text-stone-200'
-              }`}
-            >
-              Off Duty
-            </button>
+        {/* Online / Offline Duty Switcher */}
+        <div className="flex items-center gap-4 bg-black/30 p-2.5 rounded-2xl border border-white/10">
+          <div className="text-right">
+            <span className="text-[10px] text-stone-400 uppercase font-bold block">Duty Status</span>
+            <span className={`text-xs font-black ${dutyStatus === 'online' ? 'text-emerald-400' : 'text-stone-400'}`}>
+              {dutyStatus === 'online' ? '🟢 ON DUTY (Radar Live)' : '⚪ OFF DUTY'}
+            </span>
           </div>
 
           <button
-            onClick={() => setIsGrievanceOpen(true)}
-            className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/20 transition-all shadow-xs"
+            onClick={() => handleToggleDutyStatus(dutyStatus === 'online' ? 'offline' : 'online')}
+            className={`px-5 py-2.5 rounded-xl font-bold text-xs shadow-lg transition-all transform active:scale-95 ${
+              dutyStatus === 'online'
+                ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                : 'bg-stone-700 hover:bg-stone-600 text-stone-200'
+            }`}
           >
-            Tribunal Grievance
+            {dutyStatus === 'online' ? 'Go Offline' : 'Go Online'}
           </button>
         </div>
       </div>
 
-      {/* 2. FAIR EARNINGS & WELFARE LEDGER */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <TiltCard maxTilt={10} className="bg-white rounded-3xl p-6 border border-stone-200 shadow-md space-y-2">
-          <div className="flex items-center justify-between text-stone-400">
-            <span className="text-xs font-bold uppercase tracking-wider">Month's Fair Earnings</span>
-            <DollarSign className="w-5 h-5 text-emerald-600" />
-          </div>
-          <p className="text-3xl font-extrabold text-[#2C1810] font-['Outfit']">₹42,850</p>
-          <div className="flex items-center gap-1 text-[11px] text-emerald-700 font-bold">
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>100% Direct Payout (₹0 Deductions)</span>
-          </div>
-        </TiltCard>
+      {/* 2. TABBED NAVIGATION: FOCUSED WORKSTATION VS SECONDARY METRICS */}
+      <div className="flex items-center gap-2 border-b border-stone-200 pb-3 text-xs font-bold overflow-x-auto no-scrollbar">
+        <button
+          onClick={() => setActiveWorkTab('workstation')}
+          className={`px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap ${
+            activeWorkTab === 'workstation'
+              ? 'bg-[#2C1810] text-white shadow-md'
+              : 'text-stone-600 hover:bg-stone-100'
+          }`}
+        >
+          <Navigation className="w-3.5 h-3.5" />
+          <span>Live Radar & Active Workstation</span>
+        </button>
 
-        <TiltCard maxTilt={10} className="bg-white rounded-3xl p-6 border border-stone-200 shadow-md space-y-2">
-          <div className="flex items-center justify-between text-stone-400">
-            <span className="text-xs font-bold uppercase tracking-wider">Mutual Aid Fund</span>
-            <HeartHandshake className="w-5 h-5 text-amber-600" />
-          </div>
-          <p className="text-3xl font-extrabold text-[#2C1810] font-['Outfit']">
-            ₹{welfare.welfare_fund_contribution.toLocaleString()}
-          </p>
-          <div className="flex items-center gap-1 text-[11px] text-amber-700 font-bold">
-            <span>Collective Emergency Safety Pool</span>
-          </div>
-        </TiltCard>
+        <button
+          onClick={() => setActiveWorkTab('earnings')}
+          className={`px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap ${
+            activeWorkTab === 'earnings'
+              ? 'bg-[#2C1810] text-white shadow-md'
+              : 'text-stone-600 hover:bg-stone-100'
+          }`}
+        >
+          <DollarSign className="w-3.5 h-3.5" />
+          <span>Fair Wage Earnings & Payouts</span>
+        </button>
 
-        <TiltCard maxTilt={10} className="bg-white rounded-3xl p-6 border border-stone-200 shadow-md space-y-2">
-          <div className="flex items-center justify-between text-stone-400">
-            <span className="text-xs font-bold uppercase tracking-wider">Annual Co-op Dividend</span>
-            <TrendingUp className="w-5 h-5 text-teal-600" />
-          </div>
-          <p className="text-3xl font-extrabold text-[#2C1810] font-['Outfit']">
-            ₹{welfare.cooperative_dividend_earned.toLocaleString()}
-          </p>
-          <div className="flex items-center gap-1 text-[11px] text-teal-700 font-bold">
-            <span>Member Profit Share Entitlement</span>
-          </div>
-        </TiltCard>
+        <button
+          onClick={() => setActiveWorkTab('certs')}
+          className={`px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap ${
+            activeWorkTab === 'certs'
+              ? 'bg-[#2C1810] text-white shadow-md'
+              : 'text-stone-600 hover:bg-stone-100'
+          }`}
+        >
+          <Award className="w-3.5 h-3.5" />
+          <span>NSDC Certifications ({workerCerts.length})</span>
+        </button>
 
-        <TiltCard maxTilt={10} className="bg-white rounded-3xl p-6 border border-stone-200 shadow-md space-y-2">
-          <div className="flex items-center justify-between text-stone-400">
-            <span className="text-xs font-bold uppercase tracking-wider">Jobs & Rating</span>
-            <Award className="w-5 h-5 text-[#D4A373]" />
-          </div>
-          <p className="text-3xl font-extrabold text-[#2C1810] font-['Outfit']">
-            {worker.total_jobs_completed} <span className="text-base font-normal text-stone-400">/ ★ {worker.rating}</span>
-          </p>
-          <div className="flex items-center gap-1 text-[11px] text-stone-600 font-medium">
-            <span>0 Algorithm Penalties or Bans</span>
-          </div>
-        </TiltCard>
+        <button
+          onClick={() => setActiveWorkTab('welfare')}
+          className={`px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap ${
+            activeWorkTab === 'welfare'
+              ? 'bg-[#2C1810] text-white shadow-md'
+              : 'text-stone-600 hover:bg-stone-100'
+          }`}
+        >
+          <HeartHandshake className="w-3.5 h-3.5" />
+          <span>Mutual Aid & Ayushman</span>
+        </button>
       </div>
 
-      {/* 3. DISPATCH RADAR QUEUE & ACTIVE JOB TRACKER */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column: Job Queue */}
-        <div className="lg:col-span-8 space-y-6">
-          {/* Active Job in Progress Banner */}
-          {inProgressJobs.length > 0 && (
-            <div className="bg-gradient-to-r from-emerald-900 to-[#0C3B2E] text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-emerald-700 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs px-3 py-1 rounded-full bg-emerald-500 text-white font-black tracking-wider animate-pulse flex items-center gap-1.5">
-                    <Flame className="w-3.5 h-3.5 fill-white text-white" />
-                    CURRENT ACTIVE DISPATCH
-                  </span>
-                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-white/20 text-emerald-200 font-bold">
-                    {inProgressJobs[0].status === 'en_route' ? '🚗 En Route' : '🛠️ Work In Progress'}
+      {/* 3. MAIN TAB: URBAN COMPANY–STYLE WORKSTATION */}
+      {activeWorkTab === 'workstation' && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* LEFT COLUMN: LIVE MAP & ACTIVE JOB DISPATCH */}
+          <div className="lg:col-span-8 space-y-6">
+            {/* Live Route & Navigation Map */}
+            <GoogleMapViewer
+              customerLocation={{
+                lat: 19.076,
+                lng: 72.8777,
+                label: activeJob ? activeJob.customer_name : 'Assigned Service Zone',
+              }}
+              workerLocation={{
+                lat: 19.082,
+                lng: 72.884,
+                name: `${currentUser.name} (Your GPS)`,
+                contact: currentUser.contact,
+              }}
+              showRoute={Boolean(activeJob)}
+              height="340px"
+              title={
+                activeJob
+                  ? `Live Navigation: Route to ${activeJob.customer_name}`
+                  : 'Artisan Live GPS & Regional Service Cluster'
+              }
+            />
+
+            {/* ACTIVE JOB IN PROGRESS CARD */}
+            {activeJob ? (
+              <div className="bg-gradient-to-r from-emerald-950 via-[#0C3B2E] to-teal-950 text-white rounded-3xl p-6 shadow-2xl border border-emerald-700 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs px-3 py-1 rounded-full bg-emerald-500 text-white font-black tracking-wider animate-pulse flex items-center gap-1.5">
+                      <Flame className="w-3.5 h-3.5 fill-white text-white" />
+                      ACTIVE DISPATCH
+                    </span>
+                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-white/20 text-emerald-200 font-bold">
+                      {activeJob.status === 'en_route' ? '🚗 En Route to Customer' : '🛠️ Work In Progress'}
+                    </span>
+                  </div>
+                  <span className="text-xs font-mono font-bold text-emerald-300">
+                    {activeJob.booking_code}
                   </span>
                 </div>
-                <span className="text-xs font-mono font-bold text-emerald-300">
-                  {inProgressJobs[0].booking_code}
-                </span>
-              </div>
 
-              <div>
-                <h3 className="font-black text-xl text-white">{inProgressJobs[0].service_task}</h3>
-                <p className="text-xs text-stone-300 mt-1 leading-relaxed">{inProgressJobs[0].description}</p>
-                <div className="bg-white/10 rounded-2xl p-4 mt-3 border border-white/10 space-y-1.5 text-xs">
-                  <p className="text-stone-200 font-medium">
-                    Customer: <strong className="text-white">{inProgressJobs[0].customer_name}</strong> ({inProgressJobs[0].customer_contact})
-                  </p>
-                  <p className="text-stone-300 flex items-start gap-1">
-                    <MapPin className="w-3.5 h-3.5 text-amber-300 flex-shrink-0 mt-0.5" />
-                    <span>{inProgressJobs[0].location.address}</span>
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t border-emerald-800">
                 <div>
-                  <span className="text-[11px] text-emerald-300 block font-semibold">Your Guaranteed Floor Wage</span>
-                  <span className="text-2xl font-black text-[#D4A373]">
-                    ₹{inProgressJobs[0].price_breakdown.worker_wage}
-                  </span>
+                  <h3 className="font-black text-xl text-white">{activeJob.service_task}</h3>
+                  <p className="text-xs text-stone-300 mt-1 leading-relaxed">{activeJob.description}</p>
+                  <div className="bg-white/10 rounded-2xl p-4 mt-3 border border-white/10 space-y-1.5 text-xs">
+                    <p className="text-stone-200 font-medium">
+                      Customer: <strong className="text-white">{activeJob.customer_name}</strong> ({activeJob.customer_contact})
+                    </p>
+                    <p className="text-stone-300 flex items-start gap-1">
+                      <MapPin className="w-3.5 h-3.5 text-amber-300 flex-shrink-0 mt-0.5" />
+                      <span>{activeJob.location?.address || 'Flat 402, Sea Crest Apartments, Bandra West, Mumbai'}</span>
+                    </p>
+                  </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2.5">
-                  {inProgressJobs[0].status === 'en_route' ? (
-                    <>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t border-emerald-800">
+                  <div>
+                    <span className="text-[11px] text-emerald-300 block font-semibold">Guaranteed Fair Earnings</span>
+                    <span className="text-2xl font-black text-[#D4A373]">
+                      ₹{activeJob.price_breakdown?.worker_wage || 550}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    {activeJob.status === 'en_route' ? (
+                      <>
+                        <button
+                          onClick={() => handleStartWork(activeJob.id)}
+                          className="px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-black text-xs shadow-lg flex items-center justify-center gap-2 transition-all transform hover:scale-105"
+                        >
+                          <MapPin className="w-4 h-4" />
+                          <span>Arrived • Start Work →</span>
+                        </button>
+                        <button
+                          onClick={() => handleAdvanceJobStatus(activeJob.id, activeJob.status)}
+                          className="px-4 py-3 rounded-2xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs shadow transition-colors"
+                          title="Advance to next step"
+                        >
+                          Advance Step →
+                        </button>
+                      </>
+                    ) : (
                       <button
-                        onClick={() => handleStartWork(inProgressJobs[0].id)}
-                        className="px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-black text-xs shadow-lg flex items-center justify-center gap-2 transition-all transform hover:scale-105"
+                        onClick={() => handleCompleteJob(activeJob.id)}
+                        className="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xs shadow-lg flex items-center justify-center gap-2 transition-all transform hover:scale-105"
                       >
-                        <MapPin className="w-4 h-4" />
-                        <span>Arrived • Start Work →</span>
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>Mark Job Completed ✓</span>
                       </button>
-                      <button
-                        onClick={() => handleAdvanceJobStatus(inProgressJobs[0].id, inProgressJobs[0].status)}
-                        className="px-4 py-3 rounded-2xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs shadow transition-colors"
-                        title="Advance to next step"
-                      >
-                        Advance Step →
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      onClick={() => handleCompleteJob(inProgressJobs[0].id)}
-                      className="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xs shadow-lg flex items-center justify-center gap-2 transition-all transform hover:scale-105"
-                    >
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>Mark Job Completed ✓</span>
-                    </button>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </div>
-            </div>
-          )}
-
-          {/* Pending Job Requests */}
-          <div className="space-y-4">
-            <h3 className="font-extrabold text-stone-900 text-lg font-['Outfit'] flex items-center gap-2">
-              <span>Incoming Live Dispatches</span>
-              <span className="text-xs bg-[#2C1810] text-white px-2.5 py-0.5 rounded-full font-bold">
-                {pendingJobs.length} Available
-              </span>
-            </h3>
-
-            {pendingJobs.length === 0 ? (
-              <div className="bg-white rounded-3xl p-10 text-center border border-stone-200 text-xs text-stone-500 space-y-2">
-                <Radio className="w-8 h-8 text-emerald-600 mx-auto animate-ping" />
-                <p className="font-bold text-stone-700 text-sm">Radar Active • Listening for Job Dispatches</p>
-                <p className="text-stone-400">You are on-duty and will receive priority regional matchings within your cooperative zone.</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="bg-white rounded-3xl p-8 text-center border border-stone-200 space-y-2 shadow-sm">
+                <Radio className="w-8 h-8 text-emerald-600 mx-auto animate-ping" />
+                <p className="font-bold text-stone-800 text-sm">Ready for Regional Dispatches</p>
+                <p className="text-xs text-stone-500">
+                  You are marked {dutyStatus === 'online' ? 'Online' : 'Offline'}. Matchings are prioritized within your registered cooperative zone.
+                </p>
+              </div>
+            )}
+
+            {/* PENDING JOB REQUESTS */}
+            {pendingJobs.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="font-bold text-stone-900 text-sm font-['Outfit']">
+                  Incoming Job Requests ({pendingJobs.length})
+                </h3>
                 {pendingJobs.map((bk) => (
-                  <TiltCard
-                    key={bk.id}
-                    maxTilt={6}
-                    className="bg-white rounded-3xl p-6 border border-stone-200 shadow-md hover:shadow-xl transition-all space-y-4"
-                  >
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-100 pb-4">
+                  <div key={bk.id} className="bg-white rounded-2xl p-5 border border-stone-200 shadow-sm space-y-3">
+                    <div className="flex items-center justify-between">
                       <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-extrabold text-stone-900 text-base">{bk.service_task}</h4>
-                          {bk.is_emergency && (
-                            <span className="text-[10px] bg-red-100 text-red-800 font-black px-2.5 py-0.5 rounded-full animate-bounce">
-                              ⚡ EMERGENCY SOS
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-stone-500 mt-0.5">
-                          {bk.service_category_name} • Scheduled: {bk.scheduled_time}
-                        </p>
+                        <h4 className="font-extrabold text-stone-900 text-sm">{bk.service_task}</h4>
+                        <p className="text-xs text-stone-500">{bk.customer_name} • {bk.scheduled_time}</p>
                       </div>
-                      <div className="text-left sm:text-right bg-emerald-50 px-3.5 py-2 rounded-2xl border border-emerald-200">
-                        <span className="text-[10px] text-emerald-800 block font-bold">Direct Member Earnings</span>
-                        <span className="font-black text-emerald-700 text-lg">
-                          ₹{bk.price_breakdown.worker_wage}
-                        </span>
-                      </div>
+                      <span className="font-black text-emerald-700 text-base">
+                        ₹{bk.price_breakdown?.worker_wage || 450}
+                      </span>
                     </div>
-
-                    <div className="text-xs text-stone-600 space-y-1 bg-stone-50 p-3.5 rounded-2xl">
-                      <p><strong className="text-stone-800">Address:</strong> {bk.location.address}</p>
-                      <p><strong className="text-stone-800">Task Notes:</strong> {bk.description}</p>
-                    </div>
-
-                    <div className="flex items-center justify-end gap-2.5 pt-1">
+                    <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => handleAdvanceJobStatus(bk.id, bk.status)}
-                        className="px-4 py-2.5 rounded-xl border border-stone-300 text-stone-700 hover:bg-stone-50 font-bold text-xs shadow-xs transition-colors"
-                        title="Advance job to next step"
+                        className="px-4 py-2 rounded-xl border border-stone-300 text-stone-700 text-xs font-semibold hover:bg-stone-50"
                       >
                         Advance Step →
                       </button>
                       <button
                         onClick={() => handleAcceptJob(bk.id)}
-                        className="px-6 py-2.5 rounded-xl bg-[#2C1810] hover:bg-[#3E2317] text-white font-extrabold text-xs shadow-md transition-all flex items-center gap-1.5 transform hover:scale-105"
+                        className="px-5 py-2 rounded-xl bg-[#2C1810] hover:bg-[#3E2317] text-white text-xs font-bold shadow"
                       >
-                        <span>Accept Dispatch & Start Route</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
+                        Accept Dispatch
                       </button>
                     </div>
-                  </TiltCard>
+                  </div>
                 ))}
               </div>
             )}
           </div>
-        </div>
 
-        {/* Right Column: Health Insurance, Trade Certifications & Mutual Aid */}
-        <div className="lg:col-span-4 space-y-6">
-          {/* Health & Accident Insurance Digital Card */}
-          <TiltCard maxTilt={8} className="bg-gradient-to-br from-[#2C1810] via-[#1E110A] to-[#0C3B2E] rounded-3xl p-6 text-white shadow-xl space-y-4 border border-amber-900/50">
-            <div className="flex items-center justify-between border-b border-white/15 pb-3">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-[#D4A373]" />
-                <span className="font-bold text-xs uppercase tracking-wider">Ayushman Co-op Shield</span>
+          {/* RIGHT COLUMN: URBAN COMPANY TIME-SLOT SCHEDULE */}
+          <div className="lg:col-span-4 space-y-6">
+            {/* Day Selector Ribbon */}
+            <div className="bg-white rounded-3xl p-5 border border-stone-200 shadow-md space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-[#2C1810]" />
+                  <h3 className="font-black text-stone-900 text-sm font-['Outfit']">Time-Slot Schedule</h3>
+                </div>
+                <span className="text-[10px] text-stone-400 uppercase font-bold">Upcoming 7 Days</span>
               </div>
-              <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-bold border border-emerald-400/30">
-                ACTIVE
-              </span>
+
+              {/* Horizontal Day Buttons */}
+              <div className="grid grid-cols-4 gap-1.5 text-center">
+                {scheduleDays.map((day, idx) => (
+                  <button
+                    key={day.fullDate}
+                    onClick={() => setSelectedDayIdx(idx)}
+                    className={`p-2 rounded-2xl border transition-all ${
+                      selectedDayIdx === idx
+                        ? 'bg-[#2C1810] text-white border-[#2C1810] shadow-md'
+                        : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'
+                    }`}
+                  >
+                    <span className="text-[10px] block font-bold">{day.dayName}</span>
+                    <span className="text-sm font-black">{day.dateNumber}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Slots List for Selected Day */}
+              <div className="space-y-2 pt-2 border-t border-stone-100">
+                <p className="text-[11px] font-bold text-stone-400 uppercase">
+                  Slots for {scheduleDays[selectedDayIdx].dayName} ({scheduleDays[selectedDayIdx].dateNumber}{' '}
+                  {scheduleDays[selectedDayIdx].month})
+                </p>
+
+                <div className="space-y-2">
+                  {timeSlots.map((ts, i) => (
+                    <div
+                      key={i}
+                      className={`p-3 rounded-2xl border flex items-center justify-between text-xs transition-colors ${
+                        ts.status === 'booked'
+                          ? 'bg-amber-50/80 border-amber-200 text-amber-900'
+                          : 'bg-emerald-50/40 border-emerald-100 text-stone-700'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-3.5 h-3.5 text-stone-400" />
+                        <span className="font-semibold">{ts.slot}</span>
+                      </div>
+
+                      {ts.status === 'booked' ? (
+                        <span className="text-[10px] bg-amber-500 text-white font-bold px-2 py-0.5 rounded-full">
+                          Booked
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-emerald-700 font-bold bg-emerald-100 px-2 py-0.5 rounded-full">
+                          Available
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-1 text-xs">
-              <p className="text-stone-300 text-[11px]">Provider: {welfare.insurance_provider}</p>
-              <p className="font-mono font-black text-base text-[#D4A373]">{welfare.policy_number}</p>
-              <p className="text-[11px] text-stone-300">
-                Coverage: <strong>₹{welfare.coverage_amount.toLocaleString()}</strong> (Hospitalization & Accidental)
-              </p>
-              <p className="text-[11px] text-stone-400">Renewal: {welfare.expiry_date}</p>
-            </div>
-
-            <button
-              onClick={() => setIsClaimModalOpen(true)}
-              className="w-full py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5"
-            >
-              <HeartHandshake className="w-4 h-4 text-[#D4A373]" />
-              <span>Claim Emergency Mutual Aid</span>
-            </button>
-          </TiltCard>
-
-          {/* Trade Certifications Vault */}
-          <div className="bg-white rounded-3xl p-6 border border-stone-200 shadow-md space-y-4">
-            <div className="flex items-center justify-between">
-              <h4 className="font-extrabold text-stone-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
-                <Award className="w-4 h-4 text-[#D4A373]" />
-                <span>Trade Certifications ({workerCerts.length})</span>
-              </h4>
+            {/* Quick Actions & Grievances */}
+            <div className="bg-[#FAF8F5] rounded-3xl p-5 border border-stone-200 shadow-sm space-y-3">
+              <h4 className="font-bold text-stone-900 text-xs uppercase tracking-wider">Artisan Solidarity Actions</h4>
               <button
                 onClick={() => setIsUploadCertOpen(true)}
-                className="text-xs font-bold text-[#2C1810] hover:underline flex items-center gap-1"
+                className="w-full py-2.5 px-4 rounded-xl bg-white border border-stone-300 text-stone-700 hover:bg-stone-50 text-xs font-semibold flex items-center justify-between"
               >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Add License</span>
+                <span>Upload NSDC Skill Certificate</span>
+                <ChevronRight className="w-4 h-4 text-stone-400" />
               </button>
-            </div>
-
-            <div className="space-y-2.5">
-              {workerCerts.map((cert) => (
-                <div key={cert.id} className="p-3.5 bg-stone-50 rounded-2xl border border-stone-200 text-xs space-y-1">
-                  <div className="flex items-center justify-between">
-                    <p className="font-bold text-stone-800 text-xs">{cert.certificate_name}</p>
-                    <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
-                      Verified
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-stone-500">{cert.issuing_body}</p>
-                </div>
-              ))}
+              <button
+                onClick={() => setIsClaimModalOpen(true)}
+                className="w-full py-2.5 px-4 rounded-xl bg-white border border-stone-300 text-stone-700 hover:bg-stone-50 text-xs font-semibold flex items-center justify-between"
+              >
+                <span>Emergency Welfare Fund Claim</span>
+                <ChevronRight className="w-4 h-4 text-stone-400" />
+              </button>
+              <button
+                onClick={() => setIsGrievanceOpen(true)}
+                className="w-full py-2.5 px-4 rounded-xl bg-white border border-stone-300 text-rose-700 hover:bg-rose-50 text-xs font-semibold flex items-center justify-between"
+              >
+                <span>File Cooperative Grievance</span>
+                <ChevronRight className="w-4 h-4 text-rose-400" />
+              </button>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* UPLOAD CERTIFICATION MODAL */}
+      {/* 4. SECONDARY TAB: FAIR WAGE EARNINGS */}
+      {activeWorkTab === 'earnings' && (
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-md space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-black text-stone-900 font-['Outfit']">Fair Wage Breakdown & Lifetime Payouts</h3>
+              <p className="text-xs text-stone-500">100% of the customer floor wage goes directly to your account.</p>
+            </div>
+            <div className="text-right">
+              <span className="text-xs text-stone-400 block">Total Lifetime Earnings</span>
+              <span className="text-2xl font-black text-emerald-700 font-['Outfit']">
+                ₹{(completedJobs.length * 550 + 24500).toLocaleString()}
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-200">
+              <span className="text-[10px] font-bold text-emerald-800 uppercase block">This Week's Net Wage</span>
+              <span className="text-xl font-black text-emerald-900">₹8,450</span>
+            </div>
+            <div className="bg-amber-50 p-4 rounded-2xl border border-amber-200">
+              <span className="text-[10px] font-bold text-amber-800 uppercase block">Cooperative Welfare Pool Contribution</span>
+              <span className="text-xl font-black text-amber-900">₹676</span>
+            </div>
+            <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200">
+              <span className="text-[10px] font-bold text-stone-700 uppercase block">Platform Aggregator Fee Cut</span>
+              <span className="text-xl font-black text-emerald-700">₹0 (0%)</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 5. SECONDARY TAB: CERTIFICATIONS */}
+      {activeWorkTab === 'certs' && (
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-md space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-black text-stone-900 font-['Outfit']">National Trade Certifications</h3>
+              <p className="text-xs text-stone-500">Stored in Supabase Storage with digital signature verification.</p>
+            </div>
+            <button
+              onClick={() => setIsUploadCertOpen(true)}
+              className="px-4 py-2 rounded-xl bg-[#2C1810] text-white text-xs font-bold shadow"
+            >
+              + Upload Certificate
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {workerCerts.map((cert) => (
+              <div key={cert.id} className="p-4 rounded-2xl border border-stone-200 bg-stone-50 flex items-center gap-3">
+                <Award className="w-8 h-8 text-amber-600 flex-shrink-0" />
+                <div>
+                  <h4 className="font-bold text-stone-900 text-sm">{cert.certificate_name}</h4>
+                  <p className="text-xs text-stone-500">{cert.issuing_body}</p>
+                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full mt-1 inline-block">
+                    Verified Digital Credential
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 6. SECONDARY TAB: WELFARE & MUTUAL AID */}
+      {activeWorkTab === 'welfare' && (
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-md space-y-6">
+          <div>
+            <h3 className="text-lg font-black text-stone-900 font-['Outfit']">Ayushman Bharat & Emergency Mutual Aid</h3>
+            <p className="text-xs text-stone-500">Cooperative collective insurance guaranteeing ₹5 Lakh hospital coverage.</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="p-5 rounded-2xl border border-teal-200 bg-teal-50 space-y-2">
+              <span className="text-[10px] font-bold text-teal-800 uppercase block">Ayushman Health Card</span>
+              <p className="text-sm font-black text-teal-950">ABHA: 91-8201-9923-4412</p>
+              <p className="text-xs text-teal-700">Covered for cashless hospital treatments up to ₹5,00,000/yr.</p>
+            </div>
+
+            <div className="p-5 rounded-2xl border border-amber-200 bg-amber-50 space-y-2">
+              <span className="text-[10px] font-bold text-amber-800 uppercase block">Cooperative Emergency Reserve</span>
+              <p className="text-sm font-black text-amber-950">Instant 0% Interest Relief</p>
+              <p className="text-xs text-amber-700">Available balance for immediate medical or tool repair claims: ₹25,000</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* GLOBAL MODALS */}
+      {isGrievanceOpen && (
+        <GrievanceModal isOpen={isGrievanceOpen} onClose={() => setIsGrievanceOpen(false)} />
+      )}
+
+      {/* CERTIFICATE UPLOAD MODAL */}
       {isUploadCertOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-4 border border-stone-200">
-            <h3 className="font-extrabold text-base text-stone-900 font-['Outfit']">
-              Upload Trade Skill Certificate
-            </h3>
+          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-stone-200 p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-stone-100 pb-3">
+              <h3 className="font-bold text-sm text-stone-900">Upload Trade Certification</h3>
+              <button
+                onClick={() => {
+                  setIsUploadCertOpen(false);
+                  setSelectedCertFile(null);
+                }}
+                className="text-stone-400 hover:text-stone-700"
+              >
+                ✕
+              </button>
+            </div>
+
             <form onSubmit={handleUploadCertSubmit} className="space-y-3.5">
               <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1">Certificate / Qualification Name</label>
+                <label className="block text-xs font-bold text-stone-700 mb-1">Certification Title</label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. ITI Class-A Wireman License, NSDC Level-4..."
+                  placeholder="e.g. Master Electrician Level 4"
                   value={newCertName}
                   onChange={(e) => setNewCertName(e.target.value)}
                   className="w-full text-xs p-2.5 border border-stone-300 rounded-xl focus:ring-2 focus:ring-[#2C1810] focus:outline-none"
@@ -519,7 +674,7 @@ export const WorkerDashboard: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1">Issuing Body / Authority</label>
+                <label className="block text-xs font-bold text-stone-700 mb-1">Issuing Authority</label>
                 <input
                   type="text"
                   required
@@ -570,67 +725,6 @@ export const WorkerDashboard: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* WELFARE EMERGENCY CLAIM MODAL */}
-      {isClaimModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-4 border border-stone-200">
-            <h3 className="font-extrabold text-base text-stone-900 font-['Outfit']">
-              Claim Cooperative Emergency Mutual Aid
-            </h3>
-            {claimSuccess ? (
-              <div className="py-6 text-center space-y-2">
-                <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
-                <h4 className="font-bold text-sm text-stone-800">Claim Forwarded to Society Committee</h4>
-                <p className="text-xs text-stone-500">Immediate disbursal review initiated.</p>
-              </div>
-            ) : (
-              <form onSubmit={handleClaimSubmit} className="space-y-3.5">
-                <div>
-                  <label className="block text-xs font-bold text-stone-700 mb-1">Required Amount (₹)</label>
-                  <input
-                    type="number"
-                    value={claimAmount}
-                    onChange={(e) => setClaimAmount(e.target.value)}
-                    className="w-full text-xs p-2.5 border border-stone-300 rounded-xl focus:ring-2 focus:ring-[#2C1810] focus:outline-none font-bold"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-stone-700 mb-1">Reason / Medical Need</label>
-                  <textarea
-                    required
-                    rows={3}
-                    placeholder="Tool replacement, hospitalization aid, or family emergency..."
-                    value={claimReason}
-                    onChange={(e) => setClaimReason(e.target.value)}
-                    className="w-full text-xs p-2.5 border border-stone-300 rounded-xl focus:ring-2 focus:ring-[#2C1810] focus:outline-none"
-                  />
-                </div>
-
-                <div className="flex gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsClaimModalOpen(false)}
-                    className="flex-1 py-2.5 rounded-xl border border-stone-300 text-xs font-semibold text-stone-700 hover:bg-stone-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 py-2.5 rounded-xl bg-[#2C1810] hover:bg-[#3E2317] text-white text-xs font-bold shadow-md"
-                  >
-                    Submit Assistance Claim
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* GRIEVANCE MODAL */}
-      <GrievanceModal isOpen={isGrievanceOpen} onClose={() => setIsGrievanceOpen(false)} />
     </div>
   );
 };

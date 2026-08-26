@@ -66,6 +66,7 @@ interface MarketplaceContextType {
   // Actions
   createBooking: (newBooking: Partial<Booking>) => Promise<Booking>;
   updateBookingStatus: (bookingId: string, status: BookingStatus) => Promise<void>;
+  updateWorkerAvailability: (workerId: string, availability: Worker['availability']) => Promise<void>;
   createEmergencyBooking: (categoryId: string, address: string, task: string) => Promise<Booking>;
   addRatingReview: (review: Omit<RatingReview, 'id' | 'created_at'>) => Promise<void>;
   fileGrievance: (grievance: Omit<Grievance, 'id' | 'ticket_number' | 'status' | 'created_at'>) => Promise<void>;
@@ -271,12 +272,36 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       total_amount: 520,
     };
 
+    // AI Auto-Assignment: If no specific worker was chosen by customer, match best verified artisan
+    let assignedWorker = newBookingData.worker_id ? getWorkerById(newBookingData.worker_id) : undefined;
+    if (!assignedWorker) {
+      const targetCatId = newBookingData.service_category_id;
+      const candidates = workers.filter(
+        (w) =>
+          (!targetCatId || w.service_category_ids?.includes(targetCatId)) &&
+          w.verification_status === 'verified'
+      );
+
+      if (candidates.length > 0) {
+        // Weighted scoring: 50% rating, 30% online/proximity, 20% fairness load
+        const scored = candidates.map((w) => {
+          const ratingScore = (w.rating || 4.5) / 5;
+          const isOnlineScore = w.availability === 'online' ? 1.0 : 0.3;
+          const fairnessScore = 1.0 / (1.0 + (w.total_jobs_completed || 0) * 0.05);
+          const score = 0.5 * ratingScore + 0.3 * isOnlineScore + 0.2 * fairnessScore;
+          return { worker: w, score };
+        });
+        scored.sort((a, b) => b.score - a.score);
+        assignedWorker = scored[0].worker;
+      }
+    }
+
     let createdId = `bk-${Date.now()}`;
 
     try {
       const serverBookingId = await api.createBooking({
-        customer_id: newBookingData.customer_id || currentUser.id || 'cust-1',
-        worker_id: newBookingData.worker_id,
+        customer_id: newBookingData.customer_id || currentUser?.id || 'cust-1',
+        worker_id: assignedWorker ? assignedWorker.id : newBookingData.worker_id,
         service_category_id: newBookingData.service_category_id || 'cat-1',
         service_task: newBookingData.service_task || 'Standard Service',
         description: newBookingData.description || 'Service booked via SAHYOG cooperative portal.',
@@ -304,14 +329,14 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const newBooking: Booking = {
       id: createdId,
       booking_code: bookingCode,
-      customer_id: newBookingData.customer_id || currentUser.id || 'cust-1',
-      customer_name: newBookingData.customer_name || currentUser.name || 'Customer',
-      customer_contact: newBookingData.customer_contact || currentUser.contact || '+91 98201 45678',
-      worker_id: newBookingData.worker_id,
-      worker_name: newBookingData.worker_name,
-      worker_contact: newBookingData.worker_contact,
-      worker_avatar: newBookingData.worker_avatar,
-      cooperative_name: newBookingData.cooperative_name || 'Mumbai Shramik Sahakari Sanstha',
+      customer_id: newBookingData.customer_id || currentUser?.id || 'cust-1',
+      customer_name: newBookingData.customer_name || currentUser?.name || 'Customer',
+      customer_contact: newBookingData.customer_contact || currentUser?.contact || '+91 98201 45678',
+      worker_id: assignedWorker ? assignedWorker.id : newBookingData.worker_id,
+      worker_name: assignedWorker ? assignedWorker.full_name : newBookingData.worker_name,
+      worker_contact: newBookingData.worker_contact || '+91 98201 45678',
+      worker_avatar: assignedWorker ? assignedWorker.avatar_url : newBookingData.worker_avatar,
+      cooperative_name: assignedWorker?.cooperative_name || newBookingData.cooperative_name || 'Mumbai Shramik Sahakari Sanstha',
       service_category_id: newBookingData.service_category_id || 'cat-1',
       service_category_name: newBookingData.service_category_name || 'Electricians & Wiring',
       service_task: newBookingData.service_task || 'Standard Maintenance & Diagnosis',
@@ -348,19 +373,42 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     };
     setInvoices((prev) => [newInvoice, ...prev]);
 
-    // Create notification
+    // Create notification for Customer
     const newNotif: NotificationItem = {
       id: `notif-${Date.now()}`,
       user_id: newBooking.customer_id,
       title: 'Booking Confirmed with Fair Wages',
-      message: `Your booking ${newBooking.booking_code} for ${newBooking.service_category_name} is confirmed. 100% of fair wage is locked for the artisan.`,
+      message: `Your booking ${newBooking.booking_code} for ${newBooking.service_category_name} is confirmed with ${newBooking.worker_name || 'matched artisan'}. 100% of fair wage is locked.`,
       type: 'booking',
       read_status: false,
       created_at: new Date().toISOString(),
     };
     setNotifications((prev) => [newNotif, ...prev]);
 
+    // If worker assigned, create notification for Worker
+    if (assignedWorker) {
+      const workerNotif: NotificationItem = {
+        id: `notif-w-${Date.now()}`,
+        user_id: assignedWorker.user_id,
+        title: '⚡ New Job Matched & Dispatched!',
+        message: `You have been auto-assigned to booking ${newBooking.booking_code} (${newBooking.service_task}). Guaranteed Fair Wage: ₹${breakdown.worker_wage}.`,
+        type: 'booking',
+        read_status: false,
+        created_at: new Date().toISOString(),
+      };
+      setNotifications((prev) => [workerNotif, ...prev]);
+    }
+
     return newBooking;
+  };
+
+  const updateWorkerAvailability = async (workerId: string, availability: Worker['availability']) => {
+    setWorkers((prev) => prev.map((w) => (w.id === workerId ? { ...w, availability } : w)));
+    try {
+      await api.updateWorkerAvailability(workerId, availability);
+    } catch {
+      // handled
+    }
   };
 
   const updateBookingStatus = async (bookingId: string, status: BookingStatus) => {
@@ -466,7 +514,7 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       prev.map((g) => (g.id === grievanceId ? { ...g, status: 'resolved', resolution_notes: resolutionNotes } : g))
     );
     try {
-      await api.resolveGrievance(grievanceId, resolutionNotes, currentUser.name || 'Federation Admin');
+      await api.resolveGrievance(grievanceId, resolutionNotes, currentUser?.name || 'Federation Admin');
     } catch {
       // handled
     }
@@ -604,6 +652,7 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         closeBookingFlow,
         createBooking,
         updateBookingStatus,
+        updateWorkerAvailability,
         createEmergencyBooking,
         addRatingReview,
         fileGrievance,

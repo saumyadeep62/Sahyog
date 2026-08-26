@@ -73,7 +73,7 @@ export const FederationAdminDashboard: React.FC = () => {
               Registration No: <strong className="font-mono text-teal-300">{currentCoop.registration_id}</strong> • Region: {currentCoop.region}
             </p>
             <p className="text-[11px] text-amber-300 font-semibold">
-              Presiding Officer: {currentUser.name} ({currentUser.email})
+              Presiding Officer: {currentUser?.name || 'Admin'} ({currentUser?.email || 'admin@sahyog.coop'})
             </p>
           </div>
         </div>

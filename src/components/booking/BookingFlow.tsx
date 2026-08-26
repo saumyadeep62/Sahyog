@@ -104,9 +104,9 @@ export const BookingFlow: React.FC = () => {
 
     try {
       const bk = await createBooking({
-        customer_id: currentUser.id,
-        customer_name: currentUser.name,
-        customer_contact: currentUser.contact,
+        customer_id: currentUser?.id || 'cust-1',
+        customer_name: currentUser?.name || 'Customer',
+        customer_contact: currentUser?.contact || '+91 98201 45678',
         worker_id: assignedWorker?.id,
         worker_name: assignedWorker?.full_name,
         worker_contact: '+91 98199 87654',
@@ -140,9 +140,9 @@ export const BookingFlow: React.FC = () => {
         try {
           await payForBooking(
             bk.id,
-            currentUser.name || 'Customer',
-            currentUser.email || 'customer@sahyog.coop',
-            currentUser.contact || '+91 98201 45678'
+            currentUser?.name || 'Customer',
+            currentUser?.email || 'customer@sahyog.coop',
+            currentUser?.contact || '+91 98201 45678'
           );
         } catch {
           // If Razorpay test keys aren't set in backend edge functions yet, continue gracefully

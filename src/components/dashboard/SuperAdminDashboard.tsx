@@ -47,7 +47,7 @@ export const SuperAdminDashboard: React.FC = () => {
               </span>
             </div>
             <p className="text-xs text-stone-300 mt-0.5">
-              Chief Administrator: {currentUser.name} • Ministry & Multi-State Federation Liaison
+              Chief Administrator: {currentUser?.name || 'Super Admin'} • Ministry & Multi-State Federation Liaison
             </p>
           </div>
         </div>

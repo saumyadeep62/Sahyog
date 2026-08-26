@@ -272,7 +272,7 @@ export function detectLanguage(text: string, currentFallback: LanguageCode): Lan
 export const SahyogChatbot: React.FC<{ onNavigateTab?: (tab: string) => void }> = ({ onNavigateTab }) => {
   const { categories, workers, openBookingFlow, openEmergencyModal } = useMarketplace();
   const { language, setLanguage, t } = useLanguage();
-  const { currentRole, switchRole } = useAuth();
+  const { currentRole } = useAuth();
 
   const currentBotText = BOT_TRANSLATIONS[language] || BOT_TRANSLATIONS.en;
 
@@ -1031,10 +1031,6 @@ export const SahyogChatbot: React.FC<{ onNavigateTab?: (tab: string) => void }> 
       setIsOpen(false);
     } else if (action.actionType === 'view_welfare') {
       onNavigateTab?.('home');
-      setIsOpen(false);
-    } else if (action.actionType === 'switch_role') {
-      switchRole(action.payload);
-      onNavigateTab?.('dashboard');
       setIsOpen(false);
     }
   };

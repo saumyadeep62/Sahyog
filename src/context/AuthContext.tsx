@@ -4,9 +4,9 @@ import { SEED_USERS } from '../lib/seedData';
 import { supabase } from '../lib/supabase';
 
 interface AuthContextType {
-  currentUser: UserProfile;
-  currentRole: UserRole;
-  switchRole: (role: UserRole) => void;
+  currentUser: UserProfile | null;
+  currentRole: UserRole | null;
+  isAuthenticated: boolean;
   signInWithSupabase: (email: string, password: string) => Promise<{ error?: string }>;
   signUpWithSupabase: (email: string, password: string, name: string, role: UserRole, contact?: string) => Promise<{ error?: string; message?: string }>;
   signInWithOtp: (email: string) => Promise<{ error?: string; message?: string }>;
@@ -21,20 +21,17 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<UserProfile>(() => {
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
     const saved = localStorage.getItem('sahyog_user');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (parsed.id === 'usr-cust-1' || parsed.name === 'Ananya Sharma') {
-          return SEED_USERS[0];
-        }
-        return parsed;
+        if (parsed?.id) return parsed;
       } catch {
         // fallback
       }
     }
-    return SEED_USERS[0]; // Default: Customer (Saumyadeep Sutradhar)
+    return null; // Logged out by default
   });
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -43,40 +40,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Sync state to localStorage
   useEffect(() => {
-    localStorage.setItem('sahyog_user', JSON.stringify(currentUser));
+    if (currentUser) {
+      localStorage.setItem('sahyog_user', JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem('sahyog_user');
+    }
   }, [currentUser]);
 
   // Listen to active Supabase Auth state changes
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+    // Check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        // Check if user has profile in public.users
-        try {
-          const { data: profile } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
+        syncUserProfile(session.user);
+      }
+    });
 
-          if (profile) {
-            setCurrentUser(profile);
-          } else {
-            const userMeta = session.user.user_metadata;
-            const newProfile: UserProfile = {
-              id: session.user.id,
-              role: (userMeta?.role as UserRole) || 'customer',
-              name: userMeta?.name || session.user.email?.split('@')[0] || 'Member',
-              email: session.user.email || '',
-              contact: userMeta?.contact || '+91 98765 43210',
-              language_preference: 'en',
-              status: 'active',
-              created_at: session.user.created_at,
-            };
-            setCurrentUser(newProfile);
-          }
-        } catch {
-          // fallback
-        }
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        await syncUserProfile(session.user);
+      } else {
+        setCurrentUser(null);
       }
     });
 
@@ -85,18 +69,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  const switchRole = (role: UserRole) => {
-    const targetUser = SEED_USERS.find((u) => u.role === role) || {
-      id: `usr-${role}-${Date.now()}`,
-      role,
-      name: role === 'worker' ? 'Master Artisan' : role === 'federation_admin' ? 'Federation Officer' : 'Demo User',
-      email: `${role}@sahyog.coop`,
-      contact: '+91 98000 00000',
-      language_preference: 'en',
-      status: 'active',
-      created_at: new Date().toISOString(),
-    };
-    setCurrentUser(targetUser);
+  const syncUserProfile = async (authUser: any) => {
+    try {
+      const { data: profile } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', authUser.id)
+        .single();
+
+      if (profile) {
+        // Admin email security verification
+        if (profile.role === 'federation_admin' || profile.role === 'super_admin') {
+          if (authUser.email !== 'admin@gmail.com') {
+            profile.role = 'customer';
+          }
+        }
+        setCurrentUser(profile);
+      } else {
+        const userMeta = authUser.user_metadata;
+        let role = (userMeta?.role as UserRole) || 'customer';
+        if ((role === 'federation_admin' || role === 'super_admin') && authUser.email !== 'admin@gmail.com') {
+          role = 'customer';
+        }
+        const newProfile: UserProfile = {
+          id: authUser.id,
+          role,
+          name: userMeta?.name || authUser.email?.split('@')[0] || 'Member',
+          email: authUser.email || '',
+          contact: userMeta?.contact || '+91 98765 43210',
+          language_preference: 'en',
+          status: 'active',
+          created_at: authUser.created_at || new Date().toISOString(),
+        };
+        setCurrentUser(newProfile);
+      }
+    } catch {
+      // fallback
+    }
   };
 
   const openAuthModal = (initialMode: 'signin' | 'signup' = 'signin') => {
@@ -122,29 +131,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (data?.user) {
-        // Fetch public.users profile created by handle_new_user trigger
-        const { data: profile } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
-
-        if (profile) {
-          setCurrentUser(profile);
-        } else {
-          const userMeta = data.user.user_metadata;
-          const userProfile: UserProfile = {
-            id: data.user.id,
-            role: (userMeta?.role as UserRole) || 'customer',
-            name: userMeta?.name || data.user.email?.split('@')[0] || 'Member',
-            email: data.user.email || email,
-            contact: userMeta?.contact || '',
-            language_preference: 'en',
-            status: 'active',
-            created_at: data.user.created_at,
-          };
-          setCurrentUser(userProfile);
-        }
+        await syncUserProfile(data.user);
         closeAuthModal();
         setLoadingAuth(false);
         return {};
@@ -167,13 +154,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   ): Promise<{ error?: string; message?: string }> => {
     setLoadingAuth(true);
     try {
+      // Prevent unauthorized admin role signups
+      const sanitizedRole: UserRole =
+        (role === 'federation_admin' || role === 'super_admin') && email.trim() !== 'admin@gmail.com'
+          ? 'customer'
+          : role;
+
       const { data, error } = await supabase.auth.signUp({
         email: email.trim(),
         password,
         options: {
           data: {
             name: name.trim(),
-            role,
+            role: sanitizedRole,
             contact: contact.trim(),
           },
         },
@@ -185,17 +178,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (data?.user) {
-        const newUserProfile: UserProfile = {
-          id: data.user.id,
-          role,
-          name: name.trim(),
-          email: email.trim(),
-          contact: contact.trim(),
-          language_preference: 'en',
-          status: 'active',
-          created_at: new Date().toISOString(),
-        };
-        setCurrentUser(newUserProfile);
+        await syncUserProfile(data.user);
         closeAuthModal();
         setLoadingAuth(false);
         return { message: 'Welcome to SAHYOG! Registration complete.' };
@@ -237,15 +220,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch {
       // ignore
     }
-    setCurrentUser(SEED_USERS[0]);
+    setCurrentUser(null);
+    localStorage.removeItem('sahyog_user');
   };
 
   return (
     <AuthContext.Provider
       value={{
         currentUser,
-        currentRole: currentUser.role,
-        switchRole,
+        currentRole: currentUser?.role || null,
+        isAuthenticated: Boolean(currentUser),
         signInWithSupabase,
         signUpWithSupabase,
         signInWithOtp,
