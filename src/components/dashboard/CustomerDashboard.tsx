@@ -38,6 +38,7 @@ export const CustomerDashboard: React.FC = () => {
     bookings,
     updateBookingStatus,
     openInvoiceModal,
+    openTrackingModal,
     addRatingReview,
     openBookingFlow,
     openEmergencyModal,
@@ -208,6 +209,52 @@ export const CustomerDashboard: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* 1.5 BLINKIT STYLE LIVE ORDER ARRIVAL HERO BANNER */}
+      {activeBookings.length > 0 && (
+        <div className="bg-gradient-to-r from-[#0C3B2E] via-[#144537] to-[#0A261D] text-white p-5 sm:p-6 rounded-3xl shadow-xl border border-emerald-500/40 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-5 animate-in fade-in">
+          <div className="absolute top-0 right-0 -mt-6 -mr-6 w-36 h-36 bg-emerald-400/10 rounded-full blur-2xl pointer-events-none" />
+
+          <div className="flex items-center gap-4 relative z-10">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-400/20 border border-emerald-400/30 flex items-center justify-center text-3xl shadow-inner flex-shrink-0 animate-bounce">
+              🛵
+            </div>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] uppercase font-black tracking-widest px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                  Blinkit Live Dispatch
+                </span>
+                <span className="text-xs text-stone-300 font-mono font-bold">
+                  #{activeBookings[0].booking_code}
+                </span>
+              </div>
+              <h3 className="text-xl sm:text-2xl font-black font-['Outfit'] text-white flex items-center gap-2">
+                <span className="text-amber-400">⚡</span> Arriving in ~14 Mins
+              </h3>
+              <p className="text-xs text-emerald-200">
+                {activeBookings[0].worker_name} ({activeBookings[0].service_task}) is en route to your doorstep
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 relative z-10 flex-wrap">
+            <div className="bg-white/10 px-3.5 py-2 rounded-2xl border border-white/10 text-center">
+              <span className="text-[9px] uppercase font-bold text-stone-300 block">Service PIN</span>
+              <span className="font-mono text-base font-black text-amber-300">
+                {activeBookings[0].booking_code.replace(/\D/g, '').slice(-4) || '7492'}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => openTrackingModal(activeBookings[0])}
+              className="px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-500 hover:to-amber-400 text-stone-950 font-black text-xs shadow-lg flex items-center gap-2 transition-all transform hover:scale-105"
+            >
+              <span>⚡ Open Live Radar Tracking →</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 2. INTERACTIVE 1-CLICK QUICK BOOKING DOCK */}
       <div className="space-y-3">
@@ -399,6 +446,15 @@ export const CustomerDashboard: React.FC = () => {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => openTrackingModal(bk)}
+                        className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-400 text-stone-950 text-xs font-black shadow flex items-center gap-1.5 hover:from-amber-500 hover:to-yellow-500 transition-all"
+                      >
+                        <Zap className="w-3.5 h-3.5 fill-current" />
+                        <span>⚡ Live Arrival Tracker</span>
+                      </button>
+
                       {bk.worker_contact && (
                         <a
                           href={`tel:${bk.worker_contact}`}

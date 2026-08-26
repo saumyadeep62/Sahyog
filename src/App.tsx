@@ -18,11 +18,12 @@ import { AdminDashboard } from './components/dashboard/AdminDashboard';
 import { SahyogChatbot } from './components/common/SahyogChatbot';
 import { ChangePasswordModal } from './components/common/ChangePasswordModal';
 import { EditProfileModal } from './components/common/EditProfileModal';
+import { LiveOrderTrackingModal } from './components/booking/LiveOrderTrackingModal';
 import { ServiceCategory, Worker } from './lib/database.types';
 
 const MainAppContent: React.FC = () => {
   const { currentUser, currentRole } = useAuth();
-  const { openBookingFlow } = useMarketplace();
+  const { openBookingFlow, selectedBookingForTracking, closeTrackingModal } = useMarketplace();
 
   const [activeTab, setActiveTab] = useState<'home' | 'services' | 'dashboard' | 'auth'>('home');
   const [browserCategory, setBrowserCategory] = useState<ServiceCategory | null>(null);
@@ -111,6 +112,11 @@ const MainAppContent: React.FC = () => {
       <BookingFlow />
       <ChangePasswordModal />
       <EditProfileModal />
+      <LiveOrderTrackingModal
+        booking={selectedBookingForTracking}
+        isOpen={Boolean(selectedBookingForTracking)}
+        onClose={closeTrackingModal}
+      />
 
       {/* Sahyog Sahayak AI Chatbot */}
       <SahyogChatbot onNavigateTab={(tab: any) => setActiveTab(tab)} />

@@ -32,6 +32,7 @@ export const BookingFlow: React.FC = () => {
     workers,
     createBooking,
     openInvoiceModal,
+    openTrackingModal,
   } = useMarketplace();
   const { currentUser } = useAuth();
 
@@ -684,26 +685,75 @@ export const BookingFlow: React.FC = () => {
             </div>
           )}
 
-          {/* STEP 5: Confirmation Success */}
+          {/* STEP 5: Confirmation Success (Blinkit Style Live Arrival ETA) */}
           {currentStep === 5 && confirmedBooking && (
-            <div className="text-center py-6 space-y-4">
-              <div className="w-16 h-16 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto shadow-inner">
-                <CheckCircle2 className="w-10 h-10 text-emerald-600" />
+            <div className="text-center py-4 space-y-4 animate-in fade-in">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto shadow-inner">
+                <CheckCircle2 className="w-8 h-8 text-emerald-600" />
               </div>
 
               <div>
                 <h4 className="font-extrabold text-lg text-[#0C3B2E] font-['Outfit']">
-                  Booking Confirmed with Fair Wages!
+                  Booking Confirmed & Fair Wage Locked!
                 </h4>
-                <p className="text-xs text-stone-500 mt-1">
-                  Thank you for supporting community-owned labour cooperatives.
+                <p className="text-xs text-stone-500 mt-0.5">
+                  Artisan has received your job alert and is preparing standard toolkit.
                 </p>
               </div>
 
+              {/* BLINKIT STYLE ARRIVAL COUNTDOWN HERO CARD */}
+              <div className="bg-gradient-to-r from-[#0C3B2E] via-[#144537] to-[#0A261D] text-white p-4 sm:p-5 rounded-2xl shadow-xl text-left relative overflow-hidden border border-emerald-500/30">
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                    Blinkit Fast Dispatch
+                  </span>
+                  <span className="text-[11px] text-amber-300 font-mono font-bold">
+                    OTP: {confirmedBooking.booking_code.replace(/\D/g, '').slice(-4) || '7492'}
+                  </span>
+                </div>
+
+                <div className="flex items-baseline justify-between gap-2">
+                  <div>
+                    <span className="text-[10px] text-emerald-200 uppercase font-bold tracking-wider block">
+                      Estimated Arrival Time
+                    </span>
+                    <h3 className="text-2xl sm:text-3xl font-black font-['Outfit'] text-white flex items-center gap-1.5">
+                      <span className="text-amber-400">⚡</span> 14 MINS
+                    </h3>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[10px] text-stone-300 block">Assigned Artisan</span>
+                    <span className="text-xs sm:text-sm font-bold text-white">{confirmedBooking.worker_name}</span>
+                  </div>
+                </div>
+
+                {/* Pulsing Progress Line */}
+                <div className="w-full h-1.5 rounded-full bg-white/20 overflow-hidden relative my-2.5">
+                  <div className="h-full bg-gradient-to-r from-emerald-400 to-amber-300 w-2/3 animate-pulse" />
+                </div>
+
+                {/* 1-Tap Open Live Radar Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleClose();
+                    openTrackingModal(confirmedBooking);
+                  }}
+                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-500 hover:to-amber-400 text-stone-950 font-black text-xs shadow-lg flex items-center justify-center gap-2 transition-all transform hover:scale-[1.01]"
+                >
+                  <span>⚡ Track Artisan Arrival Live (Blinkit Radar) →</span>
+                </button>
+              </div>
+
+              {/* Artisan Details Mini Card */}
               <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200 text-left text-xs space-y-3">
                 <div className="flex items-center gap-3 bg-emerald-50/80 p-3 rounded-xl border border-emerald-200/80">
                   <img
-                    src={confirmedBooking.worker_avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80'}
+                    src={
+                      confirmedBooking.worker_avatar ||
+                      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80'
+                    }
                     alt={confirmedBooking.worker_name}
                     className="w-12 h-12 rounded-xl object-cover border-2 border-[#D4A373]"
                   />
@@ -747,7 +797,7 @@ export const BookingFlow: React.FC = () => {
                   onClick={() => openInvoiceModal(confirmedBooking)}
                   className="flex-1 py-2.5 rounded-xl border border-stone-300 text-xs font-semibold text-stone-700 hover:bg-stone-50 transition-colors"
                 >
-                  Download Cooperative Invoice
+                  Download Invoice
                 </button>
                 <button
                   type="button"

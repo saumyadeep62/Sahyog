@@ -53,6 +53,10 @@ interface MarketplaceContextType {
   openInvoiceModal: (booking: Booking) => void;
   closeInvoiceModal: () => void;
 
+  selectedBookingForTracking: Booking | null;
+  openTrackingModal: (booking: Booking) => void;
+  closeTrackingModal: () => void;
+
   isEmergencyModalOpen: boolean;
   openEmergencyModal: () => void;
   closeEmergencyModal: () => void;
@@ -140,10 +144,14 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // Modal states
   const [selectedWorkerForModal, setSelectedWorkerForModal] = useState<Worker | null>(null);
   const [selectedBookingForInvoice, setSelectedBookingForInvoice] = useState<Booking | null>(null);
+  const [selectedBookingForTracking, setSelectedBookingForTracking] = useState<Booking | null>(null);
   const [isEmergencyModalOpen, setIsEmergencyModalOpen] = useState(false);
   const [isBookingFlowOpen, setIsBookingFlowOpen] = useState(false);
   const [bookingTargetCategory, setBookingTargetCategory] = useState<ServiceCategory | null>(null);
   const [bookingTargetWorker, setBookingTargetWorker] = useState<Worker | null>(null);
+
+  const openTrackingModal = (booking: Booking) => setSelectedBookingForTracking(booking);
+  const closeTrackingModal = () => setSelectedBookingForTracking(null);
 
   // Sync to localStorage as local cache
   useEffect(() => {
@@ -742,6 +750,9 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         selectedBookingForInvoice,
         openInvoiceModal,
         closeInvoiceModal,
+        selectedBookingForTracking,
+        openTrackingModal,
+        closeTrackingModal,
         isEmergencyModalOpen,
         openEmergencyModal,
         closeEmergencyModal,

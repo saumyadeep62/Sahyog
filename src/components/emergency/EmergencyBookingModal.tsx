@@ -17,8 +17,15 @@ import { useAuth } from '../../context/AuthContext';
 import { Booking } from '../../lib/database.types';
 
 export const EmergencyBookingModal: React.FC = () => {
-  const { isEmergencyModalOpen, closeEmergencyModal, categories, workers, createEmergencyBooking, openInvoiceModal } =
-    useMarketplace();
+  const {
+    isEmergencyModalOpen,
+    closeEmergencyModal,
+    categories,
+    workers,
+    createEmergencyBooking,
+    openInvoiceModal,
+    openTrackingModal,
+  } = useMarketplace();
   const { currentUser } = useAuth();
 
   const [step, setStep] = useState<'details' | 'scanning' | 'dispatched'>('details');
@@ -234,6 +241,18 @@ export const EmergencyBookingModal: React.FC = () => {
                     <span className="font-bold text-[#0C3B2E]">₹{dispatchedBooking.price_breakdown.total_amount}</span>
                   </div>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    closeEmergencyModal();
+                    openTrackingModal(dispatchedBooking);
+                  }}
+                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-500 hover:to-amber-400 text-stone-950 font-black text-xs shadow-md flex items-center justify-center gap-1.5 transition-all"
+                >
+                  <Zap className="w-3.5 h-3.5 fill-current" />
+                  <span>⚡ Track Emergency Rapid Arrival Live (Blinkit Radar) →</span>
+                </button>
               </div>
 
               <div className="flex gap-2">
@@ -249,7 +268,7 @@ export const EmergencyBookingModal: React.FC = () => {
                   onClick={closeEmergencyModal}
                   className="flex-1 py-2.5 rounded-lg bg-[#0C3B2E] text-white text-xs font-bold shadow-md hover:bg-[#164E3F] transition-colors"
                 >
-                  Done & Track
+                  Close
                 </button>
               </div>
             </div>
