@@ -54,17 +54,32 @@ export const BookingFlow: React.FC = () => {
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   useEffect(() => {
-    if (bookingTargetCategory) {
-      setSelectedCategory(bookingTargetCategory);
-      if (bookingTargetCategory.popular_tasks?.length) {
-        setSelectedTask(bookingTargetCategory.popular_tasks[0]);
+    if (isBookingFlowOpen) {
+      setCurrentStep(1);
+      setConfirmedBooking(null);
+      setIsProcessingPayment(false);
+      const cat = bookingTargetCategory || categories[0];
+      if (cat) {
+        setSelectedCategory(cat);
+        if (cat.popular_tasks?.length) {
+          setSelectedTask(cat.popular_tasks[0]);
+        }
       }
+      setSelectedWorker(bookingTargetWorker || null);
+      setAutoMatch(!bookingTargetWorker);
+      setIsEmergency(false);
+      setDescription('');
+      setTimeSlot('10:00 AM - 12:00 PM');
+      setPaymentMethod('UPI');
     }
-    if (bookingTargetWorker) {
-      setSelectedWorker(bookingTargetWorker);
-      setAutoMatch(false);
-    }
-  }, [bookingTargetCategory, bookingTargetWorker, isBookingFlowOpen]);
+  }, [isBookingFlowOpen, bookingTargetCategory, bookingTargetWorker, categories]);
+
+  const handleClose = () => {
+    setCurrentStep(1);
+    setConfirmedBooking(null);
+    setIsProcessingPayment(false);
+    closeBookingFlow();
+  };
 
   if (!isBookingFlowOpen) return null;
 
@@ -170,7 +185,7 @@ export const BookingFlow: React.FC = () => {
               </h3>
             </div>
             <button
-              onClick={closeBookingFlow}
+              onClick={handleClose}
               className="p-1 rounded-lg text-stone-300 hover:text-white hover:bg-[#164E3F] transition-colors"
             >
               <X className="w-5 h-5" />
@@ -522,7 +537,7 @@ export const BookingFlow: React.FC = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={closeBookingFlow}
+                  onClick={handleClose}
                   className="flex-1 py-2.5 rounded-xl bg-[#0C3B2E] text-white text-xs font-bold shadow-md hover:bg-[#164E3F] transition-colors"
                 >
                   View My Bookings
