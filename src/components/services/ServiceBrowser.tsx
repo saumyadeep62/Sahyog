@@ -20,11 +20,13 @@ import { TiltCard } from '../3d/TiltCard';
 interface ServiceBrowserProps {
   initialCategory?: ServiceCategory | null;
   onSelectWorkerForBooking: (worker: Worker) => void;
+  onNavigateHome?: () => void;
 }
 
 export const ServiceBrowser: React.FC<ServiceBrowserProps> = ({
   initialCategory,
   onSelectWorkerForBooking,
+  onNavigateHome,
 }) => {
   const { categories, cooperatives, workers, openWorkerModal, openBookingFlow, openEmergencyModal } =
     useMarketplace();
@@ -70,15 +72,40 @@ export const ServiceBrowser: React.FC<ServiceBrowserProps> = ({
   const activeCategory = categories.find((c) => c.id === selectedCategoryId);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8 animate-in fade-in">
+      {/* Navigation Breadcrumb Bar with Back to Home Button */}
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white px-4 py-2.5 rounded-2xl border border-stone-200 shadow-xs text-xs font-semibold">
+        <div className="flex items-center gap-2 text-stone-500">
+          <button
+            onClick={onNavigateHome}
+            className="text-[#0C3B2E] hover:underline font-bold flex items-center gap-1.5 px-2.5 py-1 rounded-xl hover:bg-emerald-50 transition-colors"
+          >
+            <span>← Back to Home</span>
+          </button>
+          <span>/</span>
+          <span className="text-stone-400">Trade Directory</span>
+          {activeCategory && (
+            <>
+              <span>/</span>
+              <span className="text-[#0C3B2E] font-bold">{activeCategory.name}</span>
+            </>
+          )}
+        </div>
+
+        <div className="text-[11px] text-emerald-800 font-bold bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span>{filteredWorkers.length} Verified Cooperative Artisans Available</span>
+        </div>
+      </div>
+
       {/* Header & Title */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-200 pb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-200 pb-5">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#0C3B2E] text-[#D4A373] font-bold">
+            <span className="text-[10px] sm:text-xs px-2.5 py-0.5 rounded-full bg-[#0C3B2E] text-[#D4A373] font-bold uppercase tracking-wider">
               Cooperative Directory
             </span>
-            <span className="text-xs text-stone-500 font-medium">100% Certified Members</span>
+            <span className="text-xs text-stone-500 font-medium">100% Floor Wage Guaranteed</span>
           </div>
           <h1 className="text-2xl sm:text-4xl font-extrabold text-[#0C3B2E] font-['Outfit'] mt-1">
             {activeCategory ? activeCategory.name : 'Certified Cooperative Artisans & Services'}
@@ -88,13 +115,15 @@ export const ServiceBrowser: React.FC<ServiceBrowserProps> = ({
           </p>
         </div>
 
-        <button
-          onClick={openEmergencyModal}
-          className="self-start md:self-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 text-white font-bold text-xs shadow-md flex items-center gap-2 animate-pulse"
-        >
-          <Zap className="w-4 h-4 text-amber-300 fill-amber-300" />
-          <span>Emergency Fast-Track</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={openEmergencyModal}
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 text-white font-black text-xs shadow-md flex items-center gap-2 animate-pulse"
+          >
+            <Zap className="w-4 h-4 text-amber-300 fill-amber-300" />
+            <span>Emergency Fast-Track</span>
+          </button>
+        </div>
       </div>
 
       {/* Filter Toolbar */}

@@ -71,6 +71,7 @@ const MainAppContent: React.FC = () => {
               <ServiceBrowser
                 initialCategory={browserCategory}
                 onSelectWorkerForBooking={handleSelectWorkerForBooking}
+                onNavigateHome={() => setActiveTab('home')}
               />
             )}
 
