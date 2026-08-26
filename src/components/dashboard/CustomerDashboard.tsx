@@ -32,7 +32,7 @@ import { GoogleMapViewer } from '../maps/GoogleMapViewer';
 import { TiltCard } from '../3d/TiltCard';
 
 export const CustomerDashboard: React.FC = () => {
-  const { currentUser, openChangePasswordModal } = useAuth();
+  const { currentUser, openChangePasswordModal, openEditProfileModal } = useAuth();
   const {
     categories,
     bookings,
@@ -167,13 +167,21 @@ export const CustomerDashboard: React.FC = () => {
         </div>
 
         {/* Action Toolbar */}
-        <div className="flex flex-wrap items-center gap-3 relative z-10">
+        <div className="flex flex-wrap items-center gap-2.5 relative z-10">
+          <button
+            onClick={openEditProfileModal}
+            className="px-3.5 py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold shadow flex items-center gap-1.5 transition-colors"
+            title="Update Profile Details & Photo"
+          >
+            <span>✏️ Edit Profile & Photo</span>
+          </button>
+
           <button
             onClick={openChangePasswordModal}
             className="px-3.5 py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold shadow flex items-center gap-1.5 transition-colors"
             title="Update Password"
           >
-            <span>🔑 Change Password</span>
+            <span>🔑 Password</span>
           </button>
 
           <button

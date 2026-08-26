@@ -11,6 +11,7 @@ interface AuthContextType {
   signUpWithSupabase: (email: string, password: string, name: string, role: UserRole, contact?: string) => Promise<{ error?: string; message?: string }>;
   signInWithOtp: (email: string) => Promise<{ error?: string; message?: string }>;
   updateUserPassword: (newPassword: string) => Promise<{ error?: string; message?: string }>;
+  updateUserProfile: (updates: { name?: string; contact?: string; avatar_url?: string; area?: string; city?: string; bio?: string }) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   isAuthModalOpen: boolean;
   openAuthModal: (initialMode?: 'signin' | 'signup') => void;
@@ -19,6 +20,9 @@ interface AuthContextType {
   isChangePasswordOpen: boolean;
   openChangePasswordModal: () => void;
   closeChangePasswordModal: () => void;
+  isEditProfileOpen: boolean;
+  openEditProfileModal: () => void;
+  closeEditProfileModal: () => void;
   loadingAuth: boolean;
 }
 
@@ -340,6 +344,56 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const openChangePasswordModal = () => setIsChangePasswordOpen(true);
   const closeChangePasswordModal = () => setIsChangePasswordOpen(false);
 
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  const openEditProfileModal = () => setIsEditProfileOpen(true);
+  const closeEditProfileModal = () => setIsEditProfileOpen(false);
+
+  const updateUserProfile = async (updates: {
+    name?: string;
+    contact?: string;
+    avatar_url?: string;
+    area?: string;
+    city?: string;
+    bio?: string;
+  }): Promise<{ success: boolean; error?: string }> => {
+    if (!currentUser) return { success: false, error: 'No active session' };
+
+    setLoadingAuth(true);
+    const updatedProfile: UserProfile = {
+      ...currentUser,
+      name: updates.name?.trim() || currentUser.name,
+      contact: updates.contact?.trim() || currentUser.contact,
+      avatar_url: updates.avatar_url || currentUser.avatar_url,
+    };
+
+    setCurrentUser(updatedProfile);
+    localStorage.setItem('sahyog_user', JSON.stringify(updatedProfile));
+
+    try {
+      await supabase
+        .from('users')
+        .update({
+          name: updatedProfile.name,
+          contact: updatedProfile.contact,
+          avatar_url: updatedProfile.avatar_url,
+        })
+        .eq('id', currentUser.id);
+
+      await supabase.auth.updateUser({
+        data: {
+          name: updatedProfile.name,
+          contact: updatedProfile.contact,
+          avatar_url: updatedProfile.avatar_url,
+        },
+      });
+    } catch {
+      // ignore
+    }
+
+    setLoadingAuth(false);
+    return { success: true };
+  };
+
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
@@ -360,6 +414,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signUpWithSupabase,
         signInWithOtp,
         updateUserPassword,
+        updateUserProfile,
         signOut,
         isAuthModalOpen,
         openAuthModal,
@@ -368,6 +423,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isChangePasswordOpen,
         openChangePasswordModal,
         closeChangePasswordModal,
+        isEditProfileOpen,
+        openEditProfileModal,
+        closeEditProfileModal,
         loadingAuth,
       }}
     >

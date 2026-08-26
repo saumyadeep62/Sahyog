@@ -145,15 +145,42 @@ export const AuthModal: React.FC = () => {
         {/* Modal Body */}
         <div className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
           {errorMsg && (
-            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs">
-              <span className="font-bold">Error:</span> {errorMsg}
+            <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs space-y-2 animate-in fade-in">
+              <div className="flex items-start gap-2">
+                <span className="font-bold flex-shrink-0">⚠️ Authentication Notice:</span>
+                <span>{errorMsg}</span>
+              </div>
+              {mode === 'signin' && (
+                <div className="pt-2 border-t border-rose-200/70 flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-[11px] text-rose-700 font-medium">Wrong password or forgot credentials?</span>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!email.trim()) {
+                        setErrorMsg('Please enter your email address in the field below first.');
+                        return;
+                      }
+                      const res = await signInWithOtp(email.trim());
+                      if (res.error) {
+                        setErrorMsg(res.error);
+                      } else {
+                        setSuccessMsg(`OTP verification reset link dispatched to ${email}! Check your inbox.`);
+                        setErrorMsg('');
+                      }
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-white border border-rose-300 text-[#0C3B2E] font-bold text-[11px] hover:bg-rose-100/50 shadow-xs transition-colors"
+                  >
+                    🔑 Verify via OTP / Reset Link
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
           {successMsg && (
-            <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2">
+            <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2 animate-in fade-in">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-              <span>{successMsg}</span>
+              <span className="font-medium">{successMsg}</span>
             </div>
           )}
 

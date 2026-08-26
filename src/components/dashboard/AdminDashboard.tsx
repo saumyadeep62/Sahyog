@@ -61,7 +61,7 @@ interface CustomerRecord {
 }
 
 export const AdminDashboard: React.FC = () => {
-  const { currentUser, openChangePasswordModal } = useAuth();
+  const { currentUser, openChangePasswordModal, openEditProfileModal } = useAuth();
   const { t } = useLanguage();
   const {
     categories,
@@ -327,14 +327,22 @@ export const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Top Summary Stat Pills & Actions */}
-        <div className="flex flex-wrap items-center gap-3 relative z-10">
+        <div className="flex flex-wrap items-center gap-2.5 relative z-10">
+          <button
+            onClick={openEditProfileModal}
+            className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold shadow flex items-center gap-1.5 transition-colors"
+            title="Update Details & Profile Photo"
+          >
+            <span>✏️ Edit Profile</span>
+          </button>
+
           <button
             onClick={openChangePasswordModal}
             className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold shadow flex items-center gap-1.5 transition-colors"
             title="Update Admin Account Password"
           >
             <Lock className="w-3.5 h-3.5 text-teal-300" />
-            <span>Change Password</span>
+            <span>Password</span>
           </button>
 
           <div className="bg-[#0A0F1D]/80 px-4 py-2.5 rounded-2xl border border-teal-700/60 shadow-inner text-right">

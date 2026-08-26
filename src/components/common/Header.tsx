@@ -41,6 +41,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
     signOut,
     openAuthModal,
     openChangePasswordModal,
+    openEditProfileModal,
   } = useAuth();
   const { language, setLanguage, t } = useLanguage();
   const { notifications, markNotificationRead, openEmergencyModal } = useMarketplace();
@@ -359,6 +360,16 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
                   <button
                     onClick={() => {
                       setIsUserMenuOpen(false);
+                      openEditProfileModal();
+                    }}
+                    className="w-full text-left px-4 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-50 flex items-center gap-1.5 transition-colors"
+                  >
+                    <User className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Edit Profile & Photo</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
                       openChangePasswordModal();
                     }}
                     className="w-full text-left px-4 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-50 flex items-center gap-1.5 transition-colors"
@@ -422,13 +433,23 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 pt-1 border-t border-white/10">
+              <div className="grid grid-cols-3 gap-2 pt-1 border-t border-white/10">
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    openEditProfileModal();
+                  }}
+                  className="px-2 py-1.5 rounded-lg bg-white/10 text-white text-[10px] font-bold flex items-center justify-center gap-1 hover:bg-white/20"
+                >
+                  <User className="w-3 h-3 text-emerald-400" />
+                  <span>Profile</span>
+                </button>
                 <button
                   onClick={() => {
                     setIsMenuOpen(false);
                     openChangePasswordModal();
                   }}
-                  className="px-2.5 py-1.5 rounded-lg bg-white/10 text-white text-[11px] font-bold flex items-center justify-center gap-1 hover:bg-white/20"
+                  className="px-2 py-1.5 rounded-lg bg-white/10 text-white text-[10px] font-bold flex items-center justify-center gap-1 hover:bg-white/20"
                 >
                   <KeyRound className="w-3 h-3 text-amber-400" />
                   <span>Password</span>
@@ -439,7 +460,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
                     await signOut();
                     setActiveTab('home');
                   }}
-                  className="px-2.5 py-1.5 rounded-lg bg-red-900/40 text-red-300 text-[11px] font-bold flex items-center justify-center gap-1 hover:bg-red-900/60"
+                  className="px-2 py-1.5 rounded-lg bg-red-900/40 text-red-300 text-[10px] font-bold flex items-center justify-center gap-1 hover:bg-red-900/60"
                 >
                   <LogOut className="w-3 h-3" />
                   <span>Sign Out</span>

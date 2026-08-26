@@ -35,7 +35,7 @@ import { BookingStatus, Worker } from '../../lib/database.types';
 import { GoogleMapViewer } from '../maps/GoogleMapViewer';
 
 export const WorkerDashboard: React.FC = () => {
-  const { currentUser, openChangePasswordModal } = useAuth();
+  const { currentUser, openChangePasswordModal, openEditProfileModal } = useAuth();
   const { t } = useLanguage();
   const {
     workers,
@@ -235,14 +235,22 @@ export const WorkerDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Top Actions: Change Password & Duty Switcher */}
-        <div className="flex flex-wrap items-center gap-3">
+        {/* Top Actions: Edit Profile, Change Password & Duty Switcher */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            onClick={openEditProfileModal}
+            className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold shadow flex items-center gap-1.5 transition-colors"
+            title="Update Details & Profile Photo"
+          >
+            <span>✏️ Edit Profile & Photo</span>
+          </button>
+
           <button
             onClick={openChangePasswordModal}
             className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold shadow flex items-center gap-1.5 transition-colors"
             title="Update Password"
           >
-            <span>🔑 Change Password</span>
+            <span>🔑 Password</span>
           </button>
 
           {/* Online / Offline Duty Switcher */}
