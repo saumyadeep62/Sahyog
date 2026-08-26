@@ -42,6 +42,11 @@ import {
   HeartHandshake,
   Activity,
   Award,
+  Edit3,
+  UserCog,
+  Mail,
+  Save,
+  RefreshCw,
 } from 'lucide-react';
 import { useMarketplace } from '../../context/MarketplaceContext';
 import { useAuth } from '../../context/AuthContext';
@@ -79,6 +84,7 @@ export const AdminDashboard: React.FC = () => {
     welfareList,
     verifyWorkerKyc,
     addWorker,
+    updateWorker,
     resolveGrievance,
     openInvoiceModal,
     refreshData,
@@ -114,6 +120,34 @@ export const AdminDashboard: React.FC = () => {
   const [editPasswordModalUser, setEditPasswordModalUser] = useState<{ id: string; name: string; email: string; role: string; currentPassword: string } | null>(null);
   const [overridePasswordInput, setOverridePasswordInput] = useState('');
   const [overrideSuccessMsg, setOverrideSuccessMsg] = useState('');
+
+  // Master Edit Account & Credentials Modal State
+  const [masterEditForm, setMasterEditForm] = useState<{
+    id: string;
+    type: 'worker' | 'customer' | 'admin';
+    originalEmail: string;
+    name: string;
+    email: string;
+    password: string;
+    contact: string;
+    avatar_url: string;
+    status: string;
+    address?: string;
+    city?: string;
+    member_type?: string;
+    skills?: string;
+    hourly_rate?: number;
+    base_visit_fee?: number;
+    experience_years?: number;
+    area?: string;
+    bio?: string;
+    cooperative_id?: string;
+    cooperative_name?: string;
+    kyc_verified?: boolean;
+    availability?: 'online' | 'busy' | 'offline';
+  } | null>(null);
+  const [masterEditSuccessMsg, setMasterEditSuccessMsg] = useState('');
+  const [isEditPasswordMasked, setIsEditPasswordMasked] = useState(false);
 
   // Search & Filter States
   const [artisanSearch, setArtisanSearch] = useState('');
@@ -205,79 +239,93 @@ export const AdminDashboard: React.FC = () => {
     welfare_fund_pool: 2850000,
   };
 
-  // Compile Comprehensive Customer Base
-  const customerBase: CustomerRecord[] = [
-    {
-      id: 'cust-1',
-      name: 'Saumyadeep Sutradhar',
-      email: 'saumyadeep.sutradhar@example.com',
-      contact: '+91 98201 45678',
-      address: 'Flat 402, Sea Crest Apartments, Bandra West',
-      city: 'Mumbai',
-      member_type: 'Solidarity Circle Member',
-      total_bookings: 6,
-      total_spend: 3450,
-      joined_date: '2026-01-10',
-      avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-      status: 'active',
-    },
-    {
-      id: 'cust-2',
-      name: 'Pooja Bhattacharya',
-      email: 'pooja.b@example.com',
-      contact: '+91 98331 99012',
-      address: '12-B, Green Meadows, Dadar Central',
-      city: 'Mumbai',
-      member_type: 'Resident Member',
-      total_bookings: 4,
-      total_spend: 2180,
-      joined_date: '2026-01-15',
-      avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-      status: 'active',
-    },
-    {
-      id: 'cust-3',
-      name: 'Dr. Ananya Sen',
-      email: 'ananya.sen@example.com',
-      contact: '+91 98711 23456',
-      address: 'B-704, Royal Palms, Goregaon East',
-      city: 'Mumbai',
-      member_type: 'Institutional Co-op Buyer',
-      total_bookings: 9,
-      total_spend: 6850,
-      joined_date: '2026-01-02',
-      avatar_url: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
-      status: 'active',
-    },
-    {
-      id: 'cust-4',
-      name: 'Karan Mehra',
-      email: 'karan.mehra@example.com',
-      contact: '+91 98110 55432',
-      address: 'Plot 88, Vasant Vihar, Thane West',
-      city: 'Mumbai',
-      member_type: 'Resident Member',
-      total_bookings: 3,
-      total_spend: 1650,
-      joined_date: '2026-01-20',
-      avatar_url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
-      status: 'active',
-    },
-    {
-      id: 'cust-5',
-      name: 'Sunita Narang',
-      email: 'sunita.narang@example.com',
-      contact: '+91 97188 66789',
-      address: 'Flat 501, Silver Arch, Khar West',
-      city: 'Mumbai',
-      member_type: 'Solidarity Circle Member',
-      total_bookings: 5,
-      total_spend: 2900,
-      joined_date: '2026-01-18',
-      avatar_url: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
-      status: 'active',
-    },
-  ];
+  // Compile Comprehensive Customer Base with persistence
+  const [customerRecords, setCustomerRecords] = useState<CustomerRecord[]>(() => {
+    const saved = localStorage.getItem('sahyog_customer_records');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {}
+    }
+    return [
+      {
+        id: 'cust-1',
+        name: 'Saumyadeep Sutradhar',
+        email: 'saumyadeep.sutradhar@example.com',
+        contact: '+91 98201 45678',
+        address: 'Flat 402, Sea Crest Apartments, Bandra West',
+        city: 'Mumbai',
+        member_type: 'Solidarity Circle Member',
+        total_bookings: 6,
+        total_spend: 3450,
+        joined_date: '2026-01-10',
+        avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+        status: 'active',
+      },
+      {
+        id: 'cust-2',
+        name: 'Pooja Bhattacharya',
+        email: 'pooja.b@example.com',
+        contact: '+91 98331 99012',
+        address: '12-B, Green Meadows, Dadar Central',
+        city: 'Mumbai',
+        member_type: 'Resident Member',
+        total_bookings: 4,
+        total_spend: 2180,
+        joined_date: '2026-01-15',
+        avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+        status: 'active',
+      },
+      {
+        id: 'cust-3',
+        name: 'Dr. Ananya Sen',
+        email: 'ananya.sen@example.com',
+        contact: '+91 98711 23456',
+        address: 'B-704, Royal Palms, Goregaon East',
+        city: 'Mumbai',
+        member_type: 'Institutional Co-op Buyer',
+        total_bookings: 9,
+        total_spend: 6850,
+        joined_date: '2026-01-02',
+        avatar_url: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+        status: 'active',
+      },
+      {
+        id: 'cust-4',
+        name: 'Karan Mehra',
+        email: 'karan.mehra@example.com',
+        contact: '+91 98110 55432',
+        address: 'Plot 88, Vasant Vihar, Thane West',
+        city: 'Mumbai',
+        member_type: 'Resident Member',
+        total_bookings: 3,
+        total_spend: 1650,
+        joined_date: '2026-01-20',
+        avatar_url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
+        status: 'active',
+      },
+      {
+        id: 'cust-5',
+        name: 'Sunita Narang',
+        email: 'sunita.narang@example.com',
+        contact: '+91 97188 66789',
+        address: 'Flat 501, Silver Arch, Khar West',
+        city: 'Mumbai',
+        member_type: 'Solidarity Circle Member',
+        total_bookings: 5,
+        total_spend: 2900,
+        joined_date: '2026-01-18',
+        avatar_url: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
+        status: 'active',
+      },
+    ];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('sahyog_customer_records', JSON.stringify(customerRecords));
+  }, [customerRecords]);
+
+  const customerBase = customerRecords;
 
   // Financial Calculations
   const totalWagesDistributed = bookings.reduce(
@@ -306,7 +354,7 @@ export const AdminDashboard: React.FC = () => {
   });
 
   // Filtered Customers
-  const filteredCustomers = customerBase.filter(
+  const filteredCustomers = customerRecords.filter(
     (c) =>
       c.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
       c.email.toLowerCase().includes(customerSearch.toLowerCase()) ||
@@ -344,7 +392,7 @@ export const AdminDashboard: React.FC = () => {
       password: passwordOverrides['admin@gmail.com'] || 'admin123',
     },
     // 2. Household Customers
-    ...customerBase.map((c) => ({
+    ...customerRecords.map((c) => ({
       id: c.id,
       name: c.name,
       email: c.email,
@@ -412,6 +460,149 @@ export const AdminDashboard: React.FC = () => {
       setEditPasswordModalUser(null);
       setOverridePasswordInput('');
     }, 1500);
+  };
+
+  // MASTER EDIT ACCOUNT & CREDENTIALS HANDLERS
+  const handleOpenEditWorker = (w: Worker) => {
+    const email = `${w.full_name.toLowerCase().replace(/\s+/g, '.')}@sahyog.coop`;
+    setMasterEditForm({
+      id: w.id,
+      type: 'worker',
+      originalEmail: email,
+      name: w.full_name,
+      email: email,
+      password: passwordOverrides[email] || 'worker@123',
+      contact: '+91 98199 87654',
+      avatar_url: w.avatar_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80',
+      status: w.kyc_verified ? 'active' : 'pending',
+      skills: w.skills.join(', '),
+      hourly_rate: w.hourly_rate,
+      base_visit_fee: w.base_visit_fee,
+      experience_years: w.experience_years,
+      area: w.location?.area || 'Bandra West',
+      city: w.location?.city || 'Mumbai',
+      bio: w.bio || '',
+      cooperative_id: w.cooperative_id,
+      cooperative_name: w.cooperative_name || 'Mumbai Shramik Sahakari',
+      kyc_verified: w.kyc_verified,
+      availability: w.availability,
+    });
+  };
+
+  const handleOpenEditCustomer = (c: CustomerRecord) => {
+    setMasterEditForm({
+      id: c.id,
+      type: 'customer',
+      originalEmail: c.email,
+      name: c.name,
+      email: c.email,
+      password: passwordOverrides[c.email] || 'customer@123',
+      contact: c.contact,
+      avatar_url: c.avatar_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80',
+      status: c.status,
+      address: c.address,
+      city: c.city,
+      member_type: c.member_type,
+    });
+  };
+
+  const handleOpenEditCredential = (acc: typeof allAccountCredentials[0]) => {
+    if (acc.role === 'worker') {
+      const foundWorker = localWorkers.find((w) => w.id === acc.id) || localWorkers.find((w) => w.full_name === acc.name);
+      if (foundWorker) {
+        handleOpenEditWorker(foundWorker);
+        return;
+      }
+    }
+    if (acc.role === 'customer') {
+      const foundCustomer = customerRecords.find((c) => c.id === acc.id || c.email === acc.email);
+      if (foundCustomer) {
+        handleOpenEditCustomer(foundCustomer);
+        return;
+      }
+    }
+    setMasterEditForm({
+      id: acc.id,
+      type: acc.role as 'worker' | 'customer' | 'admin',
+      originalEmail: acc.email,
+      name: acc.name,
+      email: acc.email,
+      password: acc.password,
+      contact: acc.contact,
+      avatar_url: acc.avatar_url || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&auto=format&fit=crop&q=80',
+      status: acc.status,
+    });
+  };
+
+  const handleSaveMasterEditAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!masterEditForm) return;
+
+    // 1. Update Password & Email Overrides
+    const newPasswordMap = { ...passwordOverrides, [masterEditForm.email]: masterEditForm.password };
+    if (masterEditForm.originalEmail !== masterEditForm.email) {
+      delete newPasswordMap[masterEditForm.originalEmail];
+    }
+    setPasswordOverrides(newPasswordMap);
+    localStorage.setItem('sahyog_account_passwords', JSON.stringify(newPasswordMap));
+
+    // 2. If Worker, update Worker record
+    if (masterEditForm.type === 'worker') {
+      const skillsArray = masterEditForm.skills
+        ? masterEditForm.skills.split(',').map((s) => s.trim()).filter(Boolean)
+        : ['Certified Artisan'];
+
+      const workerUpdates: Partial<Worker> = {
+        full_name: masterEditForm.name,
+        skills: skillsArray,
+        hourly_rate: Number(masterEditForm.hourly_rate) || 280,
+        base_visit_fee: Number(masterEditForm.base_visit_fee) || 150,
+        experience_years: Number(masterEditForm.experience_years) || 3,
+        avatar_url: masterEditForm.avatar_url,
+        bio: masterEditForm.bio,
+        availability: masterEditForm.availability || 'online',
+        kyc_verified: Boolean(masterEditForm.kyc_verified),
+        police_verified: Boolean(masterEditForm.kyc_verified),
+        location: {
+          lat: 19.0596,
+          lng: 72.8295,
+          area: masterEditForm.area || 'Bandra West',
+          city: masterEditForm.city || 'Mumbai',
+        },
+      };
+
+      setLocalWorkers((prev) =>
+        prev.map((w) => (w.id === masterEditForm.id ? { ...w, ...workerUpdates } : w))
+      );
+      await updateWorker(masterEditForm.id, workerUpdates);
+    }
+
+    // 3. If Customer, update Customer record
+    if (masterEditForm.type === 'customer') {
+      setCustomerRecords((prev) =>
+        prev.map((c) =>
+          c.id === masterEditForm.id
+            ? {
+                ...c,
+                name: masterEditForm.name,
+                email: masterEditForm.email,
+                contact: masterEditForm.contact,
+                address: masterEditForm.address || c.address,
+                city: masterEditForm.city || c.city,
+                member_type: masterEditForm.member_type || c.member_type,
+                avatar_url: masterEditForm.avatar_url,
+                status: (masterEditForm.status as 'active' | 'suspended') || 'active',
+              }
+            : c
+        )
+      );
+    }
+
+    setMasterEditSuccessMsg(`✓ Successfully updated ${masterEditForm.name}'s profile, email, and password!`);
+    setTimeout(() => {
+      setMasterEditSuccessMsg('');
+      setMasterEditForm(null);
+    }, 1200);
   };
 
   const handleImpersonateUser = (acc: typeof allAccountCredentials[0]) => {
@@ -811,16 +1002,27 @@ export const AdminDashboard: React.FC = () => {
                       </td>
 
                       <td className="p-4 text-right">
-                        <button
-                          onClick={() => verifyWorkerKyc(w.id, !w.kyc_verified)}
-                          className={`px-3 py-1.5 rounded-xl font-bold text-[11px] transition-all ${
-                            w.kyc_verified
-                              ? 'bg-stone-100 hover:bg-red-50 text-stone-600 hover:text-red-600 border border-stone-200'
-                              : 'bg-teal-600 hover:bg-teal-700 text-white shadow-sm'
-                          }`}
-                        >
-                          {w.kyc_verified ? 'Revoke KYC' : 'Approve KYC ✓'}
-                        </button>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditWorker(w)}
+                            className="px-2.5 py-1.5 rounded-xl border border-stone-300 bg-white hover:bg-stone-50 text-stone-700 font-bold text-[11px] shadow-xs flex items-center gap-1 transition-colors"
+                            title="Edit artisan details, email & password"
+                          >
+                            <Edit3 className="w-3 h-3 text-teal-600" />
+                            <span>Edit</span>
+                          </button>
+                          <button
+                            onClick={() => verifyWorkerKyc(w.id, !w.kyc_verified)}
+                            className={`px-2.5 py-1.5 rounded-xl font-bold text-[11px] transition-all ${
+                              w.kyc_verified
+                                ? 'bg-stone-100 hover:bg-red-50 text-stone-600 hover:text-red-600 border border-stone-200'
+                                : 'bg-teal-600 hover:bg-teal-700 text-white shadow-sm'
+                            }`}
+                          >
+                            {w.kyc_verified ? 'Revoke KYC' : 'Approve KYC ✓'}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -862,6 +1064,7 @@ export const AdminDashboard: React.FC = () => {
                     <th className="p-4">Total Services</th>
                     <th className="p-4">Wages Paid to Artisans</th>
                     <th className="p-4">Member Since</th>
+                    <th className="p-4 text-right">Admin Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-stone-100">
@@ -913,6 +1116,18 @@ export const AdminDashboard: React.FC = () => {
 
                       <td className="p-4 font-mono text-stone-500">
                         {c.joined_date}
+                      </td>
+
+                      <td className="p-4 text-right">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditCustomer(c)}
+                          className="px-3 py-1.5 rounded-xl border border-stone-300 bg-white hover:bg-stone-50 text-stone-700 font-bold text-[11px] shadow-xs inline-flex items-center gap-1 transition-colors"
+                          title="Edit customer profile, email & password"
+                        >
+                          <Edit3 className="w-3 h-3 text-cyan-600" />
+                          <span>Edit Profile</span>
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -1101,6 +1316,16 @@ export const AdminDashboard: React.FC = () => {
                         {/* Action Controls */}
                         <td className="p-4 text-right">
                           <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEditCredential(acc)}
+                              className="px-2.5 py-1.5 rounded-xl border border-teal-300 bg-teal-50 hover:bg-teal-100 text-teal-900 font-bold text-[11px] shadow-xs flex items-center gap-1 transition-colors"
+                              title="Edit all user details, email and password"
+                            >
+                              <Edit3 className="w-3 h-3 text-teal-700" />
+                              <span>Edit Details</span>
+                            </button>
+
                             <button
                               type="button"
                               onClick={() => {
@@ -1701,6 +1926,392 @@ export const AdminDashboard: React.FC = () => {
                   className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-black text-xs shadow-md flex items-center justify-center gap-1.5"
                 >
                   <span>✓ Save & Override</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 11. MASTER MODAL: EDIT CUSTOMER / ARTISAN / ADMIN DETAILS & CREDENTIALS */}
+      {masterEditForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-md animate-in fade-in">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full overflow-hidden border border-teal-200 animate-in zoom-in-95 flex flex-col max-h-[92vh]">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#0D9488] px-6 py-5 text-white flex items-center justify-between flex-shrink-0">
+              <div className="flex items-center gap-3.5">
+                <div className="p-2.5 rounded-2xl bg-teal-400/20 text-teal-300 border border-teal-400/30">
+                  <UserCog className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base sm:text-lg font-['Outfit'] flex items-center gap-2">
+                    <span>
+                      Edit{' '}
+                      {masterEditForm.type === 'worker'
+                        ? 'Artisan Profile'
+                        : masterEditForm.type === 'customer'
+                        ? 'Customer Profile'
+                        : 'Admin Profile'}{' '}
+                      & Credentials
+                    </span>
+                    <span className="text-[10px] bg-teal-400/20 text-teal-300 px-2 py-0.5 rounded-full font-bold uppercase border border-teal-400/30">
+                      {masterEditForm.type}
+                    </span>
+                  </h3>
+                  <p className="text-xs text-teal-200">
+                    Master Super Admin control: edit full identity, registered email, and access password.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMasterEditForm(null)}
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-stone-300 hover:text-white flex items-center justify-center transition-colors text-xs"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Form */}
+            <form
+              onSubmit={handleSaveMasterEditAccount}
+              className="p-5 sm:p-6 overflow-y-auto space-y-5 text-xs text-stone-700 flex-1"
+            >
+              {masterEditSuccessMsg && (
+                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 text-xs flex items-center gap-2 animate-in fade-in">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                  <span className="font-bold">{masterEditSuccessMsg}</span>
+                </div>
+              )}
+
+              {/* 1. PHOTO & AVATAR EDIT SECTION */}
+              <div className="p-4 bg-stone-50 rounded-2xl border border-stone-200 space-y-3">
+                <label className="block text-xs font-bold text-stone-900">Profile Photo & Avatar</label>
+                <div className="flex items-center gap-4">
+                  <img
+                    src={masterEditForm.avatar_url}
+                    alt={masterEditForm.name}
+                    className="w-16 h-16 rounded-2xl object-cover border-2 border-teal-600 shadow-md flex-shrink-0"
+                  />
+                  <div className="flex-1 space-y-2">
+                    <input
+                      type="url"
+                      value={masterEditForm.avatar_url}
+                      onChange={(e) => setMasterEditForm({ ...masterEditForm, avatar_url: e.target.value })}
+                      placeholder="Paste image URL (https://...)"
+                      className="w-full px-3 py-2 text-xs border border-stone-300 rounded-xl focus:ring-2 focus:ring-teal-600 focus:outline-none bg-white font-mono"
+                    />
+                    <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                      <span className="text-[10px] text-stone-400 font-bold">Quick Presets:</span>
+                      {[
+                        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80',
+                        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
+                        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&auto=format&fit=crop&q=80',
+                        'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&auto=format&fit=crop&q=80',
+                        'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=300&auto=format&fit=crop&q=80',
+                        'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=300&auto=format&fit=crop&q=80',
+                      ].map((presetUrl, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setMasterEditForm({ ...masterEditForm, avatar_url: presetUrl })}
+                          className={`w-7 h-7 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${
+                            masterEditForm.avatar_url === presetUrl
+                              ? 'border-teal-600 scale-110'
+                              : 'border-stone-200 opacity-70 hover:opacity-100'
+                          }`}
+                        >
+                          <img src={presetUrl} alt="preset" className="w-full h-full object-cover" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. LOGIN CREDENTIALS & SECURITY ACCESS (EMAIL & PASSWORD) */}
+              <div className="p-4 bg-amber-50/60 rounded-2xl border border-amber-200 space-y-3">
+                <h4 className="font-bold text-xs text-amber-950 uppercase tracking-wider flex items-center gap-1.5">
+                  <KeyRound className="w-4 h-4 text-amber-700" />
+                  <span>Account Credentials & Security Access</span>
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Registered Email */}
+                  <div>
+                    <label className="block text-xs font-bold text-stone-900 mb-1">Registered Email Address *</label>
+                    <div className="relative">
+                      <Mail className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
+                      <input
+                        type="email"
+                        required
+                        value={masterEditForm.email}
+                        onChange={(e) => setMasterEditForm({ ...masterEditForm, email: e.target.value })}
+                        className="w-full pl-9 pr-3 py-2 text-xs font-mono font-bold border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none bg-white"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Account Password */}
+                  <div>
+                    <label className="block text-xs font-bold text-stone-900 mb-1">Account Password / Access Key *</label>
+                    <div className="relative flex items-center">
+                      <Key className="w-4 h-4 text-stone-400 absolute left-3" />
+                      <input
+                        type={isEditPasswordMasked ? 'password' : 'text'}
+                        required
+                        value={masterEditForm.password}
+                        onChange={(e) => setMasterEditForm({ ...masterEditForm, password: e.target.value })}
+                        className="w-full pl-9 pr-18 py-2 text-xs font-mono font-bold border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none bg-white"
+                      />
+                      <div className="absolute right-2 flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setIsEditPasswordMasked(!isEditPasswordMasked)}
+                          className="p-1 rounded-md text-stone-500 hover:bg-stone-100"
+                          title={isEditPasswordMasked ? 'Show Password' : 'Mask Password'}
+                        >
+                          {isEditPasswordMasked ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyPassword(masterEditForm.email, masterEditForm.password)}
+                          className="p-1 rounded-md text-stone-500 hover:bg-stone-100"
+                          title="Copy Password"
+                        >
+                          {copiedUserEmail === masterEditForm.email ? (
+                            <Check className="w-3.5 h-3.5 text-emerald-600 font-bold" />
+                          ) : (
+                            <Copy className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. BASIC IDENTITY & CONTACT */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-stone-900 mb-1">Full Legal Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={masterEditForm.name}
+                    onChange={(e) => setMasterEditForm({ ...masterEditForm, name: e.target.value })}
+                    className="w-full px-3.5 py-2 text-xs border border-stone-300 rounded-xl focus:ring-2 focus:ring-teal-600 focus:outline-none bg-white font-bold text-stone-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-stone-900 mb-1">Phone / WhatsApp Number *</label>
+                  <div className="relative">
+                    <PhoneCall className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
+                    <input
+                      type="text"
+                      required
+                      value={masterEditForm.contact}
+                      onChange={(e) => setMasterEditForm({ ...masterEditForm, contact: e.target.value })}
+                      className="w-full pl-9 pr-3 py-2 text-xs font-mono font-bold border border-stone-300 rounded-xl focus:ring-2 focus:ring-teal-600 focus:outline-none bg-white"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 4. WORKER SPECIFIC EDIT FIELDS */}
+              {masterEditForm.type === 'worker' && (
+                <div className="p-4 bg-teal-50/50 rounded-2xl border border-teal-200 space-y-3">
+                  <h4 className="font-bold text-xs text-teal-950 uppercase tracking-wider">
+                    Artisan Trade & Cooperative Specs
+                  </h4>
+
+                  <div>
+                    <label className="block text-xs font-bold text-stone-900 mb-1">Trade Skills & Certifications</label>
+                    <input
+                      type="text"
+                      value={masterEditForm.skills || ''}
+                      onChange={(e) => setMasterEditForm({ ...masterEditForm, skills: e.target.value })}
+                      placeholder="e.g. Master Electrician, High-Voltage Wiring, MCB Repairs"
+                      className="w-full px-3.5 py-2 text-xs border border-stone-300 rounded-xl focus:ring-2 focus:ring-teal-600 focus:outline-none bg-white"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-stone-900 mb-1">Rate (₹/hr)</label>
+                      <input
+                        type="number"
+                        min="50"
+                        value={masterEditForm.hourly_rate || 280}
+                        onChange={(e) => setMasterEditForm({ ...masterEditForm, hourly_rate: Number(e.target.value) })}
+                        className="w-full px-3 py-2 text-xs border border-stone-300 rounded-xl font-mono font-bold bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-stone-900 mb-1">Visit Fee (₹)</label>
+                      <input
+                        type="number"
+                        min="50"
+                        value={masterEditForm.base_visit_fee || 150}
+                        onChange={(e) =>
+                          setMasterEditForm({ ...masterEditForm, base_visit_fee: Number(e.target.value) })
+                        }
+                        className="w-full px-3 py-2 text-xs border border-stone-300 rounded-xl font-mono font-bold bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-stone-900 mb-1">Experience (Yrs)</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={masterEditForm.experience_years || 5}
+                        onChange={(e) =>
+                          setMasterEditForm({ ...masterEditForm, experience_years: Number(e.target.value) })
+                        }
+                        className="w-full px-3 py-2 text-xs border border-stone-300 rounded-xl font-mono font-bold bg-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-stone-900 mb-1">Area / Neighborhood</label>
+                      <input
+                        type="text"
+                        value={masterEditForm.area || ''}
+                        onChange={(e) => setMasterEditForm({ ...masterEditForm, area: e.target.value })}
+                        placeholder="e.g. Bandra West"
+                        className="w-full px-3.5 py-2 text-xs border border-stone-300 rounded-xl bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-stone-900 mb-1">City</label>
+                      <input
+                        type="text"
+                        value={masterEditForm.city || ''}
+                        onChange={(e) => setMasterEditForm({ ...masterEditForm, city: e.target.value })}
+                        placeholder="e.g. Mumbai"
+                        className="w-full px-3.5 py-2 text-xs border border-stone-300 rounded-xl bg-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 pt-1">
+                    <div>
+                      <label className="block text-xs font-bold text-stone-900 mb-1">On-Duty Availability</label>
+                      <select
+                        value={masterEditForm.availability || 'online'}
+                        onChange={(e) => setMasterEditForm({ ...masterEditForm, availability: e.target.value as any })}
+                        className="w-full px-3 py-2 text-xs border border-stone-300 rounded-xl bg-white font-bold"
+                      >
+                        <option value="online">🟢 Online & Free (Accepting Jobs)</option>
+                        <option value="busy">🟡 Busy on Active Job</option>
+                        <option value="offline">⚪ Offline (Resting)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-stone-900 mb-1">KYC Police Verification</label>
+                      <select
+                        value={masterEditForm.kyc_verified ? 'verified' : 'pending'}
+                        onChange={(e) =>
+                          setMasterEditForm({ ...masterEditForm, kyc_verified: e.target.value === 'verified' })
+                        }
+                        className="w-full px-3 py-2 text-xs border border-stone-300 rounded-xl bg-white font-bold"
+                      >
+                        <option value="verified">✓ KYC & Police Verified</option>
+                        <option value="pending">⏳ Pending Audit</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-stone-900 mb-1">Artisan Bio & Background</label>
+                    <textarea
+                      rows={2}
+                      value={masterEditForm.bio || ''}
+                      onChange={(e) => setMasterEditForm({ ...masterEditForm, bio: e.target.value })}
+                      placeholder="Artisan professional background..."
+                      className="w-full p-2.5 text-xs border border-stone-300 rounded-xl bg-white"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* 5. CUSTOMER SPECIFIC EDIT FIELDS */}
+              {masterEditForm.type === 'customer' && (
+                <div className="p-4 bg-cyan-50/50 rounded-2xl border border-cyan-200 space-y-3">
+                  <h4 className="font-bold text-xs text-cyan-950 uppercase tracking-wider">
+                    Household Address & Membership Tier
+                  </h4>
+
+                  <div>
+                    <label className="block text-xs font-bold text-stone-900 mb-1">Delivery / Household Address</label>
+                    <input
+                      type="text"
+                      value={masterEditForm.address || ''}
+                      onChange={(e) => setMasterEditForm({ ...masterEditForm, address: e.target.value })}
+                      placeholder="e.g. Flat 402, Sea Crest Apartments, Bandra West"
+                      className="w-full px-3.5 py-2 text-xs border border-stone-300 rounded-xl bg-white"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-stone-900 mb-1">City</label>
+                      <input
+                        type="text"
+                        value={masterEditForm.city || ''}
+                        onChange={(e) => setMasterEditForm({ ...masterEditForm, city: e.target.value })}
+                        placeholder="e.g. Mumbai"
+                        className="w-full px-3.5 py-2 text-xs border border-stone-300 rounded-xl bg-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-stone-900 mb-1">Membership Category</label>
+                      <select
+                        value={masterEditForm.member_type || 'Solidarity Circle Member'}
+                        onChange={(e) => setMasterEditForm({ ...masterEditForm, member_type: e.target.value })}
+                        className="w-full px-3 py-2 text-xs border border-stone-300 rounded-xl bg-white font-bold"
+                      >
+                        <option value="Solidarity Circle Member">Solidarity Circle Member</option>
+                        <option value="Resident Member">Resident Member</option>
+                        <option value="Institutional Co-op Buyer">Institutional Co-op Buyer</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-stone-900 mb-1">Account Status</label>
+                    <select
+                      value={masterEditForm.status || 'active'}
+                      onChange={(e) => setMasterEditForm({ ...masterEditForm, status: e.target.value })}
+                      className="w-full px-3 py-2 text-xs border border-stone-300 rounded-xl bg-white font-bold"
+                    >
+                      <option value="active">🟢 Active Verified Household</option>
+                      <option value="suspended">🔴 Suspended</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="pt-3 border-t border-stone-100 flex items-center justify-end gap-3 flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setMasterEditForm(null)}
+                  className="px-4 py-2.5 rounded-xl border border-stone-300 text-stone-700 font-semibold hover:bg-stone-50 text-xs"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-teal-600 via-teal-700 to-emerald-600 text-white font-black text-xs shadow-lg hover:opacity-95 flex items-center gap-1.5"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>✓ Save & Synchronize Account</span>
                 </button>
               </div>
             </form>
