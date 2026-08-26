@@ -34,27 +34,27 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectCategory, onEx
   const { categories, workers, openWorkerModal, openEmergencyModal, openBookingFlow } = useMarketplace();
 
   return (
-    <div className="space-y-16 sm:space-y-24 pb-16">
+    <div className="space-y-12 sm:space-y-20 pb-16">
       {/* 1. HERO SECTION WITH 3D COOPERATIVE GLOBE */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-[#0C3B2E] via-[#144537] to-[#0C3B2E] text-white pt-12 sm:pt-20 pb-20 sm:pb-28">
+      <section className="relative overflow-hidden bg-gradient-to-b from-[#0C3B2E] via-[#144537] to-[#0C3B2E] text-white pt-8 sm:pt-16 pb-14 sm:pb-24">
         {/* Ambient 3D Glowing Orbs */}
         <div className="absolute top-10 left-1/4 w-80 h-80 rounded-full bg-[#D4A373]/15 blur-3xl pointer-events-none animate-float"></div>
         <div className="absolute bottom-10 right-1/4 w-96 h-96 rounded-full bg-emerald-400/10 blur-3xl pointer-events-none animate-float-reverse"></div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             {/* Left Content */}
-            <div className="lg:col-span-6 space-y-6 text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#1D5C4B]/80 backdrop-blur-md border border-[#297762] text-xs font-semibold text-[#D4A373] shadow-lg animate-pulse">
-                <Shield className="w-3.5 h-3.5 text-[#D4A373]" />
+            <div className="lg:col-span-6 space-y-4 sm:space-y-6 text-center lg:text-left">
+              <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-[#1D5C4B]/80 backdrop-blur-md border border-[#297762] text-[11px] sm:text-xs font-semibold text-[#D4A373] shadow-lg animate-pulse">
+                <Shield className="w-3.5 h-3.5 text-[#D4A373] flex-shrink-0" />
                 <span>{t('hero_badge', 'Democratically Owned by Labour Cooperative Federations')}</span>
               </div>
 
-              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight font-['Outfit'] leading-[1.12]">
+              <h1 className="text-2xl sm:text-4xl lg:text-6xl font-extrabold tracking-tight font-['Outfit'] leading-tight">
                 {t('hero_headline', 'Skilled Labour Services, Owned by Artisans Themselves.')}
               </h1>
 
-              <p className="text-sm sm:text-base text-stone-200/90 leading-relaxed max-w-xl mx-auto lg:mx-0">
+              <p className="text-xs sm:text-base text-stone-200/90 leading-relaxed max-w-xl mx-auto lg:mx-0">
                 {t(
                   'hero_subtext',
                   'No 30% private aggregator cuts. 100% of fair floor wages go directly to certified electricians, plumbers, carpenters, caregivers, and technicians with collective accident insurance and mutual aid funds.'
@@ -62,10 +62,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectCategory, onEx
               </p>
 
               {/* Action Buttons with Modern 3D Micro-interactions */}
-              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5 pt-2">
+              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-2.5 sm:gap-3.5 pt-1 sm:pt-2">
                 <button
                   onClick={onExploreServices}
-                  className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-gradient-to-r from-[#D4A373] via-[#E0A96D] to-[#c68b59] hover:from-[#c68b59] hover:to-[#d4a373] text-[#0C3B2E] font-extrabold text-sm shadow-xl flex items-center justify-center gap-2 transition-all transform hover:scale-105 hover:-translate-y-0.5 active:scale-95"
+                  className="w-full sm:w-auto px-6 sm:px-7 py-3 sm:py-3.5 rounded-xl bg-gradient-to-r from-[#D4A373] via-[#E0A96D] to-[#c68b59] hover:from-[#c68b59] hover:to-[#d4a373] text-[#0C3B2E] font-black text-xs sm:text-sm shadow-xl flex items-center justify-center gap-2 transition-all transform hover:scale-105 active:scale-95"
                 >
                   <Award className="w-4 h-4" />
                   <span>{t('btn_book_artisan', 'Book Verified Artisan')}</span>
@@ -74,7 +74,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectCategory, onEx
 
                 <button
                   onClick={openEmergencyModal}
-                  className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-red-600/90 hover:bg-red-600 text-white font-bold text-sm border border-red-400/40 shadow-lg flex items-center justify-center gap-2 transition-all transform hover:scale-105 hover:-translate-y-0.5 active:scale-95"
+                  className="w-full sm:w-auto px-6 sm:px-7 py-3 sm:py-3.5 rounded-xl bg-red-600/90 hover:bg-red-600 text-white font-bold text-xs sm:text-sm border border-red-400/40 shadow-lg flex items-center justify-center gap-2 transition-all transform hover:scale-105 active:scale-95"
                 >
                   <Zap className="w-4 h-4 text-amber-300 fill-amber-300" />
                   <span>{t('btn_urgent_sos', 'Emergency SOS Dispatch')}</span>
@@ -82,17 +82,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectCategory, onEx
               </div>
 
               {/* Trust Badges */}
-              <div className="pt-4 flex flex-wrap items-center justify-center lg:justify-start gap-6 text-xs text-stone-300">
+              <div className="pt-2 sm:pt-4 flex flex-wrap items-center justify-center lg:justify-start gap-3 sm:gap-6 text-[11px] sm:text-xs text-stone-300">
                 <div className="flex items-center gap-1.5 font-medium">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400 flex-shrink-0" />
                   <span>{t('trust_nsdc', 'NSDC / ITI Certified')}</span>
                 </div>
                 <div className="flex items-center gap-1.5 font-medium">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400 flex-shrink-0" />
                   <span>{t('trust_police', 'Police Verified')}</span>
                 </div>
                 <div className="flex items-center gap-1.5 font-medium">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400 flex-shrink-0" />
                   <span>{t('trust_ayushman', 'Ayushman Health Shield')}</span>
                 </div>
               </div>
@@ -100,7 +100,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectCategory, onEx
 
             {/* Right: 3D INTERACTIVE THREE.JS GLOBE */}
             <div className="lg:col-span-6 flex justify-center">
-              <TiltCard maxTilt={8} scale={1.01} className="w-full max-w-lg bg-white/10 backdrop-blur-md rounded-3xl p-4 sm:p-6 border border-white/20 shadow-2xl">
+              <TiltCard maxTilt={8} scale={1.01} className="w-full max-w-lg bg-white/10 backdrop-blur-md rounded-2xl sm:rounded-3xl p-3 sm:p-6 border border-white/20 shadow-2xl">
                 <CooperativeGlobe3D />
               </TiltCard>
             </div>
@@ -113,49 +113,49 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectCategory, onEx
 
       {/* 3. 3D TILT IMPACT METRICS COUNTERS */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 sm:-mt-12 relative z-20">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          <TiltCard maxTilt={12} className="bg-white rounded-2xl shadow-xl border border-stone-200 p-6 space-y-1.5">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-6">
+          <TiltCard maxTilt={12} className="bg-white rounded-2xl shadow-xl border border-stone-200 p-3.5 sm:p-6 space-y-1 sm:space-y-1.5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">
-                {t('stats_verified_artisans', 'Verified Artisans')}
+              <span className="text-[10px] sm:text-xs font-bold text-stone-400 uppercase tracking-wider">
+                {t('stats_verified_artisans', 'Artisans')}
               </span>
-              <Users className="w-4 h-4 text-emerald-600" />
+              <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
             </div>
-            <p className="text-2xl sm:text-4xl font-extrabold text-[#0C3B2E] font-['Outfit']">14,280+</p>
-            <p className="text-[11px] text-emerald-700 font-semibold">{t('stats_sub_artisans', '100% KYC & Trade Certified')}</p>
+            <p className="text-xl sm:text-4xl font-extrabold text-[#0C3B2E] font-['Outfit']">14,280+</p>
+            <p className="text-[10px] sm:text-[11px] text-emerald-700 font-semibold truncate">{t('stats_sub_artisans', '100% KYC Certified')}</p>
           </TiltCard>
 
-          <TiltCard maxTilt={12} className="bg-white rounded-2xl shadow-xl border border-stone-200 p-6 space-y-1.5">
+          <TiltCard maxTilt={12} className="bg-white rounded-2xl shadow-xl border border-stone-200 p-3.5 sm:p-6 space-y-1 sm:space-y-1.5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">
-                {t('stats_fair_wages', 'Fair Wages Paid')}
+              <span className="text-[10px] sm:text-xs font-bold text-stone-400 uppercase tracking-wider">
+                {t('stats_fair_wages', 'Fair Wages')}
               </span>
-              <TrendingUp className="w-4 h-4 text-emerald-600" />
+              <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
             </div>
-            <p className="text-2xl sm:text-4xl font-extrabold text-[#0C3B2E] font-['Outfit']">₹3.82 Cr</p>
-            <p className="text-[11px] text-emerald-700 font-semibold">{t('stats_sub_wages', '0% Aggregator Cuts')}</p>
+            <p className="text-xl sm:text-4xl font-extrabold text-[#0C3B2E] font-['Outfit']">₹3.82 Cr</p>
+            <p className="text-[10px] sm:text-[11px] text-emerald-700 font-semibold truncate">{t('stats_sub_wages', '0% Aggregator Cuts')}</p>
           </TiltCard>
 
-          <TiltCard maxTilt={12} className="bg-white rounded-2xl shadow-xl border border-stone-200 p-6 space-y-1.5">
+          <TiltCard maxTilt={12} className="bg-white rounded-2xl shadow-xl border border-stone-200 p-3.5 sm:p-6 space-y-1 sm:space-y-1.5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">
-                {t('stats_welfare_pool', 'Health & Welfare Pool')}
+              <span className="text-[10px] sm:text-xs font-bold text-stone-400 uppercase tracking-wider">
+                {t('stats_welfare_pool', 'Welfare Pool')}
               </span>
-              <HeartHandshake className="w-4 h-4 text-amber-600" />
+              <HeartHandshake className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-600" />
             </div>
-            <p className="text-2xl sm:text-4xl font-extrabold text-[#0C3B2E] font-['Outfit']">₹68.5 Lakh</p>
-            <p className="text-[11px] text-emerald-700 font-semibold">{t('stats_sub_welfare', 'Universal Accident Shield')}</p>
+            <p className="text-xl sm:text-4xl font-extrabold text-[#0C3B2E] font-['Outfit']">₹68.5 L</p>
+            <p className="text-[10px] sm:text-[11px] text-emerald-700 font-semibold truncate">{t('stats_sub_welfare', 'Accident Shield')}</p>
           </TiltCard>
 
-          <TiltCard maxTilt={12} className="bg-white rounded-2xl shadow-xl border border-stone-200 p-6 space-y-1.5">
+          <TiltCard maxTilt={12} className="bg-white rounded-2xl shadow-xl border border-stone-200 p-3.5 sm:p-6 space-y-1 sm:space-y-1.5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">
-                {t('stats_cooperatives', 'Cooperatives')}
+              <span className="text-[10px] sm:text-xs font-bold text-stone-400 uppercase tracking-wider">
+                {t('stats_cooperatives', 'Societies')}
               </span>
-              <ShieldCheck className="w-4 h-4 text-[#D4A373]" />
+              <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#D4A373]" />
             </div>
-            <p className="text-2xl sm:text-4xl font-extrabold text-[#0C3B2E] font-['Outfit']">42 Societies</p>
-            <p className="text-[11px] text-emerald-700 font-semibold">{t('stats_sub_coop', 'Multi-State Network')}</p>
+            <p className="text-xl sm:text-4xl font-extrabold text-[#0C3B2E] font-['Outfit']">42 Co-ops</p>
+            <p className="text-[10px] sm:text-[11px] text-emerald-700 font-semibold truncate">{t('stats_sub_coop', 'Multi-State')}</p>
           </TiltCard>
         </div>
       </section>
@@ -266,47 +266,47 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectCategory, onEx
         </div>
 
         {/* Categories Grid with 3D Tilt Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2.5 sm:gap-6">
           {categories.map((cat) => (
             <TiltCard
               key={cat.id}
               maxTilt={12}
               onClick={() => onSelectCategory(cat)}
-              className="group bg-white rounded-2xl border border-stone-200 hover:border-[#0C3B2E] shadow-sm hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer flex flex-col justify-between"
+              className="group bg-white rounded-2xl border border-stone-200 hover:border-[#0C3B2E] shadow-xs hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer flex flex-col justify-between"
             >
               <div>
-                <div className="relative h-36 overflow-hidden">
+                <div className="relative h-24 sm:h-36 overflow-hidden">
                   <img
                     src={cat.image_url}
                     alt={cat.name}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent"></div>
-                  <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between text-white text-xs">
-                    <span className="font-bold drop-shadow">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent"></div>
+                  <div className="absolute bottom-1.5 sm:bottom-2 left-1.5 sm:left-2 right-1.5 sm:right-2 flex items-center justify-between text-white text-[10px] sm:text-xs">
+                    <span className="font-bold drop-shadow truncate">
                       {language === 'or'
                         ? (cat.slug === 'electricians' ? 'ଇଲେକ୍ଟ୍ରିସିଆନ' : cat.slug === 'plumbers' ? 'ପ୍ଲମ୍ବର' : cat.slug === 'carpenters' ? 'ବଢ଼େଇ' : cat.slug === 'painters' ? 'ପେଣ୍ଟର' : cat.slug === 'domestic-helpers' ? 'ଘରୋଇ ସହାୟକ' : cat.slug === 'caregivers' ? 'ସେବାକାରୀ' : cat.slug === 'drivers' ? 'ଚାଳକ' : cat.slug === 'gardeners' ? 'ମାଳୀ' : cat.slug === 'cleaners' ? 'ସଫେଇ କର୍ମୀ' : 'ଟେକ୍ନିସିଆନ')
                         : cat.name_hi || cat.name}
                     </span>
-                    <span className="text-[10px] bg-black/40 px-2 py-0.5 rounded backdrop-blur-sm">
+                    <span className="text-[9px] sm:text-[10px] bg-black/50 px-1.5 py-0.2 rounded backdrop-blur-xs font-mono">
                       {cat.base_price_range}
                     </span>
                   </div>
                 </div>
 
-                <div className="p-4 space-y-2">
-                  <h3 className="font-bold text-stone-900 text-sm group-hover:text-[#0C3B2E] transition-colors">
+                <div className="p-2.5 sm:p-4 space-y-1 sm:space-y-2">
+                  <h3 className="font-bold text-stone-900 text-xs sm:text-sm group-hover:text-[#0C3B2E] transition-colors truncate">
                     {language === 'or'
                       ? (cat.slug === 'electricians' ? 'ଇଲେକ୍ଟ୍ରିସିଆନ ଓ ତାର ଯୋଡ଼ା' : cat.slug === 'plumbers' ? 'ପ୍ଲମ୍ବର ଓ ପାଇପ୍ ସେବା' : cat.slug === 'carpenters' ? 'ବଢ଼େଇ ଓ କାଠ କାର୍ଯ୍ୟ' : cat.slug === 'painters' ? 'ପେଣ୍ଟର ଓ କାନ୍ଥ ରଙ୍ଗ' : cat.slug === 'domestic-helpers' ? 'ଘରୋଇ ସହାୟକ ଓ ରୋଷେୟା' : cat.slug === 'caregivers' ? 'ବୃଦ୍ଧ ଓ ରୋଗୀ ସେବାକାରୀ' : cat.slug === 'drivers' ? 'ପ୍ରମାଣିତ ଚାଳକ (ଡ୍ରାଇଭର)' : cat.slug === 'gardeners' ? 'ମାଳୀ ଓ ବଗିଚା କାର୍ଯ୍ୟ' : cat.slug === 'cleaners' ? 'ଗଭୀର ସଫେଇ ସେବା' : 'ଉପକରଣ ଓ ଏସି ଟେକ୍ନିସିଆନ')
                       : cat.name}
                   </h3>
-                  <p className="text-[11px] text-stone-500 line-clamp-2 leading-relaxed">{cat.description}</p>
+                  <p className="text-[10px] sm:text-[11px] text-stone-500 line-clamp-2 leading-relaxed">{cat.description}</p>
                 </div>
               </div>
 
-              <div className="p-4 pt-0 border-t border-stone-100 flex items-center justify-between text-xs text-[#0C3B2E] font-bold">
-                <span>{t('book_service', 'Book Service')}</span>
-                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1.5 transition-transform" />
+              <div className="p-2.5 sm:p-4 pt-0 border-t border-stone-100 flex items-center justify-between text-[11px] sm:text-xs text-[#0C3B2E] font-bold">
+                <span>{t('book_service', 'Book')}</span>
+                <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 group-hover:translate-x-1.5 transition-transform" />
               </div>
             </TiltCard>
           ))}

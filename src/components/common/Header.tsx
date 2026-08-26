@@ -103,23 +103,23 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
       </div>
 
       {/* Main Navigation Bar */}
-      <div className="max-w-[1700px] mx-auto px-4 sm:px-8 py-3.5 flex items-center justify-between gap-4">
+      <div className="max-w-[1700px] mx-auto px-3 sm:px-8 py-2.5 sm:py-3.5 flex items-center justify-between gap-3 sm:gap-4">
         {/* 1. Left: Brand Identity */}
         <div
           onClick={() => setActiveTab('home')}
-          className="flex items-center gap-3 cursor-pointer group select-none flex-shrink-0"
+          className="flex items-center gap-2 sm:gap-3 cursor-pointer group select-none flex-shrink-0"
         >
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#D4A373] via-[#E0A96D] to-[#FAEDCD] flex items-center justify-center text-[#0C3B2E] font-black text-xl shadow-lg border border-[#D4A373]/50 group-hover:scale-105 transition-transform">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-[#D4A373] via-[#E0A96D] to-[#FAEDCD] flex items-center justify-center text-[#0C3B2E] font-black text-base sm:text-xl shadow-lg border border-[#D4A373]/50 group-hover:scale-105 transition-transform">
             स
           </div>
           <div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-extrabold text-xl tracking-tight font-['Outfit'] text-white">
+            <div className="flex items-center gap-1">
+              <span className="font-extrabold text-base sm:text-xl tracking-tight font-['Outfit'] text-white">
                 SAHYOG
               </span>
-              <span className="text-[#D4A373] text-xs font-semibold">(सहयोग)</span>
+              <span className="text-[#D4A373] text-[10px] sm:text-xs font-semibold">(सहयोग)</span>
             </div>
-            <p className="text-[10px] text-stone-300 tracking-wider uppercase font-medium">
+            <p className="hidden sm:block text-[10px] text-stone-300 tracking-wider uppercase font-medium">
               Cooperative Service Marketplace
             </p>
           </div>
