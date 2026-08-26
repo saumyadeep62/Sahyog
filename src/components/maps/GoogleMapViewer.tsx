@@ -219,7 +219,7 @@ export const GoogleMapViewer: React.FC<GoogleMapViewerProps> = ({
           <span className="font-extrabold text-xs font-['Outfit'] tracking-wide">{title}</span>
         </div>
 
-        <div className="flex items-center gap-3 text-xs">
+        <div className="flex items-center gap-2.5 text-xs">
           {showRoute && (
             <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-400/30">
               <Clock className="w-3.5 h-3.5 text-amber-300" />
@@ -227,7 +227,20 @@ export const GoogleMapViewer: React.FC<GoogleMapViewerProps> = ({
               <span className="text-stone-400">({distanceText})</span>
             </span>
           )}
-          <span className="text-[11px] font-mono text-stone-300 bg-white/10 px-2.5 py-0.5 rounded-lg">
+
+          <button
+            onClick={() => {
+              const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${activeCustomerLoc.lat},${activeCustomerLoc.lng}&travelmode=driving`;
+              window.open(mapsUrl, '_blank');
+            }}
+            className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-bold text-[11px] shadow flex items-center gap-1 transition-all"
+            title="Launch Google Maps App with Turn-by-Turn GPS Navigation"
+          >
+            <Navigation className="w-3 h-3 fill-stone-950 transform rotate-45" />
+            <span>Open GPS App</span>
+          </button>
+
+          <span className="text-[11px] font-mono text-stone-300 bg-white/10 px-2.5 py-0.5 rounded-lg hidden sm:inline">
             GPS: {activeCustomerLoc.lat.toFixed(4)}, {activeCustomerLoc.lng.toFixed(4)}
           </span>
         </div>

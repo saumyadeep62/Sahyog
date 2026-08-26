@@ -279,6 +279,25 @@ export const AuthModal: React.FC = () => {
               )}
             </button>
           </form>
+
+          {/* Admin Credentials Helper */}
+          <div className="pt-3 border-t border-stone-200 flex items-center justify-between text-[11px] text-stone-500">
+            <span className="flex items-center gap-1">
+              <Shield className="w-3.5 h-3.5 text-teal-700" />
+              <span>Admin: <strong className="text-stone-800 font-mono">admin@gmail.com</strong></span>
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setEmail('admin@gmail.com');
+                setPassword('admin123');
+                setMode('signin');
+              }}
+              className="text-teal-800 hover:text-teal-950 font-bold bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200 transition-colors"
+            >
+              Autofill Admin ➔
+            </button>
+          </div>
         </div>
       </div>
     </div>

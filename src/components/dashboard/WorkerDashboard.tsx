@@ -356,14 +356,44 @@ export const WorkerDashboard: React.FC = () => {
                 <div>
                   <h3 className="font-black text-xl text-white">{activeJob.service_task}</h3>
                   <p className="text-xs text-stone-300 mt-1 leading-relaxed">{activeJob.description}</p>
-                  <div className="bg-white/10 rounded-2xl p-4 mt-3 border border-white/10 space-y-1.5 text-xs">
-                    <p className="text-stone-200 font-medium">
-                      Customer: <strong className="text-white">{activeJob.customer_name}</strong> ({activeJob.customer_contact})
-                    </p>
-                    <p className="text-stone-300 flex items-start gap-1">
-                      <MapPin className="w-3.5 h-3.5 text-amber-300 flex-shrink-0 mt-0.5" />
-                      <span>{activeJob.location?.address || 'Flat 402, Sea Crest Apartments, Bandra West, Mumbai'}</span>
-                    </p>
+                  
+                  {/* Interactive Address & Navigation Box */}
+                  <div className="bg-white/10 rounded-2xl p-4 mt-3 border border-white/10 space-y-2 text-xs">
+                    <div className="flex items-center justify-between">
+                      <p className="text-stone-200 font-medium">
+                        Customer: <strong className="text-white">{activeJob.customer_name}</strong>
+                      </p>
+                      {activeJob.customer_contact && (
+                        <a
+                          href={`tel:${activeJob.customer_contact}`}
+                          className="px-2.5 py-1 rounded-lg bg-emerald-500/30 hover:bg-emerald-500/50 text-emerald-200 font-bold text-[11px] flex items-center gap-1 transition-colors border border-emerald-400/30"
+                        >
+                          <PhoneCall className="w-3 h-3 text-amber-300" />
+                          <span>Call: {activeJob.customer_contact}</span>
+                        </a>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1 border-t border-white/10">
+                      <p className="text-stone-300 flex items-start gap-1">
+                        <MapPin className="w-3.5 h-3.5 text-amber-300 flex-shrink-0 mt-0.5" />
+                        <span>{activeJob.location?.address || 'Flat 402, Sea Crest Apartments, Bandra West, Mumbai'}</span>
+                      </p>
+                      
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const destLat = activeJob.location?.lat || 19.076;
+                          const destLng = activeJob.location?.lng || 72.8777;
+                          const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}&travelmode=driving`;
+                          window.open(navUrl, '_blank');
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-stone-950 font-black text-[11px] shadow flex items-center gap-1.5 transition-all w-fit flex-shrink-0"
+                      >
+                        <Navigation className="w-3.5 h-3.5 fill-stone-950 transform rotate-45" />
+                        <span>Open Turn-by-Turn GPS</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -378,6 +408,21 @@ export const WorkerDashboard: React.FC = () => {
                   <div className="flex flex-wrap items-center gap-2.5">
                     {activeJob.status === 'en_route' ? (
                       <>
+                        <button
+                          onClick={() => {
+                            const destLat = activeJob.location?.lat || 19.076;
+                            const destLng = activeJob.location?.lng || 72.8777;
+                            window.open(
+                              `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}&travelmode=driving`,
+                              '_blank'
+                            );
+                          }}
+                          className="px-4 py-3 rounded-2xl bg-[#D4A373] hover:bg-[#E0A96D] text-[#0C3B2E] font-black text-xs shadow-lg flex items-center justify-center gap-1.5 transition-all transform hover:scale-105"
+                          title="Open Google Maps app with route"
+                        >
+                          <Navigation className="w-4 h-4 fill-[#0C3B2E] transform rotate-45" />
+                          <span>Google Maps Nav</span>
+                        </button>
                         <button
                           onClick={() => handleStartWork(activeJob.id)}
                           className="px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-black text-xs shadow-lg flex items-center justify-center gap-2 transition-all transform hover:scale-105"
