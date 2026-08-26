@@ -399,6 +399,34 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
             </button>
           )}
 
+          {/* Mobile / Tablet Quick Profile Icon */}
+          {currentUser ? (
+            <button
+              onClick={openEditProfileModal}
+              className="xl:hidden p-1.5 rounded-xl bg-[#144537] border border-[#297762] text-stone-200 hover:bg-[#1D5C4B] transition-colors relative"
+              title="Click to Edit Profile & Photo"
+            >
+              {currentUser.avatar_url ? (
+                <img
+                  src={currentUser.avatar_url}
+                  alt={currentUser.name}
+                  className="w-6 h-6 rounded-lg object-cover border border-amber-300"
+                />
+              ) : (
+                <User className="w-4 h-4 text-amber-300" />
+              )}
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 border border-[#0C3B2E]" />
+            </button>
+          ) : (
+            <button
+              onClick={() => setActiveTab('auth')}
+              className="xl:hidden p-2 rounded-xl bg-[#144537] border border-[#297762] text-stone-200 hover:bg-[#1D5C4B] transition-colors"
+              title="Sign In"
+            >
+              <User className="w-4 h-4 text-amber-300" />
+            </button>
+          )}
+
           {/* Mobile / Tablet Menu Drawer Toggle Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}

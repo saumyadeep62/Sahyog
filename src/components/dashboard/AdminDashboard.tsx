@@ -306,8 +306,15 @@ export const AdminDashboard: React.FC = () => {
       {/* 1. MASTER GOVERNANCE COMMAND BANNER */}
       <div className="bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#0D9488] rounded-3xl p-6 sm:p-8 text-white shadow-2xl border border-teal-800/40 flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative overflow-hidden">
         <div className="flex items-center gap-4 relative z-10">
-          <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-tr from-teal-400 via-emerald-400 to-cyan-200 flex items-center justify-center text-[#0F172A] font-black text-3xl shadow-xl border border-white/20 flex-shrink-0">
-            🏛️
+          <div
+            onClick={openEditProfileModal}
+            className="w-18 h-18 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-tr from-teal-400 via-emerald-400 to-cyan-200 flex items-center justify-center text-[#0F172A] font-black text-3xl shadow-xl border border-white/20 flex-shrink-0 cursor-pointer group relative overflow-hidden"
+            title="Click to Edit Admin Details & Photo"
+          >
+            <span>🏛️</span>
+            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[10px] font-bold transition-opacity backdrop-blur-xs">
+              <span>📷 Edit</span>
+            </div>
           </div>
           <div className="space-y-1">
             <div className="flex items-center gap-2 flex-wrap">

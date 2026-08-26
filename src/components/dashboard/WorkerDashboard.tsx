@@ -200,7 +200,11 @@ export const WorkerDashboard: React.FC = () => {
       {/* 1. URBAN COMPANY STYLE TOP COMMAND BAR */}
       <div className="bg-gradient-to-r from-[#2C1810] via-[#3E2317] to-[#1C3B2E] rounded-3xl p-5 sm:p-8 text-white shadow-2xl border border-amber-900/30 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
-          <div className="relative flex-shrink-0">
+          <div
+            onClick={openEditProfileModal}
+            className="relative flex-shrink-0 cursor-pointer group select-none"
+            title="Click to Edit Profile & Photo"
+          >
             <img
               src={
                 currentUser.avatar_url ||
@@ -208,8 +212,11 @@ export const WorkerDashboard: React.FC = () => {
                 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=200&auto=format&fit=crop&q=80'
               }
               alt={currentUser.name}
-              className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover border-2 border-amber-400 shadow-md"
+              className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover border-2 border-amber-400 shadow-md group-hover:scale-105 transition-transform"
             />
+            <div className="absolute inset-0 bg-black/40 rounded-2xl opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[10px] font-bold transition-opacity backdrop-blur-xs">
+              <span>📷 Edit</span>
+            </div>
             <span
               className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full border-2 border-[#2C1810] ${
                 dutyStatus === 'online' ? 'bg-emerald-400' : 'bg-stone-400'

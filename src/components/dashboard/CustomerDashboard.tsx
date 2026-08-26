@@ -136,16 +136,23 @@ export const CustomerDashboard: React.FC = () => {
       {/* 1. INTERACTIVE HEADER HERO BANNER */}
       <div className="bg-gradient-to-r from-[#0C3B2E] via-[#144537] to-[#1D5C4B] rounded-3xl p-6 sm:p-8 text-white shadow-2xl border border-[#297762] flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative overflow-hidden">
         <div className="flex items-center gap-4 relative z-10">
-          <div className="relative">
+          <div
+            onClick={openEditProfileModal}
+            className="relative cursor-pointer group select-none flex-shrink-0"
+            title="Click to Edit Profile & Photo"
+          >
             <img
               src={
                 currentUser.avatar_url ||
                 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80'
               }
               alt={currentUser.name}
-              className="w-18 h-18 sm:w-20 sm:h-20 rounded-3xl object-cover border-2 border-[#D4A373] shadow-xl"
+              className="w-18 h-18 sm:w-20 sm:h-20 rounded-3xl object-cover border-2 border-[#D4A373] shadow-xl group-hover:scale-105 transition-transform"
             />
-            <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-400 border-2 border-[#0C3B2E] flex items-center justify-center text-[10px] text-stone-900 font-bold">
+            <div className="absolute inset-0 bg-black/40 rounded-3xl opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[10px] font-bold transition-opacity backdrop-blur-xs">
+              <span>📷 Edit</span>
+            </div>
+            <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-400 border-2 border-[#0C3B2E] flex items-center justify-center text-[10px] text-stone-900 font-bold shadow">
               ✓
             </span>
           </div>
