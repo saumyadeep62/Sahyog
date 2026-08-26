@@ -119,29 +119,8 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
 
         {/* 2. Middle: Navigation Links */}
         <nav className="hidden xl:flex items-center gap-1 bg-[#08281F]/90 p-1.5 rounded-2xl border border-[#1D5C4B]">
-          <button
-            onClick={() => setActiveTab('home')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-              activeTab === 'home'
-                ? 'bg-gradient-to-r from-[#1D5C4B] to-[#164E3F] text-[#D4A373] shadow-md border border-[#297762]'
-                : 'text-stone-300 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            {t('nav_home', 'Home')}
-          </button>
-          <button
-            onClick={() => setActiveTab('services')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-              activeTab === 'services'
-                ? 'bg-gradient-to-r from-[#1D5C4B] to-[#164E3F] text-[#D4A373] shadow-md border border-[#297762]'
-                : 'text-stone-300 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            {t('nav_services', 'Services & Trades')}
-          </button>
-
-          {/* Role-gated Dashboard Tab */}
-          {currentUser && (
+          {/* If Artisan: Direct pure workstation navigation */}
+          {currentRole === 'worker' ? (
             <button
               onClick={() => setActiveTab('dashboard')}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
@@ -150,23 +129,56 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
                   : 'text-stone-300 hover:text-white hover:bg-white/5'
               }`}
             >
-              {currentUser.email === 'admin@gmail.com' ? (
-                <>
-                  <Shield className="w-3.5 h-3.5 text-teal-400" />
-                  <span>Admin Command</span>
-                </>
-              ) : currentRole === 'worker' ? (
-                <>
-                  <Briefcase className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Artisan Workstation</span>
-                </>
-              ) : (
-                <>
-                  <Users className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>My Bookings</span>
-                </>
-              )}
+              <Briefcase className="w-3.5 h-3.5 text-amber-400" />
+              <span>Artisan Workstation</span>
             </button>
+          ) : (
+            <>
+              <button
+                onClick={() => setActiveTab('home')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                  activeTab === 'home'
+                    ? 'bg-gradient-to-r from-[#1D5C4B] to-[#164E3F] text-[#D4A373] shadow-md border border-[#297762]'
+                    : 'text-stone-300 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                {t('nav_home', 'Home')}
+              </button>
+              <button
+                onClick={() => setActiveTab('services')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                  activeTab === 'services'
+                    ? 'bg-gradient-to-r from-[#1D5C4B] to-[#164E3F] text-[#D4A373] shadow-md border border-[#297762]'
+                    : 'text-stone-300 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                {t('nav_services', 'Services & Trades')}
+              </button>
+
+              {/* Role-gated Dashboard Tab */}
+              {currentUser && (
+                <button
+                  onClick={() => setActiveTab('dashboard')}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
+                    activeTab === 'dashboard'
+                      ? 'bg-gradient-to-r from-[#1D5C4B] to-[#164E3F] text-[#D4A373] shadow-md border border-[#297762]'
+                      : 'text-stone-300 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  {currentUser.email === 'admin@gmail.com' ? (
+                    <>
+                      <Shield className="w-3.5 h-3.5 text-teal-400" />
+                      <span>Admin Command</span>
+                    </>
+                  ) : (
+                    <>
+                      <Users className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>My Bookings</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </>
           )}
 
           {!currentUser && (
@@ -366,38 +378,17 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
       {/* Mobile Drawer Menu */}
       {isMenuOpen && (
         <div className="xl:hidden bg-[#08281F] border-t border-[#1D5C4B] px-4 py-4 space-y-2 animate-in fade-in">
-          <button
-            onClick={() => {
-              setActiveTab('home');
-              setIsMenuOpen(false);
-            }}
-            className="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-[#144537] transition-colors"
-          >
-            {t('nav_home', 'Home')}
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab('services');
-              setIsMenuOpen(false);
-            }}
-            className="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-[#144537] transition-colors"
-          >
-            {t('nav_services', 'Services & Trades')}
-          </button>
-          {currentUser ? (
+          {currentRole === 'worker' ? (
             <>
               <button
                 onClick={() => {
                   setActiveTab('dashboard');
                   setIsMenuOpen(false);
                 }}
-                className="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-[#144537] text-emerald-300 transition-colors"
+                className="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold bg-[#144537] text-amber-300 transition-colors flex items-center gap-2"
               >
-                {currentUser.email === 'admin@gmail.com'
-                  ? 'Admin Command'
-                  : currentRole === 'worker'
-                  ? 'Artisan Workstation'
-                  : 'My Bookings'}
+                <Briefcase className="w-4 h-4" />
+                <span>Artisan Workstation</span>
               </button>
               <button
                 onClick={async () => {
@@ -411,16 +402,60 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
               </button>
             </>
           ) : (
-            <button
-              onClick={() => {
-                setActiveTab('auth');
-                setIsMenuOpen(false);
-              }}
-              className="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-[#144537] text-[#D4A373] flex items-center gap-2 transition-colors"
-            >
-              <Lock className="w-4 h-4" />
-              <span>{t('nav_auth', 'Sign In / Sign Up')}</span>
-            </button>
+            <>
+              <button
+                onClick={() => {
+                  setActiveTab('home');
+                  setIsMenuOpen(false);
+                }}
+                className="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-[#144537] transition-colors"
+              >
+                {t('nav_home', 'Home')}
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab('services');
+                  setIsMenuOpen(false);
+                }}
+                className="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-[#144537] transition-colors"
+              >
+                {t('nav_services', 'Services & Trades')}
+              </button>
+              {currentUser ? (
+                <>
+                  <button
+                    onClick={() => {
+                      setActiveTab('dashboard');
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-[#144537] text-emerald-300 transition-colors"
+                  >
+                    {currentUser.email === 'admin@gmail.com' ? 'Admin Command' : 'My Bookings'}
+                  </button>
+                  <button
+                    onClick={async () => {
+                      setIsMenuOpen(false);
+                      await signOut();
+                      setActiveTab('home');
+                    }}
+                    className="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-red-900/30 text-red-400 transition-colors"
+                  >
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => {
+                    setActiveTab('auth');
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-[#144537] text-[#D4A373] flex items-center gap-2 transition-colors"
+                >
+                  <Lock className="w-4 h-4" />
+                  <span>{t('nav_auth', 'Sign In / Sign Up')}</span>
+                </button>
+              )}
+            </>
           )}
         </div>
       )}

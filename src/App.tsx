@@ -53,42 +53,46 @@ const MainAppContent: React.FC = () => {
 
       {/* Main Content Area */}
       <main className="flex-1">
-        {activeTab === 'home' && (
-          <LandingPage
-            onSelectCategory={handleSelectCategoryFromLanding}
-            onExploreServices={handleExploreServices}
-          />
-        )}
-
-        {activeTab === 'services' && (
-          <ServiceBrowser
-            initialCategory={browserCategory}
-            onSelectWorkerForBooking={handleSelectWorkerForBooking}
-          />
-        )}
-
-        {activeTab === 'auth' && (
-          <AuthPage
-            initialMode="signin"
-            onNavigateHome={() => setActiveTab('home')}
-            onLoginSuccess={handleAuthSuccess}
-          />
-        )}
-
-        {activeTab === 'dashboard' && (
+        {currentUser && currentRole === 'worker' ? (
+          <WorkerDashboard />
+        ) : (
           <>
-            {!currentUser ? (
+            {activeTab === 'home' && (
+              <LandingPage
+                onSelectCategory={handleSelectCategoryFromLanding}
+                onExploreServices={handleExploreServices}
+              />
+            )}
+
+            {activeTab === 'services' && (
+              <ServiceBrowser
+                initialCategory={browserCategory}
+                onSelectWorkerForBooking={handleSelectWorkerForBooking}
+              />
+            )}
+
+            {activeTab === 'auth' && (
               <AuthPage
                 initialMode="signin"
                 onNavigateHome={() => setActiveTab('home')}
                 onLoginSuccess={handleAuthSuccess}
               />
-            ) : currentUser.email === 'admin@gmail.com' ? (
-              <AdminDashboard />
-            ) : currentRole === 'worker' ? (
-              <WorkerDashboard />
-            ) : (
-              <CustomerDashboard />
+            )}
+
+            {activeTab === 'dashboard' && (
+              <>
+                {!currentUser ? (
+                  <AuthPage
+                    initialMode="signin"
+                    onNavigateHome={() => setActiveTab('home')}
+                    onLoginSuccess={handleAuthSuccess}
+                  />
+                ) : currentUser.email === 'admin@gmail.com' ? (
+                  <AdminDashboard />
+                ) : (
+                  <CustomerDashboard />
+                )}
+              </>
             )}
           </>
         )}
