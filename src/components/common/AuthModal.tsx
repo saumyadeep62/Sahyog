@@ -69,23 +69,23 @@ export const AuthModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-md animate-in fade-in">
-      <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-stone-200 flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-md animate-in fade-in">
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-stone-200 flex flex-col max-h-[92vh]">
         {/* Modal Header */}
-        <div className="bg-gradient-to-r from-[#0C3B2E] via-[#144537] to-[#1D5C4B] text-white p-6 flex items-center justify-between">
+        <div className="bg-gradient-to-r from-[#0C3B2E] via-[#144537] to-[#1D5C4B] text-white p-4 sm:p-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#D4A373] to-[#E0A96D] flex items-center justify-center text-[#0C3B2E] font-extrabold text-xl shadow-md">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-[#D4A373] to-[#E0A96D] flex items-center justify-center text-[#0C3B2E] font-extrabold text-lg sm:text-xl shadow-md">
               स
             </div>
             <div>
-              <h3 className="font-extrabold text-base font-['Outfit']">
+              <h3 className="font-extrabold text-sm sm:text-base font-['Outfit']">
                 {mode === 'signin'
                   ? 'Sign In to SAHYOG'
                   : mode === 'magic_link'
                   ? 'Passwordless Magic Login'
                   : 'Join Cooperative Network'}
               </h3>
-              <p className="text-[11px] text-emerald-200">Supabase Auth Connected</p>
+              <p className="text-[10px] sm:text-[11px] text-emerald-200">Supabase Auth Connected</p>
             </div>
           </div>
           <button

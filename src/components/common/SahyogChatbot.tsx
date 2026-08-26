@@ -1036,13 +1036,13 @@ export const SahyogChatbot: React.FC<{ onNavigateTab?: (tab: string) => void }> 
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 select-none">
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 select-none">
       {/* 1. FLOATING 3D ROBOTIC FACE LAUNCHER BUTTON */}
       {!isOpen && (
         <div className="relative group">
           {/* Notification Ping Badge */}
           {hasUnread && (
-            <span className="absolute -top-1.5 -right-1.5 z-10 w-4 h-4 rounded-full bg-amber-400 border-2 border-[#0C3B2E] animate-ping" />
+            <span className="absolute -top-1 -right-1 z-10 w-3.5 h-3.5 rounded-full bg-amber-400 border-2 border-[#0C3B2E] animate-ping" />
           )}
 
           <button
@@ -1050,18 +1050,18 @@ export const SahyogChatbot: React.FC<{ onNavigateTab?: (tab: string) => void }> 
               setIsOpen(true);
               setHasUnread(false);
             }}
-            className="w-18 h-18 sm:w-22 sm:h-22 rounded-3xl bg-gradient-to-tr from-[#0C3B2E] via-[#144537] to-[#1D5C4B] text-white flex items-center justify-center shadow-2xl border-2 border-[#D4A373]/80 transform hover:scale-110 active:scale-95 transition-all duration-300 relative group overflow-hidden"
-            title="Open SAHYOG AI 3D Robotic Assistant"
+            className="w-14 h-14 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-gradient-to-tr from-[#0C3B2E] via-[#144537] to-[#1D5C4B] text-white flex items-center justify-center shadow-2xl border-2 border-[#D4A373]/80 transform hover:scale-105 active:scale-95 transition-all duration-300 relative group overflow-hidden"
+            title="Open SAHYOG AI Assistant"
           >
             {/* 3D Animated Robotic Face inside launcher */}
-            <RobotFace3D size={72} isListening={isListening} isSpeaking={isSpeaking} />
+            <RobotFace3D size={52} isListening={isListening} isSpeaking={isSpeaking} />
 
             {/* Glowing particle sheen */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-white/10 pointer-events-none" />
           </button>
 
-          {/* Tooltip callout */}
-          <div className="absolute bottom-full right-0 mb-3 hidden sm:flex items-center gap-2 bg-[#0C3B2E]/95 backdrop-blur-md text-white px-4 py-2 rounded-2xl text-xs font-extrabold shadow-2xl border border-[#D4A373]/50 whitespace-nowrap animate-bounce">
+          {/* Tooltip callout (Desktop only) */}
+          <div className="absolute bottom-full right-0 mb-3 hidden lg:flex items-center gap-2 bg-[#0C3B2E]/95 backdrop-blur-md text-white px-4 py-2 rounded-2xl text-xs font-extrabold shadow-2xl border border-[#D4A373]/50 whitespace-nowrap animate-bounce">
             <Sparkles className="w-4 h-4 text-amber-300 animate-spin" />
             <span>SAHYOG AI • Speak in Any Language</span>
           </div>
@@ -1073,8 +1073,8 @@ export const SahyogChatbot: React.FC<{ onNavigateTab?: (tab: string) => void }> 
         <div
           className={`bg-white/95 backdrop-blur-2xl rounded-3xl shadow-2xl border-2 border-[#1D5C4B]/50 flex flex-col overflow-hidden transition-all duration-300 ${
             isMinimized
-              ? 'w-80 h-20'
-              : 'w-[94vw] sm:w-[450px] h-[620px] sm:h-[680px] max-h-[90vh]'
+              ? 'w-72 sm:w-80 h-16 sm:h-20'
+              : 'fixed sm:relative inset-x-2 bottom-2 sm:inset-auto w-auto sm:w-[440px] h-[82vh] sm:h-[680px] max-h-[92vh]'
           }`}
         >
           {/* 3D Interactive Robotic Header */}

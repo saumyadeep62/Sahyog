@@ -238,20 +238,20 @@ export const CooperativeGlobe3D: React.FC = () => {
   }, []);
 
   return (
-    <div className="relative w-full h-[360px] sm:h-[400px] flex items-center justify-center">
-      <div ref={containerRef} className="w-full h-full cursor-grab active:cursor-grabbing" />
+    <div className="relative w-full h-[260px] sm:h-[380px] flex items-center justify-center touch-pan-y">
+      <div ref={containerRef} className="w-full h-full cursor-grab active:cursor-grabbing touch-pan-y" />
 
       {/* 3D HUD Floating Badge Overlay */}
-      <div className="absolute top-3 left-3 bg-[#0C3B2E]/85 backdrop-blur-md px-3 py-2 rounded-xl border border-emerald-500/30 text-white shadow-xl pointer-events-none text-xs space-y-0.5">
+      <div className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-[#0C3B2E]/90 backdrop-blur-md px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-emerald-500/30 text-white shadow-xl pointer-events-none text-xs space-y-0.5">
         <div className="flex items-center gap-1.5 font-bold text-emerald-300">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
           <span>Live 3D Solidarity Mesh</span>
         </div>
-        <p className="text-[10px] text-stone-300">42 Federations • 14,280 Nodes Connected</p>
+        <p className="text-[9px] sm:text-[10px] text-stone-300">42 Federations • 14,280 Nodes</p>
       </div>
 
-      <div className="absolute bottom-3 right-3 bg-[#0C3B2E]/85 backdrop-blur-md px-3 py-1.5 rounded-xl border border-[#D4A373]/30 text-[#D4A373] shadow-xl pointer-events-none text-[11px] font-bold">
-        ✦ Interactive 3D Orbit (Drag & Hover)
+      <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 bg-[#0C3B2E]/90 backdrop-blur-md px-2.5 sm:px-3 py-1 rounded-xl border border-[#D4A373]/30 text-[#D4A373] shadow-xl pointer-events-none text-[10px] sm:text-[11px] font-bold">
+        ✦ 3D Cooperative Globe
       </div>
     </div>
   );

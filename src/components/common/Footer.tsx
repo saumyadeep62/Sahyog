@@ -143,15 +143,15 @@ export const Footer: React.FC = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-8 border-t border-[#144537] flex flex-col sm:flex-row items-center justify-between text-xs text-stone-400 gap-4">
+        <div className="pt-8 border-t border-[#144537] flex flex-col sm:flex-row items-center justify-between text-xs text-stone-400 gap-4 text-center sm:text-left">
           <div>
             © {new Date().getFullYear()} SAHYOG Cooperative Federation. Dignity in Labour, Fairness in Trade.
           </div>
-          <div className="flex items-center gap-6">
-            <span className="hover:text-white cursor-pointer">Cooperative Bylaws</span>
-            <span className="hover:text-white cursor-pointer">Welfare Fund Policy</span>
-            <span className="hover:text-white cursor-pointer">Grievance Redressal</span>
-            <span className="hover:text-white cursor-pointer">Open Source Transparency</span>
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] sm:text-xs">
+            <span className="hover:text-white cursor-pointer transition-colors">Cooperative Bylaws</span>
+            <span className="hover:text-white cursor-pointer transition-colors">Welfare Policy</span>
+            <span className="hover:text-white cursor-pointer transition-colors">Grievance Redressal</span>
+            <span className="hover:text-white cursor-pointer transition-colors">Open Source</span>
           </div>
         </div>
       </div>

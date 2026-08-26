@@ -214,16 +214,16 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
           {/* Emergency SOS Button */}
           <button
             onClick={openEmergencyModal}
-            className="bg-gradient-to-r from-red-600 via-red-500 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-extrabold text-xs px-3.5 py-2 rounded-xl shadow-lg flex items-center gap-1.5 transition-all transform hover:scale-105 active:scale-95 whitespace-nowrap border border-red-400/30"
+            className="bg-gradient-to-r from-red-600 via-red-500 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-black text-[11px] sm:text-xs px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl shadow-lg flex items-center gap-1 sm:gap-1.5 transition-all transform hover:scale-105 active:scale-95 whitespace-nowrap border border-red-400/30"
             title="Fast-track Emergency Artisan Dispatch"
           >
             <Zap className="w-3.5 h-3.5 text-amber-300 fill-amber-300 animate-bounce" />
             <span>SOS Urgent</span>
           </button>
 
-          {/* Verified Role Pill (Read-Only) */}
+          {/* Verified Role Pill (Desktop only) */}
           {currentUser && (
-            <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#144537] border border-[#297762] text-xs font-semibold text-stone-200">
+            <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#144537] border border-[#297762] text-xs font-semibold text-stone-200">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               <span className="text-stone-400 text-[10px]">Verified:</span>
               <span className="font-bold text-white capitalize">
@@ -236,8 +236,8 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
             </div>
           )}
 
-          {/* Language Selector */}
-          <div className="relative">
+          {/* Language Selector (Desktop only) */}
+          <div className="relative hidden md:block">
             <button
               onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
               className="p-2 rounded-xl bg-[#144537] hover:bg-[#1D5C4B] border border-[#297762] text-stone-200 transition-colors flex items-center gap-1.5 text-xs font-bold uppercase whitespace-nowrap"
@@ -269,9 +269,9 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
             )}
           </div>
 
-          {/* Notifications Dropdown (When Logged In) */}
+          {/* Notifications Dropdown (When Logged In - Desktop only) */}
           {currentUser && (
-            <div className="relative">
+            <div className="relative hidden md:block">
               <button
                 onClick={() => setIsNotifDropdownOpen(!isNotifDropdownOpen)}
                 className="p-2 rounded-xl bg-[#144537] hover:bg-[#1D5C4B] border border-[#297762] text-stone-200 relative transition-colors"
@@ -319,9 +319,9 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
             </div>
           )}
 
-          {/* User Profile / Auth Action */}
+          {/* User Profile Dropdown (Desktop only) */}
           {currentUser ? (
-            <div className="relative">
+            <div className="relative hidden md:block">
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 className="flex items-center gap-2 bg-[#164E3F] hover:bg-[#1D5C4B] border border-[#297762] px-3 py-1.5 rounded-xl text-xs transition-all shadow-xs whitespace-nowrap"
@@ -335,7 +335,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
                 ) : (
                   <User className="w-4 h-4 text-amber-300" />
                 )}
-                <span className="hidden md:inline font-bold text-white max-w-[120px] truncate">
+                <span className="font-bold text-white max-w-[120px] truncate">
                   {currentUser.name.split(' ')[0]}
                 </span>
                 <ChevronDown className="w-3.5 h-3.5 text-stone-300" />
@@ -382,127 +382,182 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
           ) : (
             <button
               onClick={() => setActiveTab('auth')}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#D4A373] to-[#E0A96D] text-[#0C3B2E] font-bold text-xs shadow-md hover:opacity-95 transition-opacity"
+              className="hidden md:block px-4 py-2 rounded-xl bg-gradient-to-r from-[#D4A373] to-[#E0A96D] text-[#0C3B2E] font-bold text-xs shadow-md hover:opacity-95 transition-opacity"
             >
               Sign In
             </button>
           )}
 
-          {/* Mobile / Tablet Menu Drawer Toggle */}
+          {/* Mobile / Tablet Menu Drawer Toggle Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="xl:hidden p-2 rounded-xl bg-[#144537] border border-[#297762] text-stone-200"
+            className="xl:hidden p-2 rounded-xl bg-[#144537] border border-[#297762] text-stone-200 hover:bg-[#1D5C4B] transition-colors"
+            title="Toggle Menu"
           >
             {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Drawer Menu */}
+      {/* Structured Mobile Navigation Drawer */}
       {isMenuOpen && (
-        <div className="xl:hidden bg-[#08281F] border-t border-[#1D5C4B] px-4 py-4 space-y-2 animate-in fade-in">
-          {currentUser?.email === 'admin@gmail.com' ? (
-            <>
+        <div className="xl:hidden bg-[#08281F] border-t border-[#1D5C4B] px-4 py-5 space-y-4 animate-in fade-in max-h-[85vh] overflow-y-auto">
+          {/* User Profile Card (if authenticated) */}
+          {currentUser ? (
+            <div className="bg-[#0C3B2E] p-3.5 rounded-2xl border border-[#1D5C4B] space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-700/60 border border-emerald-400/40 flex items-center justify-center font-bold text-white text-sm">
+                  {currentUser.avatar_url ? (
+                    <img src={currentUser.avatar_url} alt={currentUser.name} className="w-full h-full object-cover rounded-xl" />
+                  ) : (
+                    currentUser.name.charAt(0)
+                  )}
+                </div>
+                <div className="overflow-hidden">
+                  <p className="font-bold text-xs text-white truncate">{currentUser.name}</p>
+                  <p className="text-[10px] text-stone-400 truncate">{currentUser.email}</p>
+                  <span className="text-[9px] bg-emerald-400/20 text-emerald-300 px-2 py-0.2 rounded-full font-bold uppercase inline-block mt-0.5">
+                    {currentUser.email === 'admin@gmail.com' ? 'Admin' : currentRole === 'worker' ? 'Artisan' : 'Customer'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 pt-1 border-t border-white/10">
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    openChangePasswordModal();
+                  }}
+                  className="px-2.5 py-1.5 rounded-lg bg-white/10 text-white text-[11px] font-bold flex items-center justify-center gap-1 hover:bg-white/20"
+                >
+                  <KeyRound className="w-3 h-3 text-amber-400" />
+                  <span>Password</span>
+                </button>
+                <button
+                  onClick={async () => {
+                    setIsMenuOpen(false);
+                    await signOut();
+                    setActiveTab('home');
+                  }}
+                  className="px-2.5 py-1.5 rounded-lg bg-red-900/40 text-red-300 text-[11px] font-bold flex items-center justify-center gap-1 hover:bg-red-900/60"
+                >
+                  <LogOut className="w-3 h-3" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => {
+                setActiveTab('auth');
+                setIsMenuOpen(false);
+              }}
+              className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#D4A373] to-[#E0A96D] text-[#0C3B2E] font-black text-xs shadow flex items-center justify-center gap-2"
+            >
+              <Lock className="w-4 h-4" />
+              <span>Sign In / Sign Up</span>
+            </button>
+          )}
+
+          {/* Navigation Links */}
+          <div className="space-y-1.5 pt-1">
+            <p className="text-[10px] font-bold text-stone-400 uppercase tracking-wider px-2">Navigation</p>
+            {currentUser?.email === 'admin@gmail.com' ? (
               <button
                 onClick={() => {
                   setActiveTab('dashboard');
                   setIsMenuOpen(false);
                 }}
-                className="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold bg-[#144537] text-teal-300 transition-colors flex items-center gap-2"
+                className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition-colors flex items-center gap-2.5 ${
+                  activeTab === 'dashboard' ? 'bg-[#144537] text-teal-300 border border-teal-500/40' : 'text-stone-300 hover:bg-white/5'
+                }`}
               >
                 <Shield className="w-4 h-4 text-teal-400" />
-                <span>Cooperative Admin Command HQ</span>
+                <span>Admin Command HQ</span>
               </button>
-              <button
-                onClick={async () => {
-                  setIsMenuOpen(false);
-                  await signOut();
-                  setActiveTab('home');
-                }}
-                className="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-red-900/30 text-red-400 transition-colors"
-              >
-                Sign Out
-              </button>
-            </>
-          ) : currentRole === 'worker' ? (
-            <>
+            ) : currentRole === 'worker' ? (
               <button
                 onClick={() => {
                   setActiveTab('dashboard');
                   setIsMenuOpen(false);
                 }}
-                className="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold bg-[#144537] text-amber-300 transition-colors flex items-center gap-2"
+                className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition-colors flex items-center gap-2.5 ${
+                  activeTab === 'dashboard' ? 'bg-[#144537] text-amber-300 border border-amber-500/40' : 'text-stone-300 hover:bg-white/5'
+                }`}
               >
-                <Briefcase className="w-4 h-4" />
+                <Briefcase className="w-4 h-4 text-amber-400" />
                 <span>Artisan Workstation</span>
               </button>
-              <button
-                onClick={async () => {
-                  setIsMenuOpen(false);
-                  await signOut();
-                  setActiveTab('home');
-                }}
-                className="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-red-900/30 text-red-400 transition-colors"
-              >
-                Sign Out
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={() => {
-                  setActiveTab('home');
-                  setIsMenuOpen(false);
-                }}
-                className="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-[#144537] transition-colors"
-              >
-                {t('nav_home', 'Home')}
-              </button>
-              <button
-                onClick={() => {
-                  setActiveTab('services');
-                  setIsMenuOpen(false);
-                }}
-                className="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-[#144537] transition-colors"
-              >
-                {t('nav_services', 'Services & Trades')}
-              </button>
-              {currentUser ? (
-                <>
+            ) : (
+              <>
+                <button
+                  onClick={() => {
+                    setActiveTab('home');
+                    setIsMenuOpen(false);
+                  }}
+                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition-colors flex items-center gap-2.5 ${
+                    activeTab === 'home' ? 'bg-[#144537] text-[#D4A373] border border-[#297762]' : 'text-stone-300 hover:bg-white/5'
+                  }`}
+                >
+                  <Compass className="w-4 h-4 text-emerald-400" />
+                  <span>Home</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveTab('services');
+                    setIsMenuOpen(false);
+                  }}
+                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition-colors flex items-center gap-2.5 ${
+                    activeTab === 'services' ? 'bg-[#144537] text-[#D4A373] border border-[#297762]' : 'text-stone-300 hover:bg-white/5'
+                  }`}
+                >
+                  <Users className="w-4 h-4 text-emerald-400" />
+                  <span>Services & Trades</span>
+                </button>
+                {currentUser && (
                   <button
                     onClick={() => {
                       setActiveTab('dashboard');
                       setIsMenuOpen(false);
                     }}
-                    className="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-[#144537] text-emerald-300 transition-colors"
+                    className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition-colors flex items-center gap-2.5 ${
+                      activeTab === 'dashboard' ? 'bg-[#144537] text-emerald-300 border border-[#297762]' : 'text-stone-300 hover:bg-white/5'
+                    }`}
                   >
-                    My Bookings
+                    <Receipt className="w-4 h-4 text-emerald-400" />
+                    <span>My Bookings</span>
                   </button>
-                  <button
-                    onClick={async () => {
-                      setIsMenuOpen(false);
-                      await signOut();
-                      setActiveTab('home');
-                    }}
-                    className="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-red-900/30 text-red-400 transition-colors"
-                  >
-                    Sign Out
-                  </button>
-                </>
-              ) : (
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Language Selector Grid in Mobile Drawer */}
+          <div className="space-y-2 pt-2 border-t border-white/10">
+            <p className="text-[10px] font-bold text-stone-400 uppercase tracking-wider px-2 flex items-center gap-1.5">
+              <Globe className="w-3.5 h-3.5 text-[#D4A373]" />
+              <span>Select Language / भाषा</span>
+            </p>
+            <div className="grid grid-cols-2 gap-1.5">
+              {languages.map((l) => (
                 <button
+                  key={l.code}
                   onClick={() => {
-                    setActiveTab('auth');
+                    setLanguage(l.code);
                     setIsMenuOpen(false);
                   }}
-                  className="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-[#144537] text-[#D4A373] flex items-center gap-2 transition-colors"
+                  className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center justify-between transition-all ${
+                    language === l.code
+                      ? 'bg-[#144537] text-[#D4A373] border border-[#297762] shadow-xs'
+                      : 'bg-black/30 text-stone-300 hover:bg-black/50 border border-white/5'
+                  }`}
                 >
-                  <Lock className="w-4 h-4" />
-                  <span>{t('nav_auth', 'Sign In / Sign Up')}</span>
+                  <span>{l.label}</span>
+                  <span className="text-[10px] text-stone-400 font-normal">{l.native}</span>
                 </button>
-              )}
-            </>
-          )}
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </header>

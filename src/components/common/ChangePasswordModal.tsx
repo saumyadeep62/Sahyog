@@ -48,22 +48,22 @@ export const ChangePasswordModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-      <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-stone-200 animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-stone-200 animate-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#0C3B2E] to-[#144537] px-6 py-5 text-white flex items-center justify-between">
+        <div className="bg-gradient-to-r from-[#0C3B2E] to-[#144537] px-5 sm:px-6 py-4 sm:py-5 text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-[#D4A373]/20 text-[#D4A373] border border-[#D4A373]/30">
-              <KeyRound className="w-5 h-5" />
+            <div className="p-2 sm:p-2.5 rounded-2xl bg-[#D4A373]/20 text-[#D4A373] border border-[#D4A373]/30">
+              <KeyRound className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div>
-              <h3 className="font-extrabold text-base font-['Outfit']">Change Account Password</h3>
-              <p className="text-[11px] text-stone-300">Secure your SAHYOG account credentials</p>
+              <h3 className="font-extrabold text-sm sm:text-base font-['Outfit']">Change Account Password</h3>
+              <p className="text-[10px] sm:text-[11px] text-stone-300">Secure your SAHYOG credentials</p>
             </div>
           </div>
           <button
             onClick={handleClose}
-            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-stone-300 hover:text-white flex items-center justify-center transition-colors"
+            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/10 hover:bg-white/20 text-stone-300 hover:text-white flex items-center justify-center transition-colors text-xs"
           >
             ✕
           </button>

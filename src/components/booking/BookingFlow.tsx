@@ -199,16 +199,16 @@ export const BookingFlow: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-sm animate-in fade-in">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full overflow-hidden border border-stone-200 flex flex-col max-h-[92vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl max-w-xl w-full overflow-hidden border border-stone-200 flex flex-col max-h-[94vh] sm:max-h-[90vh]">
         {/* Step Indicator Header */}
-        <div className="bg-[#0C3B2E] text-white p-5">
-          <div className="flex items-center justify-between mb-3">
+        <div className="bg-[#0C3B2E] text-white p-4 sm:p-5">
+          <div className="flex items-center justify-between mb-2.5 sm:mb-3">
             <div className="flex items-center gap-2">
-              <span className="text-xs px-2 py-0.5 rounded bg-[#1D5C4B] text-[#D4A373] font-bold">
+              <span className="text-[10px] sm:text-xs px-2 py-0.5 rounded bg-[#1D5C4B] text-[#D4A373] font-bold">
                 Step {currentStep} of 5
               </span>
-              <h3 className="font-bold text-sm font-['Outfit']">
+              <h3 className="font-bold text-xs sm:text-sm font-['Outfit'] truncate">
                 {currentStep === 1 && 'Service Requirement'}
                 {currentStep === 2 && 'Schedule & Location'}
                 {currentStep === 3 && 'Choose Cooperative Artisan'}
@@ -218,9 +218,9 @@ export const BookingFlow: React.FC = () => {
             </div>
             <button
               onClick={handleClose}
-              className="p-1 rounded-lg text-stone-300 hover:text-white hover:bg-[#164E3F] transition-colors"
+              className="p-1.5 rounded-lg text-stone-300 hover:text-white hover:bg-[#164E3F] transition-colors"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
 
@@ -234,7 +234,7 @@ export const BookingFlow: React.FC = () => {
         </div>
 
         {/* Modal Body */}
-        <div className="p-6 overflow-y-auto space-y-5 text-xs text-stone-700 flex-1">
+        <div className="p-4 sm:p-6 overflow-y-auto space-y-4 sm:space-y-5 text-xs text-stone-700 flex-1">
           {/* STEP 1: Task Selection */}
           {currentStep === 1 && (
             <div className="space-y-4">
