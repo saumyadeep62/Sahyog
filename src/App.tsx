@@ -53,7 +53,7 @@ const MainAppContent: React.FC = () => {
       <Header activeTab={activeTab} setActiveTab={(tab: any) => setActiveTab(tab)} />
 
       {/* Main Content Area */}
-      <main className="flex-1">
+      <main className="flex-1 mobile-nav-pb md:pb-0">
         {currentUser && currentUser.email === 'admin@gmail.com' ? (
           <AdminDashboard />
         ) : currentUser && currentRole === 'worker' ? (

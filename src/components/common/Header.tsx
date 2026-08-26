@@ -560,6 +560,73 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
           </div>
         </div>
       )}
+
+      {/* Mobile Floating App Dock (Fixed at bottom on <768px screens) */}
+      <div className="md:hidden fixed bottom-3 inset-x-3 z-40 bg-[#08281F]/90 backdrop-blur-2xl border border-emerald-500/30 rounded-3xl p-1.5 shadow-2xl flex items-center justify-around text-center">
+        {/* Home */}
+        <button
+          onClick={() => setActiveTab('home')}
+          className={`flex flex-col items-center justify-center py-1.5 px-3 rounded-2xl transition-all ${
+            activeTab === 'home'
+              ? 'bg-[#144537] text-[#D4A373] shadow-md border border-[#297762]'
+              : 'text-stone-400 hover:text-stone-200'
+          }`}
+        >
+          <Compass className={`w-4 h-4 ${activeTab === 'home' ? 'text-[#D4A373]' : ''}`} />
+          <span className="text-[10px] font-bold mt-0.5">Home</span>
+        </button>
+
+        {/* Services & Trades (if customer/guest) */}
+        {currentRole !== 'worker' && currentUser?.email !== 'admin@gmail.com' && (
+          <button
+            onClick={() => setActiveTab('services')}
+            className={`flex flex-col items-center justify-center py-1.5 px-3 rounded-2xl transition-all ${
+              activeTab === 'services'
+                ? 'bg-[#144537] text-[#D4A373] shadow-md border border-[#297762]'
+                : 'text-stone-400 hover:text-stone-200'
+            }`}
+          >
+            <Users className={`w-4 h-4 ${activeTab === 'services' ? 'text-[#D4A373]' : ''}`} />
+            <span className="text-[10px] font-bold mt-0.5">Trades</span>
+          </button>
+        )}
+
+        {/* Dashboard / Workstation / HQ */}
+        <button
+          onClick={() => setActiveTab(currentUser ? 'dashboard' : 'auth')}
+          className={`flex flex-col items-center justify-center py-1.5 px-3 rounded-2xl transition-all ${
+            activeTab === 'dashboard' || activeTab === 'auth'
+              ? 'bg-[#144537] text-emerald-300 shadow-md border border-emerald-500/40'
+              : 'text-stone-400 hover:text-stone-200'
+          }`}
+        >
+          {currentUser?.email === 'admin@gmail.com' ? (
+            <Shield className="w-4 h-4 text-teal-400" />
+          ) : currentRole === 'worker' ? (
+            <Briefcase className="w-4 h-4 text-amber-400" />
+          ) : (
+            <Receipt className="w-4 h-4 text-emerald-400" />
+          )}
+          <span className="text-[10px] font-bold mt-0.5">
+            {currentUser?.email === 'admin@gmail.com'
+              ? 'Admin HQ'
+              : currentRole === 'worker'
+              ? 'Workstation'
+              : currentUser
+              ? 'Bookings'
+              : 'Sign In'}
+          </span>
+        </button>
+
+        {/* SOS Urgent Action */}
+        <button
+          onClick={openEmergencyModal}
+          className="flex flex-col items-center justify-center py-1.5 px-3 rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-lg border border-red-400/40 animate-pulse"
+        >
+          <Zap className="w-4 h-4 text-amber-300 fill-amber-300" />
+          <span className="text-[10px] font-extrabold mt-0.5">SOS</span>
+        </button>
+      </div>
     </header>
   );
 };
