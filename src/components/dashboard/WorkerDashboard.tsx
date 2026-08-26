@@ -40,6 +40,7 @@ export const WorkerDashboard: React.FC = () => {
     updateBookingStatus,
     openInvoiceModal,
     uploadCertification,
+    uploadCertificationFile,
     claimWelfareEmergency,
   } = useMarketplace();
 
@@ -53,6 +54,8 @@ export const WorkerDashboard: React.FC = () => {
   const [isUploadCertOpen, setIsUploadCertOpen] = useState(false);
   const [newCertName, setNewCertName] = useState('');
   const [newIssuingBody, setNewIssuingBody] = useState('National Skill Development Corporation (NSDC)');
+  const [selectedCertFile, setSelectedCertFile] = useState<File | null>(null);
+  const [isUploadingCert, setIsUploadingCert] = useState(false);
   const [claimAmount, setClaimAmount] = useState('10000');
   const [claimReason, setClaimReason] = useState('');
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
@@ -77,18 +80,31 @@ export const WorkerDashboard: React.FC = () => {
     updateBookingStatus(bookingId, 'completed');
   };
 
-  const handleUploadCertSubmit = (e: React.FormEvent) => {
+  const handleUploadCertSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCertName.trim()) return;
 
-    uploadCertification(
-      worker.id,
-      newCertName,
-      newIssuingBody,
-      'https://images.unsplash.com/photo-1589330694653-ded6df03f754?w=600&auto=format&fit=crop&q=80'
-    );
-    setIsUploadCertOpen(false);
-    setNewCertName('');
+    setIsUploadingCert(true);
+    try {
+      if (selectedCertFile) {
+        await uploadCertificationFile(worker.id, selectedCertFile, {
+          certificate_name: newCertName,
+          issuing_body: newIssuingBody,
+        });
+      } else {
+        uploadCertification(
+          worker.id,
+          newCertName,
+          newIssuingBody,
+          'https://images.unsplash.com/photo-1589330694653-ded6df03f754?w=600&auto=format&fit=crop&q=80'
+        );
+      }
+      setIsUploadCertOpen(false);
+      setNewCertName('');
+      setSelectedCertFile(null);
+    } finally {
+      setIsUploadingCert(false);
+    }
   };
 
   const handleClaimSubmit = (e: React.FormEvent) => {
@@ -458,25 +474,41 @@ export const WorkerDashboard: React.FC = () => {
                 />
               </div>
 
-              <div className="border-2 border-dashed border-stone-300 rounded-2xl p-4 text-center space-y-1">
+              <label className="block border-2 border-dashed border-stone-300 hover:border-amber-700 rounded-2xl p-4 text-center space-y-1 cursor-pointer transition-colors">
                 <FileText className="w-8 h-8 text-stone-400 mx-auto" />
-                <p className="text-xs font-semibold text-stone-700">Drag & Drop PDF or Image Document</p>
+                <p className="text-xs font-semibold text-stone-700">
+                  {selectedCertFile ? selectedCertFile.name : 'Select or Drag & Drop PDF / Image'}
+                </p>
                 <p className="text-[10px] text-stone-400">Stored securely in Supabase Storage</p>
-              </div>
+                <input
+                  type="file"
+                  accept=".pdf,.png,.jpg,.jpeg"
+                  className="hidden"
+                  onChange={(e) => {
+                    if (e.target.files?.[0]) {
+                      setSelectedCertFile(e.target.files[0]);
+                    }
+                  }}
+                />
+              </label>
 
               <div className="flex gap-2 pt-2">
                 <button
                   type="button"
-                  onClick={() => setIsUploadCertOpen(false)}
+                  onClick={() => {
+                    setIsUploadCertOpen(false);
+                    setSelectedCertFile(null);
+                  }}
                   className="flex-1 py-2.5 rounded-xl border border-stone-300 text-xs font-semibold text-stone-700 hover:bg-stone-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 rounded-xl bg-[#2C1810] hover:bg-[#3E2317] text-white text-xs font-bold shadow-md"
+                  disabled={isUploadingCert}
+                  className="flex-1 py-2.5 rounded-xl bg-[#2C1810] hover:bg-[#3E2317] disabled:opacity-50 text-white text-xs font-bold shadow-md"
                 >
-                  Submit for Verification
+                  {isUploadingCert ? 'Uploading to Storage...' : 'Submit for Verification'}
                 </button>
               </div>
             </form>

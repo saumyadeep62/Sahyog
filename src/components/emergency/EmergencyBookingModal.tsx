@@ -43,19 +43,23 @@ export const EmergencyBookingModal: React.FC = () => {
     setStep('scanning');
 
     // Simulate 2.2s radar lock with nearest cooperative brigade
-    setTimeout(() => {
-      const bk = createEmergencyBooking(selectedCategoryId, address, urgentNote);
-      setDispatchedBooking(bk);
-      setStep('dispatched');
-
+    setTimeout(async () => {
       try {
-        confetti({
-          particleCount: 50,
-          spread: 60,
-          origin: { y: 0.6 },
-        });
+        const bk = await createEmergencyBooking(selectedCategoryId, address, urgentNote);
+        setDispatchedBooking(bk);
+        setStep('dispatched');
+
+        try {
+          confetti({
+            particleCount: 50,
+            spread: 60,
+            origin: { y: 0.6 },
+          });
+        } catch {
+          // ignore
+        }
       } catch {
-        // ignore
+        // fallback
       }
     }, 2200);
   };

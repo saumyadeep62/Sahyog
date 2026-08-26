@@ -117,37 +117,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
-        // Check if matching mock seed user exists for instant trial
-        const seedMatch = SEED_USERS.find((u) => u.email.toLowerCase() === email.trim().toLowerCase());
-        if (seedMatch) {
-          setCurrentUser(seedMatch);
-          closeAuthModal();
-          setLoadingAuth(false);
-          return {};
-        }
         setLoadingAuth(false);
         return { error: error.message };
       }
 
       if (data?.user) {
-        const userMeta = data.user.user_metadata;
-        const userProfile: UserProfile = {
-          id: data.user.id,
-          role: (userMeta?.role as UserRole) || 'customer',
-          name: userMeta?.name || data.user.email?.split('@')[0] || 'Member',
-          email: data.user.email || email,
-          contact: userMeta?.contact || '+91 98765 43210',
-          language_preference: 'en',
-          status: 'active',
-          created_at: data.user.created_at,
-        };
-        setCurrentUser(userProfile);
+        // Fetch public.users profile created by handle_new_user trigger
+        const { data: profile } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+
+        if (profile) {
+          setCurrentUser(profile);
+        } else {
+          const userMeta = data.user.user_metadata;
+          const userProfile: UserProfile = {
+            id: data.user.id,
+            role: (userMeta?.role as UserRole) || 'customer',
+            name: userMeta?.name || data.user.email?.split('@')[0] || 'Member',
+            email: data.user.email || email,
+            contact: userMeta?.contact || '',
+            language_preference: 'en',
+            status: 'active',
+            created_at: data.user.created_at,
+          };
+          setCurrentUser(userProfile);
+        }
         closeAuthModal();
         setLoadingAuth(false);
         return {};
       }
       setLoadingAuth(false);
-      return { error: 'Authentication failed. Please verify your credentials.' };
+      return { error: 'Authentication failed. Please check your credentials.' };
     } catch (err: unknown) {
       setLoadingAuth(false);
       const message = err instanceof Error ? err.message : 'Login failed';
@@ -177,21 +180,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
-        // If Supabase returns rate-limit or email confirmation required, create rich local profile
-        const localUser: UserProfile = {
-          id: `usr-${Date.now()}`,
-          role,
-          name: name.trim(),
-          email: email.trim(),
-          contact: contact.trim(),
-          language_preference: 'en',
-          status: 'active',
-          created_at: new Date().toISOString(),
-        };
-        setCurrentUser(localUser);
-        closeAuthModal();
         setLoadingAuth(false);
-        return { message: 'Account registered successfully!' };
+        return { error: error.message };
       }
 
       if (data?.user) {
@@ -211,7 +201,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { message: 'Welcome to SAHYOG! Registration complete.' };
       }
       setLoadingAuth(false);
-      return {};
+      return { error: 'Sign up failed. Please try again.' };
     } catch (err: unknown) {
       setLoadingAuth(false);
       const message = err instanceof Error ? err.message : 'Registration failed';

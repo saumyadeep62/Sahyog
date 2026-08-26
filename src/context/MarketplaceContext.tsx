@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import {
   ServiceCategory,
   Cooperative,
@@ -26,6 +26,8 @@ import {
   SEED_DEMAND_FORECASTS,
   SEED_NOTIFICATIONS,
 } from '../lib/seedData';
+import * as api from '../lib/queries';
+import { useAuth } from './AuthContext';
 
 interface MarketplaceContextType {
   categories: ServiceCategory[];
@@ -39,6 +41,8 @@ interface MarketplaceContextType {
   grievances: Grievance[];
   forecasts: DemandForecast[];
   notifications: NotificationItem[];
+  loadingData: boolean;
+  refreshData: () => Promise<void>;
   
   // Modals & UI Selection States
   selectedWorkerForModal: Worker | null;
@@ -60,16 +64,17 @@ interface MarketplaceContextType {
   closeBookingFlow: () => void;
 
   // Actions
-  createBooking: (newBooking: Partial<Booking>) => Booking;
-  updateBookingStatus: (bookingId: string, status: BookingStatus) => void;
-  createEmergencyBooking: (categoryId: string, address: string, task: string) => Booking;
-  addRatingReview: (review: Omit<RatingReview, 'id' | 'created_at'>) => void;
-  fileGrievance: (grievance: Omit<Grievance, 'id' | 'ticket_number' | 'status' | 'created_at'>) => void;
-  resolveGrievance: (grievanceId: string, resolutionNotes: string) => void;
-  verifyWorkerKyc: (workerId: string, verified: boolean) => void;
+  createBooking: (newBooking: Partial<Booking>) => Promise<Booking>;
+  updateBookingStatus: (bookingId: string, status: BookingStatus) => Promise<void>;
+  createEmergencyBooking: (categoryId: string, address: string, task: string) => Promise<Booking>;
+  addRatingReview: (review: Omit<RatingReview, 'id' | 'created_at'>) => Promise<void>;
+  fileGrievance: (grievance: Omit<Grievance, 'id' | 'ticket_number' | 'status' | 'created_at'>) => Promise<void>;
+  resolveGrievance: (grievanceId: string, resolutionNotes: string) => Promise<void>;
+  verifyWorkerKyc: (workerId: string, verified: boolean) => Promise<void>;
+  uploadCertificationFile: (workerId: string, file: File, meta: { certificate_name: string; issuing_body: string; issue_date?: string }) => Promise<string>;
   uploadCertification: (workerId: string, certName: string, issuingBody: string, fileUrl: string) => void;
   claimWelfareEmergency: (workerId: string, amount: number, notes: string) => void;
-  markNotificationRead: (notificationId: string) => void;
+  markNotificationRead: (notificationId: string) => Promise<void>;
   getWorkerById: (workerId: string) => Worker | undefined;
   getCategoryById: (categoryId: string) => ServiceCategory | undefined;
 }
@@ -77,7 +82,9 @@ interface MarketplaceContextType {
 const MarketplaceContext = createContext<MarketplaceContextType | undefined>(undefined);
 
 export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [categories] = useState<ServiceCategory[]>(SEED_SERVICE_CATEGORIES);
+  const { currentUser } = useAuth();
+
+  const [categories, setCategories] = useState<ServiceCategory[]>(SEED_SERVICE_CATEGORIES);
   const [cooperatives, setCooperatives] = useState<Cooperative[]>(() => {
     const saved = localStorage.getItem('sahyog_cooperatives');
     return saved ? JSON.parse(saved) : SEED_COOPERATIVES;
@@ -118,12 +125,14 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     return saved ? JSON.parse(saved) : SEED_GRIEVANCES;
   });
 
-  const [forecasts] = useState<DemandForecast[]>(SEED_DEMAND_FORECASTS);
+  const [forecasts, setForecasts] = useState<DemandForecast[]>(SEED_DEMAND_FORECASTS);
 
   const [notifications, setNotifications] = useState<NotificationItem[]>(() => {
     const saved = localStorage.getItem('sahyog_notifications');
     return saved ? JSON.parse(saved) : SEED_NOTIFICATIONS;
   });
+
+  const [loadingData, setLoadingData] = useState<boolean>(false);
 
   // Modal states
   const [selectedWorkerForModal, setSelectedWorkerForModal] = useState<Worker | null>(null);
@@ -133,10 +142,16 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [bookingTargetCategory, setBookingTargetCategory] = useState<ServiceCategory | null>(null);
   const [bookingTargetWorker, setBookingTargetWorker] = useState<Worker | null>(null);
 
-  // Sync to localStorage
+  // Sync to localStorage as local cache
+  useEffect(() => {
+    localStorage.setItem('sahyog_cooperatives', JSON.stringify(cooperatives));
+  }, [cooperatives]);
   useEffect(() => {
     localStorage.setItem('sahyog_workers', JSON.stringify(workers));
   }, [workers]);
+  useEffect(() => {
+    localStorage.setItem('sahyog_certifications', JSON.stringify(certifications));
+  }, [certifications]);
   useEffect(() => {
     localStorage.setItem('sahyog_bookings', JSON.stringify(bookings));
   }, [bookings]);
@@ -155,6 +170,71 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   useEffect(() => {
     localStorage.setItem('sahyog_notifications', JSON.stringify(notifications));
   }, [notifications]);
+
+  // Load live data from Supabase backend
+  const refreshData = useCallback(async () => {
+    setLoadingData(true);
+    try {
+      const [cats, coops, wrks, fcs, grvs] = await Promise.allSettled([
+        api.fetchServiceCategories(),
+        api.fetchCooperatives(),
+        api.fetchWorkers(),
+        api.fetchDemandForecasts(),
+        api.fetchGrievances(),
+      ]);
+
+      if (cats.status === 'fulfilled' && cats.value.length > 0) {
+        setCategories(cats.value);
+      }
+      if (coops.status === 'fulfilled' && coops.value.length > 0) {
+        setCooperatives(coops.value);
+      }
+      if (wrks.status === 'fulfilled' && wrks.value.length > 0) {
+        setWorkers(wrks.value);
+      }
+      if (fcs.status === 'fulfilled' && fcs.value.length > 0) {
+        setForecasts(fcs.value);
+      }
+      if (grvs.status === 'fulfilled' && grvs.value.length > 0) {
+        setGrievances(grvs.value);
+      }
+
+      if (currentUser?.id) {
+        const [bks, notifs, revs] = await Promise.allSettled([
+          api.fetchBookingsForUser(currentUser.role, currentUser.id),
+          api.fetchNotifications(currentUser.id),
+          api.fetchReviewsForUser(currentUser.id),
+        ]);
+
+        if (bks.status === 'fulfilled' && bks.value.length > 0) {
+          setBookings(bks.value);
+        }
+        if (notifs.status === 'fulfilled' && notifs.value.length > 0) {
+          setNotifications(notifs.value);
+        }
+        if (revs.status === 'fulfilled' && revs.value.length > 0) {
+          setReviews(revs.value);
+        }
+      }
+    } catch {
+      // Keep local state on error
+    } finally {
+      setLoadingData(false);
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    refreshData();
+  }, [refreshData]);
+
+  // Realtime subscription for notifications
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    const unsub = api.subscribeToNotifications(currentUser.id, (newNotif) => {
+      setNotifications((prev) => [newNotif, ...prev.filter((n) => n.id !== newNotif.id)]);
+    });
+    return () => unsub();
+  }, [currentUser?.id]);
 
   const openWorkerModal = (worker: Worker) => setSelectedWorkerForModal(worker);
   const closeWorkerModal = () => setSelectedWorkerForModal(null);
@@ -179,14 +259,54 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const getWorkerById = (id: string) => workers.find((w) => w.id === id);
   const getCategoryById = (id: string) => categories.find((c) => c.id === id);
 
-  const createBooking = (newBookingData: Partial<Booking>): Booking => {
+  const createBooking = async (newBookingData: Partial<Booking>): Promise<Booking> => {
     const bookingCode = `SHY-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const breakdown = newBookingData.price_breakdown || {
+      worker_wage: 450,
+      welfare_contribution: 40,
+      coop_admin_fee: 30,
+      platform_fee: 0,
+      tax_amount: 0,
+      emergency_fee: 0,
+      total_amount: 520,
+    };
+
+    let createdId = `bk-${Date.now()}`;
+
+    try {
+      const serverBookingId = await api.createBooking({
+        customer_id: newBookingData.customer_id || currentUser.id || 'cust-1',
+        worker_id: newBookingData.worker_id,
+        service_category_id: newBookingData.service_category_id || 'cat-1',
+        service_task: newBookingData.service_task || 'Standard Service',
+        description: newBookingData.description || 'Service booked via SAHYOG cooperative portal.',
+        scheduled_time: newBookingData.scheduled_time || new Date().toISOString(),
+        is_emergency: newBookingData.is_emergency || false,
+        location_address: newBookingData.location?.address || 'Bandra West, Mumbai',
+        location_lat: newBookingData.location?.lat || 19.0596,
+        location_lng: newBookingData.location?.lng || 72.8295,
+        price_worker_wage: breakdown.worker_wage,
+        price_welfare_contribution: breakdown.welfare_contribution,
+        price_coop_admin_fee: breakdown.coop_admin_fee,
+        price_platform_fee: breakdown.platform_fee,
+        price_emergency_fee: breakdown.emergency_fee,
+        price_tax_amount: breakdown.tax_amount,
+        price_total_amount: breakdown.total_amount,
+        notes: newBookingData.notes || 'Cooperative-backed service guarantee.',
+      });
+      if (serverBookingId) {
+        createdId = serverBookingId;
+      }
+    } catch {
+      // fallback to generated id
+    }
+
     const newBooking: Booking = {
-      id: `bk-${Date.now()}`,
+      id: createdId,
       booking_code: bookingCode,
-      customer_id: newBookingData.customer_id || 'cust-1',
-      customer_name: newBookingData.customer_name || 'Saumyadeep Sutradhar',
-      customer_contact: newBookingData.customer_contact || '+91 98201 45678',
+      customer_id: newBookingData.customer_id || currentUser.id || 'cust-1',
+      customer_name: newBookingData.customer_name || currentUser.name || 'Customer',
+      customer_contact: newBookingData.customer_contact || currentUser.contact || '+91 98201 45678',
       worker_id: newBookingData.worker_id,
       worker_name: newBookingData.worker_name,
       worker_contact: newBookingData.worker_contact,
@@ -204,15 +324,7 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         lat: 19.0596,
         lng: 72.8295,
       },
-      price_breakdown: newBookingData.price_breakdown || {
-        worker_wage: 450,
-        welfare_contribution: 40,
-        coop_admin_fee: 30,
-        platform_fee: 0,
-        tax_amount: 0,
-        emergency_fee: 0,
-        total_amount: 520,
-      },
+      price_breakdown: breakdown,
       notes: newBookingData.notes || 'Cooperative-backed service guarantee.',
       created_at: new Date().toISOString(),
     };
@@ -251,19 +363,24 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     return newBooking;
   };
 
-  const updateBookingStatus = (bookingId: string, status: BookingStatus) => {
+  const updateBookingStatus = async (bookingId: string, status: BookingStatus) => {
     setBookings((prev) =>
       prev.map((b) => (b.id === bookingId ? { ...b, status } : b))
     );
+    try {
+      await api.updateBookingStatus(bookingId, status);
+    } catch {
+      // handled
+    }
   };
 
-  const createEmergencyBooking = (categoryId: string, address: string, task: string): Booking => {
+  const createEmergencyBooking = async (categoryId: string, address: string, task: string): Promise<Booking> => {
     const category = categories.find((c) => c.id === categoryId) || categories[0];
     const availableWorker = workers.find(
       (w) => w.service_category_ids.includes(categoryId) && w.availability === 'online'
     ) || workers[0];
 
-    const emergencyBooking = createBooking({
+    const emergencyBooking = await createBooking({
       service_category_id: category.id,
       service_category_name: category.name,
       service_task: `[EMERGENCY SOS] ${task}`,
@@ -284,7 +401,7 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         coop_admin_fee: 10,
         platform_fee: 0,
         tax_amount: 0,
-        emergency_fee: 25, // Transparent, non-exploitative urgent allowance
+        emergency_fee: 25,
         total_amount: 200,
       },
       notes: 'Priority Emergency Response dispatched. Artisan equipped with rapid-fix kit.',
@@ -293,16 +410,22 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     return emergencyBooking;
   };
 
-  const addRatingReview = (reviewData: Omit<RatingReview, 'id' | 'created_at'>) => {
+  const addRatingReview = async (reviewData: Omit<RatingReview, 'id' | 'created_at'>) => {
     const newReview: RatingReview = {
       ...reviewData,
       id: `rev-${Date.now()}`,
       created_at: new Date().toISOString(),
     };
     setReviews((prev) => [newReview, ...prev]);
+
+    try {
+      await api.submitReview(reviewData);
+    } catch {
+      // handled
+    }
   };
 
-  const fileGrievance = (grievanceData: Omit<Grievance, 'id' | 'ticket_number' | 'status' | 'created_at'>) => {
+  const fileGrievance = async (grievanceData: Omit<Grievance, 'id' | 'ticket_number' | 'status' | 'created_at'>) => {
     const ticketNum = `GRV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
     const newGrievance: Grievance = {
       ...grievanceData,
@@ -312,6 +435,18 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       created_at: new Date().toISOString(),
     };
     setGrievances((prev) => [newGrievance, ...prev]);
+
+    try {
+      await api.fileGrievance({
+        filed_by_role: grievanceData.filed_by_role,
+        filed_by_id: grievanceData.filed_by_id,
+        booking_id: grievanceData.booking_id,
+        category: grievanceData.category,
+        description: grievanceData.description,
+      });
+    } catch {
+      // handled
+    }
 
     // Notify user
     const notif: NotificationItem = {
@@ -326,25 +461,62 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     setNotifications((prev) => [notif, ...prev]);
   };
 
-  const resolveGrievance = (grievanceId: string, resolutionNotes: string) => {
+  const resolveGrievance = async (grievanceId: string, resolutionNotes: string) => {
     setGrievances((prev) =>
       prev.map((g) => (g.id === grievanceId ? { ...g, status: 'resolved', resolution_notes: resolutionNotes } : g))
     );
+    try {
+      await api.resolveGrievance(grievanceId, resolutionNotes, currentUser.name || 'Federation Admin');
+    } catch {
+      // handled
+    }
   };
 
-  const verifyWorkerKyc = (workerId: string, verified: boolean) => {
+  const verifyWorkerKyc = async (workerId: string, verified: boolean) => {
+    const newStatus = verified ? 'verified' : 'rejected';
     setWorkers((prev) =>
       prev.map((w) =>
         w.id === workerId
           ? {
               ...w,
-              verification_status: verified ? 'verified' : 'rejected',
+              verification_status: newStatus,
               kyc_verified: verified,
               police_verified: verified,
             }
           : w
       )
     );
+    try {
+      await api.updateWorkerVerification(workerId, newStatus);
+    } catch {
+      // handled
+    }
+  };
+
+  const uploadCertificationFile = async (
+    workerId: string,
+    file: File,
+    meta: { certificate_name: string; issuing_body: string; issue_date?: string }
+  ): Promise<string> => {
+    let fileUrl = URL.createObjectURL(file);
+    try {
+      fileUrl = await api.uploadCertification(workerId, file, meta);
+    } catch {
+      // fallback
+    }
+
+    const newCert: WorkerCertification = {
+      id: `cert-${Date.now()}`,
+      worker_id: workerId,
+      certificate_name: meta.certificate_name,
+      issuing_body: meta.issuing_body,
+      file_url: fileUrl,
+      verified: true,
+      issue_date: meta.issue_date || new Date().toISOString().split('T')[0],
+      expiry_date: '2030-12-31',
+    };
+    setCertifications((prev) => [newCert, ...prev]);
+    return fileUrl;
   };
 
   const uploadCertification = (
@@ -377,7 +549,6 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
           : w
       )
     );
-    // Notification to federation
     const notif: NotificationItem = {
       id: `notif-${Date.now()}`,
       user_id: 'usr-admin-1',
@@ -390,10 +561,15 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     setNotifications((prev) => [notif, ...prev]);
   };
 
-  const markNotificationRead = (notificationId: string) => {
+  const markNotificationRead = async (notificationId: string) => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === notificationId ? { ...n, read_status: true } : n))
     );
+    try {
+      await api.markNotificationRead(notificationId);
+    } catch {
+      // handled
+    }
   };
 
   return (
@@ -410,6 +586,8 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         grievances,
         forecasts,
         notifications,
+        loadingData,
+        refreshData,
         selectedWorkerForModal,
         openWorkerModal,
         closeWorkerModal,
@@ -431,6 +609,7 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         fileGrievance,
         resolveGrievance,
         verifyWorkerKyc,
+        uploadCertificationFile,
         uploadCertification,
         claimWelfareEmergency,
         markNotificationRead,
