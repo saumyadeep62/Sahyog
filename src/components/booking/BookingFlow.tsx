@@ -13,6 +13,8 @@ import {
   Star,
   Receipt,
   UserCheck,
+  Navigation,
+  SlidersHorizontal,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useMarketplace } from '../../context/MarketplaceContext';
@@ -47,11 +49,31 @@ export const BookingFlow: React.FC = () => {
   const [address, setAddress] = useState<string>(
     'Flat 402, Sea Crest Apartments, Perry Cross Road, Bandra West, Mumbai 400050'
   );
+  const [customerLocation, setCustomerLocation] = useState<{ lat: number; lng: number }>({
+    lat: 19.076,
+    lng: 72.8777,
+  });
+  const [sortMode, setSortMode] = useState<'distance' | 'rating'>('distance');
   const [selectedWorker, setSelectedWorker] = useState<Worker | null>(bookingTargetWorker || null);
   const [autoMatch, setAutoMatch] = useState<boolean>(!bookingTargetWorker);
   const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'Card' | 'CashAfterWork'>('UPI');
   const [confirmedBooking, setConfirmedBooking] = useState<Booking | null>(null);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+
+  // Haversine distance calculator in km
+  const getDistKm = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return Math.round(R * c * 10) / 10;
+  };
 
   useEffect(() => {
     if (isBookingFlowOpen) {
@@ -83,9 +105,19 @@ export const BookingFlow: React.FC = () => {
 
   if (!isBookingFlowOpen) return null;
 
-  // Category matching workers
-  const eligibleWorkers = workers.filter((w) =>
-    w.service_category_ids.includes(selectedCategory.id)
+  // Category matching workers with proximity distance & ETA
+  const eligibleWorkersWithDistance = workers
+    .filter((w) => w.service_category_ids.includes(selectedCategory.id))
+    .map((w) => {
+      const wLat = w.location?.lat || 19.082;
+      const wLng = w.location?.lng || 72.884;
+      const distKm = getDistKm(customerLocation.lat, customerLocation.lng, wLat, wLng);
+      const etaMins = Math.max(5, Math.round(distKm * 3.2 + 4));
+      return { ...w, distKm, etaMins };
+    });
+
+  const eligibleWorkers = [...eligibleWorkersWithDistance].sort((a, b) =>
+    sortMode === 'distance' ? a.distKm - b.distKm : (b.rating || 0) - (a.rating || 0)
   );
 
   // Price calculations
@@ -120,8 +152,8 @@ export const BookingFlow: React.FC = () => {
         is_emergency: isEmergency,
         location: {
           address,
-          lat: 19.0596,
-          lng: 72.8295,
+          lat: customerLocation.lat,
+          lng: customerLocation.lng,
         },
         price_breakdown: {
           worker_wage: workerWage,
@@ -314,21 +346,52 @@ export const BookingFlow: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-stone-800 mb-1">Service Address</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold text-stone-800">Service Address & Household GPS</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(
+                          (pos) => {
+                            setCustomerLocation({
+                              lat: pos.coords.latitude,
+                              lng: pos.coords.longitude,
+                            });
+                            setAddress(`Household GPS (${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}) • Bandra West, Mumbai`);
+                          },
+                          () => {
+                            setCustomerLocation({ lat: 19.076, lng: 72.8777 });
+                          }
+                        );
+                      }
+                    }}
+                    className="text-[11px] font-bold text-emerald-800 hover:text-emerald-950 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded-lg border border-emerald-300 flex items-center gap-1 transition-colors"
+                  >
+                    <Navigation className="w-3 h-3 text-emerald-700 transform rotate-45" />
+                    <span>Detect Household GPS</span>
+                  </button>
+                </div>
                 <div className="relative">
                   <MapPin className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
                   <textarea
-                    rows={3}
+                    rows={2}
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-xs border border-stone-300 rounded-xl focus:ring-2 focus:ring-[#0C3B2E] focus:outline-none"
+                    className="w-full pl-9 pr-3 py-2 text-xs border border-stone-300 rounded-xl focus:ring-2 focus:ring-[#0C3B2E] focus:outline-none bg-stone-50/40"
                   />
                 </div>
+                <p className="text-[10px] text-stone-500 mt-1 flex items-center gap-1">
+                  <span>📍 Matching Coordinates:</span>
+                  <span className="font-mono font-bold text-emerald-800">
+                    {customerLocation.lat.toFixed(4)}, {customerLocation.lng.toFixed(4)}
+                  </span>
+                </p>
               </div>
             </div>
           )}
 
-          {/* STEP 3: Worker Selection */}
+          {/* STEP 3: Proximity-Based Worker Selection */}
           {currentStep === 3 && (
             <div className="space-y-4">
               <div
@@ -347,24 +410,54 @@ export const BookingFlow: React.FC = () => {
                     <UserCheck className="w-5 h-5 text-[#D4A373]" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-stone-900 text-xs">Instant Cooperative Auto-Match (Recommended)</h4>
-                    <p className="text-[11px] text-stone-500">
-                      Cooperative assigns the nearest available certified artisan in your zone
+                    <div className="flex items-center gap-1.5">
+                      <h4 className="font-bold text-stone-900 text-xs">⚡ Proximity Auto-Dispatch (Recommended)</h4>
+                      <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
+                        Shortest ETA
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-stone-500 mt-0.5">
+                      Dispatches the closest verified online artisan within your neighborhood cluster (~8 min arrival)
                     </p>
                   </div>
                 </div>
                 {autoMatch && <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />}
               </div>
 
-              <div className="relative text-center">
-                <span className="bg-white px-3 text-[10px] font-bold text-stone-400 uppercase tracking-wider relative z-10">
-                  Or Pick a Specific Artisan
+              {/* Sort Toggle Bar */}
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
+                  Available Artisans Near You ({eligibleWorkers.length})
                 </span>
-                <div className="absolute inset-0 top-1/2 border-t border-stone-200 -z-0"></div>
+
+                <div className="flex items-center gap-1 bg-stone-100 p-0.5 rounded-lg border border-stone-200 text-[10px]">
+                  <button
+                    type="button"
+                    onClick={() => setSortMode('distance')}
+                    className={`px-2 py-1 rounded-md font-bold transition-all ${
+                      sortMode === 'distance'
+                        ? 'bg-[#0C3B2E] text-white shadow-xs'
+                        : 'text-stone-600 hover:text-stone-900'
+                    }`}
+                  >
+                    📍 Nearest Proximity
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSortMode('rating')}
+                    className={`px-2 py-1 rounded-md font-bold transition-all ${
+                      sortMode === 'rating'
+                        ? 'bg-[#0C3B2E] text-white shadow-xs'
+                        : 'text-stone-600 hover:text-stone-900'
+                    }`}
+                  >
+                    ★ Top Rated
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-2 max-h-56 overflow-y-auto">
-                {eligibleWorkers.map((w) => {
+                {eligibleWorkers.map((w, idx) => {
                   const isSelected = selectedWorker?.id === w.id;
                   return (
                     <div
@@ -386,19 +479,29 @@ export const BookingFlow: React.FC = () => {
                           className="w-10 h-10 rounded-xl object-cover border border-[#D4A373]"
                         />
                         <div>
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-bold text-stone-900">{w.full_name}</span>
-                            <span className="text-[10px] px-1.5 py-0.2 bg-emerald-100 text-emerald-800 rounded font-medium">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-bold text-stone-900 text-xs">{w.full_name}</span>
+                            <span className="text-[10px] px-1.5 py-0.2 bg-emerald-100 text-emerald-800 rounded font-bold">
                               ★ {w.rating}
                             </span>
+                            {idx === 0 && sortMode === 'distance' && (
+                              <span className="text-[9px] bg-emerald-500 text-white font-extrabold px-1.5 py-0.5 rounded-md uppercase">
+                                🥇 Closest
+                              </span>
+                            )}
                           </div>
-                          <p className="text-[10px] text-stone-500">
-                            {w.cooperative_name} • {w.experience_years} yrs exp
-                          </p>
+                          
+                          <div className="flex items-center gap-2 text-[10px] text-stone-500 mt-0.5">
+                            <span className="font-semibold text-emerald-800 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200/60 font-mono">
+                              📍 {w.distKm} km • ~{w.etaMins}m ETA
+                            </span>
+                            <span>{w.location?.area || 'Bandra West'}</span>
+                          </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <span className="font-bold text-[#0C3B2E] block">₹{w.hourly_rate}/h</span>
+
+                      <div className="text-right flex-shrink-0">
+                        <span className="font-black text-xs text-[#0C3B2E] block">₹{w.hourly_rate}/h</span>
                         {isSelected && <CheckCircle2 className="w-4 h-4 text-emerald-600 inline mt-1" />}
                       </div>
                     </div>

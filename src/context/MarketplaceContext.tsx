@@ -272,7 +272,7 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       total_amount: 520,
     };
 
-    // AI Auto-Assignment: If no specific worker was chosen by customer, match best verified artisan
+    // Proximity & AI Auto-Assignment: If no specific worker was chosen by customer, match closest verified artisan
     let assignedWorker = newBookingData.worker_id ? getWorkerById(newBookingData.worker_id) : undefined;
     if (!assignedWorker) {
       const targetCatId = newBookingData.service_category_id;
@@ -283,14 +283,43 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       );
 
       if (candidates.length > 0) {
-        // Weighted scoring: 50% rating, 30% online/proximity, 20% fairness load
+        const custLat = newBookingData.location?.lat || 19.076;
+        const custLng = newBookingData.location?.lng || 72.8777;
+
+        // Haversine distance calculation in km
+        const getDistKm = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+          const R = 6371;
+          const dLat = ((lat2 - lat1) * Math.PI) / 180;
+          const dLon = ((lon2 - lon1) * Math.PI) / 180;
+          const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos((lat1 * Math.PI) / 180) *
+              Math.cos((lat2 * Math.PI) / 180) *
+              Math.sin(dLon / 2) *
+              Math.sin(dLon / 2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          return Math.round(R * c * 10) / 10;
+        };
+
+        // Weighted scoring: 60% Proximity/Distance, 20% Online Status, 15% Rating, 5% Fairness
         const scored = candidates.map((w) => {
+          const wLat = w.location?.lat || 19.082;
+          const wLng = w.location?.lng || 72.884;
+          const distKm = getDistKm(custLat, custLng, wLat, wLng);
+          const proximityScore = 1.0 / (1.0 + distKm * 0.25);
           const ratingScore = (w.rating || 4.5) / 5;
-          const isOnlineScore = w.availability === 'online' ? 1.0 : 0.3;
+          const isOnlineScore = w.availability === 'online' ? 1.0 : 0.35;
           const fairnessScore = 1.0 / (1.0 + (w.total_jobs_completed || 0) * 0.05);
-          const score = 0.5 * ratingScore + 0.3 * isOnlineScore + 0.2 * fairnessScore;
-          return { worker: w, score };
+
+          const score =
+            0.6 * proximityScore +
+            0.2 * isOnlineScore +
+            0.15 * ratingScore +
+            0.05 * fairnessScore;
+
+          return { worker: w, distKm, score };
         });
+
         scored.sort((a, b) => b.score - a.score);
         assignedWorker = scored[0].worker;
       }
