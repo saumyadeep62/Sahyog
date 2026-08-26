@@ -23,6 +23,7 @@ interface AuthContextType {
   isEditProfileOpen: boolean;
   openEditProfileModal: () => void;
   closeEditProfileModal: () => void;
+  impersonateUser: (user: UserProfile) => void;
   loadingAuth: boolean;
 }
 
@@ -404,6 +405,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('sahyog_user');
   };
 
+  const impersonateUser = (user: UserProfile) => {
+    setCurrentUser(user);
+    localStorage.setItem('sahyog_user', JSON.stringify(user));
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -415,6 +421,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signInWithOtp,
         updateUserPassword,
         updateUserProfile,
+        impersonateUser,
         signOut,
         isAuthModalOpen,
         openAuthModal,

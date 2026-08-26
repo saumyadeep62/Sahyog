@@ -30,6 +30,13 @@ import {
   UserCheck,
   ChevronRight,
   Eye,
+  EyeOff,
+  Copy,
+  Unlock,
+  LogIn,
+  Key,
+  KeyRound,
+  ShieldCheck,
   Check,
   X,
   HeartHandshake,
@@ -61,7 +68,7 @@ interface CustomerRecord {
 }
 
 export const AdminDashboard: React.FC = () => {
-  const { currentUser, openChangePasswordModal, openEditProfileModal } = useAuth();
+  const { currentUser, openChangePasswordModal, openEditProfileModal, impersonateUser } = useAuth();
   const { t } = useLanguage();
   const {
     categories,
@@ -78,8 +85,35 @@ export const AdminDashboard: React.FC = () => {
   } = useMarketplace();
 
   const [activeAdminTab, setActiveAdminTab] = useState<
-    'artisans' | 'customers' | 'bookings' | 'grievances' | 'welfare' | 'ai_forecast'
+    'artisans' | 'customers' | 'credentials' | 'bookings' | 'grievances' | 'welfare' | 'ai_forecast'
   >('artisans');
+
+  // Credentials & Password Inspection State
+  const [passwordOverrides, setPasswordOverrides] = useState<Record<string, string>>(() => {
+    const saved = localStorage.getItem('sahyog_account_passwords');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {}
+    }
+    return {
+      'admin@gmail.com': 'admin123',
+      'saumyadeep.sutradhar@example.com': 'customer@123',
+      'pooja.b@example.com': 'customer@123',
+      'ananya.sen@example.com': 'customer@123',
+      'karan.mehra@example.com': 'customer@123',
+      'sunita.narang@example.com': 'customer@123',
+    };
+  });
+
+  const [revealedPasswords, setRevealedPasswords] = useState<Record<string, boolean>>({});
+  const [showAllPasswords, setShowAllPasswords] = useState(false);
+  const [copiedUserEmail, setCopiedUserEmail] = useState<string | null>(null);
+  const [credentialSearch, setCredentialSearch] = useState('');
+  const [credentialRoleFilter, setCredentialRoleFilter] = useState<'all' | 'customer' | 'worker' | 'admin'>('all');
+  const [editPasswordModalUser, setEditPasswordModalUser] = useState<{ id: string; name: string; email: string; role: string; currentPassword: string } | null>(null);
+  const [overridePasswordInput, setOverridePasswordInput] = useState('');
+  const [overrideSuccessMsg, setOverrideSuccessMsg] = useState('');
 
   // Search & Filter States
   const [artisanSearch, setArtisanSearch] = useState('');
@@ -294,6 +328,106 @@ export const AdminDashboard: React.FC = () => {
     return matchesSearch && matchesStatus;
   });
 
+  // Compile Comprehensive Accounts & Passwords Audit List
+  const allAccountCredentials = [
+    // 1. Super Admin Account
+    {
+      id: 'usr-admin-master',
+      name: 'Super Administrator',
+      email: 'admin@gmail.com',
+      contact: '+91 98000 00000',
+      role: 'admin' as const,
+      category_name: 'Cooperative Federation Command',
+      cooperative_name: 'National Federation of Multi-State Worker Cooperatives',
+      avatar_url: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&auto=format&fit=crop&q=80',
+      status: 'Active • Super Admin Authority',
+      password: passwordOverrides['admin@gmail.com'] || 'admin123',
+    },
+    // 2. Household Customers
+    ...customerBase.map((c) => ({
+      id: c.id,
+      name: c.name,
+      email: c.email,
+      contact: c.contact,
+      role: 'customer' as const,
+      category_name: c.member_type,
+      cooperative_name: `${c.city} Consumer Circle`,
+      avatar_url: c.avatar_url,
+      status: 'Active • Verified Household',
+      password: passwordOverrides[c.email] || 'customer@123',
+    })),
+    // 3. Registered Cooperative Artisans
+    ...localWorkers.map((w) => {
+      const email = `${w.full_name.toLowerCase().replace(/\s+/g, '.')}@sahyog.coop`;
+      return {
+        id: w.id,
+        name: w.full_name,
+        email,
+        contact: '+91 98199 87654',
+        role: 'worker' as const,
+        category_name: w.skills.slice(0, 2).join(', ') || 'Certified Artisan',
+        cooperative_name: w.cooperative_name || 'Mumbai Shramik Sahakari',
+        avatar_url: w.avatar_url,
+        status: w.kyc_verified ? 'Active • KYC Police Verified' : 'Active • On-Duty Artisan',
+        password: passwordOverrides[email] || 'worker@123',
+      };
+    }),
+  ];
+
+  // Filtered Accounts
+  const filteredCredentials = allAccountCredentials.filter((acc) => {
+    const matchesSearch =
+      acc.name.toLowerCase().includes(credentialSearch.toLowerCase()) ||
+      acc.email.toLowerCase().includes(credentialSearch.toLowerCase()) ||
+      acc.contact.includes(credentialSearch) ||
+      acc.cooperative_name.toLowerCase().includes(credentialSearch.toLowerCase());
+
+    const matchesRole =
+      credentialRoleFilter === 'all' || acc.role === credentialRoleFilter;
+
+    return matchesSearch && matchesRole;
+  });
+
+  const toggleRevealPassword = (email: string) => {
+    setRevealedPasswords((prev) => ({ ...prev, [email]: !prev[email] }));
+  };
+
+  const handleCopyPassword = (email: string, pass: string) => {
+    navigator.clipboard.writeText(pass);
+    setCopiedUserEmail(email);
+    setTimeout(() => setCopiedUserEmail(null), 2000);
+  };
+
+  const handleSavePasswordOverride = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editPasswordModalUser || !overridePasswordInput.trim()) return;
+
+    const newMap = { ...passwordOverrides, [editPasswordModalUser.email]: overridePasswordInput.trim() };
+    setPasswordOverrides(newMap);
+    localStorage.setItem('sahyog_account_passwords', JSON.stringify(newMap));
+
+    setOverrideSuccessMsg(`Password for ${editPasswordModalUser.name} (${editPasswordModalUser.email}) updated to "${overridePasswordInput.trim()}"!`);
+    setTimeout(() => {
+      setOverrideSuccessMsg('');
+      setEditPasswordModalUser(null);
+      setOverridePasswordInput('');
+    }, 1500);
+  };
+
+  const handleImpersonateUser = (acc: typeof allAccountCredentials[0]) => {
+    impersonateUser({
+      id: acc.id,
+      email: acc.email,
+      name: acc.name,
+      role: acc.role === 'admin' ? 'super_admin' : (acc.role as 'worker' | 'customer'),
+      contact: acc.contact,
+      avatar_url: acc.avatar_url,
+      language_preference: 'en',
+      status: 'active',
+      created_at: new Date().toISOString(),
+    });
+  };
+
   const handleResolveGrievance = (grievanceId: string) => {
     if (!resolutionNote.trim()) return;
     resolveGrievance(grievanceId, resolutionNote);
@@ -467,6 +601,18 @@ export const AdminDashboard: React.FC = () => {
         >
           <Building className="w-4 h-4 text-cyan-400" />
           <span>Full Customer Base ({customerBase.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveAdminTab('credentials')}
+          className={`px-4 py-2.5 rounded-2xl transition-all flex items-center gap-2 whitespace-nowrap ${
+            activeAdminTab === 'credentials'
+              ? 'bg-[#0F172A] text-amber-300 shadow-md border border-amber-500/50 ring-1 ring-amber-400/30'
+              : 'text-stone-600 hover:bg-stone-100'
+          }`}
+        >
+          <KeyRound className="w-4 h-4 text-amber-400" />
+          <span>🔐 User Credentials & Passwords ({allAccountCredentials.length})</span>
         </button>
 
         <button
@@ -770,6 +916,226 @@ export const AdminDashboard: React.FC = () => {
                       </td>
                     </tr>
                   ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 5.5 TAB: USER CREDENTIALS & PASSWORD ACCESS AUDIT */}
+      {activeAdminTab === 'credentials' && (
+        <div className="space-y-4 animate-in fade-in duration-300">
+          {/* Top Audit Notice & Global Controls */}
+          <div className="bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#3B2818] p-5 sm:p-6 rounded-3xl text-white shadow-xl border border-amber-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="p-3 rounded-2xl bg-amber-400/20 text-amber-300 border border-amber-400/30 flex-shrink-0">
+                <KeyRound className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-black text-base sm:text-lg font-['Outfit'] flex items-center gap-2">
+                  <span>Cooperative Account Credentials & Password Access</span>
+                  <span className="text-[10px] bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded-full font-bold border border-amber-400/40 uppercase">
+                    Admin Privilege
+                  </span>
+                </h3>
+                <p className="text-xs text-stone-300 mt-0.5">
+                  Super Administrator master oversight: view account access keys, unmask passwords, copy credentials, or override login keys.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <button
+                type="button"
+                onClick={() => setShowAllPasswords(!showAllPasswords)}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-md ${
+                  showAllPasswords
+                    ? 'bg-amber-400 text-stone-900 hover:bg-amber-300'
+                    : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
+                }`}
+              >
+                {showAllPasswords ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                <span>{showAllPasswords ? 'Hide All Passwords' : 'Show All Passwords'}</span>
+              </button>
+
+              <span className="text-xs text-stone-300 bg-black/40 px-3 py-2 rounded-xl border border-white/10 font-mono font-bold">
+                Total Accounts: {filteredCredentials.length}
+              </span>
+            </div>
+          </div>
+
+          {/* Filter & Search Bar */}
+          <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
+              <input
+                type="text"
+                value={credentialSearch}
+                onChange={(e) => setCredentialSearch(e.target.value)}
+                placeholder="Search accounts by name, registered email, or cooperative guild..."
+                className="w-full pl-9 pr-3 py-2 text-xs border border-stone-200 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:outline-none"
+              />
+            </div>
+
+            <div className="flex items-center gap-1.5 overflow-x-auto text-xs">
+              {(['all', 'admin', 'worker', 'customer'] as const).map((role) => (
+                <button
+                  key={role}
+                  type="button"
+                  onClick={() => setCredentialRoleFilter(role)}
+                  className={`px-3 py-1.5 rounded-xl font-bold capitalize transition-all whitespace-nowrap ${
+                    credentialRoleFilter === role
+                      ? 'bg-[#0F172A] text-amber-300 shadow-sm'
+                      : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                  }`}
+                >
+                  {role === 'all' ? 'All Accounts' : role === 'worker' ? 'Artisans' : `${role}s`}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Accounts & Passwords Table */}
+          <div className="bg-white rounded-3xl border border-stone-200 shadow-md overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-[#0F172A] text-stone-300 font-bold border-b border-stone-800">
+                  <tr>
+                    <th className="p-4">User Account & Identity</th>
+                    <th className="p-4">Role & Guild</th>
+                    <th className="p-4">Registered Email & Contact</th>
+                    <th className="p-4">Access Key / Password</th>
+                    <th className="p-4">Account Status</th>
+                    <th className="p-4 text-right">Admin Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-stone-100">
+                  {filteredCredentials.map((acc) => {
+                    const isRevealed = showAllPasswords || Boolean(revealedPasswords[acc.email]);
+                    const isCopied = copiedUserEmail === acc.email;
+
+                    return (
+                      <tr key={acc.email} className="hover:bg-amber-50/30 transition-colors">
+                        {/* User Identity */}
+                        <td className="p-4">
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={acc.avatar_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80'}
+                              alt={acc.name}
+                              className="w-10 h-10 rounded-xl object-cover border border-[#D4A373] shadow-xs"
+                            />
+                            <div>
+                              <p className="font-bold text-stone-900 text-xs">{acc.name}</p>
+                              <span className="text-[10px] font-mono text-stone-400">ID: {acc.id}</span>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Role & Guild */}
+                        <td className="p-4">
+                          <span
+                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                              acc.role === 'admin'
+                                ? 'bg-purple-100 text-purple-900 border border-purple-300'
+                                : acc.role === 'worker'
+                                ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                                : 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                            }`}
+                          >
+                            {acc.role === 'admin' ? '🏛️ Admin' : acc.role === 'worker' ? '⚡ Artisan' : '🏠 Customer'}
+                          </span>
+                          <p className="text-[11px] text-stone-500 mt-1 font-medium">{acc.category_name}</p>
+                        </td>
+
+                        {/* Registered Email & Contact */}
+                        <td className="p-4">
+                          <p className="font-mono font-bold text-stone-900 text-xs">{acc.email}</p>
+                          <p className="text-[11px] text-stone-500 font-mono mt-0.5">{acc.contact}</p>
+                        </td>
+
+                        {/* Password / Access Key Field */}
+                        <td className="p-4">
+                          <div className="inline-flex items-center gap-2 bg-stone-100/90 border border-stone-300/80 px-2.5 py-1.5 rounded-xl shadow-xs">
+                            <span className="font-mono font-black text-xs text-stone-900 tracking-wider">
+                              {isRevealed ? acc.password : '••••••••••••'}
+                            </span>
+                            <div className="flex items-center gap-1 border-l border-stone-300 pl-1.5">
+                              <button
+                                type="button"
+                                onClick={() => toggleRevealPassword(acc.email)}
+                                className="p-1 rounded-lg hover:bg-stone-200 text-stone-600 transition-colors"
+                                title={isRevealed ? 'Mask Password' : 'Show Password'}
+                              >
+                                {isRevealed ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleCopyPassword(acc.email, acc.password)}
+                                className="p-1 rounded-lg hover:bg-stone-200 text-stone-600 transition-colors relative"
+                                title="Copy Password to Clipboard"
+                              >
+                                {isCopied ? (
+                                  <Check className="w-3.5 h-3.5 text-emerald-600 font-bold" />
+                                ) : (
+                                  <Copy className="w-3.5 h-3.5" />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                          {isCopied && (
+                            <span className="block text-[10px] font-bold text-emerald-700 mt-0.5 animate-in fade-in">
+                              ✓ Copied to clipboard!
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Account Status */}
+                        <td className="p-4">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>{acc.status}</span>
+                          </span>
+                        </td>
+
+                        {/* Action Controls */}
+                        <td className="p-4 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditPasswordModalUser({
+                                  id: acc.id,
+                                  name: acc.name,
+                                  email: acc.email,
+                                  role: acc.role,
+                                  currentPassword: acc.password,
+                                });
+                                setOverridePasswordInput(acc.password);
+                              }}
+                              className="px-2.5 py-1.5 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold text-[11px] shadow-xs flex items-center gap-1 transition-colors"
+                              title="Set or override user password"
+                            >
+                              <Key className="w-3 h-3 text-amber-700" />
+                              <span>Override</span>
+                            </button>
+
+                            {acc.email !== 'admin@gmail.com' && (
+                              <button
+                                type="button"
+                                onClick={() => handleImpersonateUser(acc)}
+                                className="px-2.5 py-1.5 rounded-xl bg-[#0F172A] hover:bg-stone-800 text-white font-bold text-[11px] shadow-xs flex items-center gap-1 transition-colors"
+                                title="Login & test experience as this user"
+                              >
+                                <LogIn className="w-3 h-3 text-cyan-300" />
+                                <span>Switch</span>
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -1250,6 +1616,91 @@ export const AdminDashboard: React.FC = () => {
                   className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 text-white font-black text-xs shadow-lg hover:opacity-95 flex items-center gap-1.5"
                 >
                   <span>✓ Save & Publish Artisan</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 9. MODAL: ADMIN PASSWORD OVERRIDE & RESET */}
+      {editPasswordModalUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-amber-200 animate-in zoom-in-95">
+            <div className="bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#3B2818] px-6 py-5 text-white flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-2xl bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                  <KeyRound className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-sm sm:text-base font-['Outfit']">Override Account Password</h3>
+                  <p className="text-[11px] text-amber-200">Super Administrator Master Key Control</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setEditPasswordModalUser(null)}
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-stone-300 hover:text-white flex items-center justify-center transition-colors text-xs"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSavePasswordOverride} className="p-6 space-y-4 text-xs text-stone-700">
+              {overrideSuccessMsg && (
+                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs flex items-center gap-2 animate-in fade-in">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                  <span className="font-medium">{overrideSuccessMsg}</span>
+                </div>
+              )}
+
+              {/* Target User Info Card */}
+              <div className="p-3.5 bg-stone-50 rounded-2xl border border-stone-200 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-stone-900 text-xs">{editPasswordModalUser.name}</span>
+                  <span className="text-[10px] bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded-full capitalize">
+                    {editPasswordModalUser.role}
+                  </span>
+                </div>
+                <p className="text-[11px] font-mono text-stone-500">{editPasswordModalUser.email}</p>
+                <div className="pt-1.5 border-t border-stone-200 flex items-center justify-between text-[10px]">
+                  <span className="text-stone-400">Current Access Key:</span>
+                  <span className="font-mono font-bold text-stone-800">{editPasswordModalUser.currentPassword}</span>
+                </div>
+              </div>
+
+              {/* New Password Input */}
+              <div>
+                <label className="block text-xs font-bold text-stone-900 mb-1">Set New Custom Password *</label>
+                <div className="relative">
+                  <Key className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
+                  <input
+                    type="text"
+                    required
+                    value={overridePasswordInput}
+                    onChange={(e) => setOverridePasswordInput(e.target.value)}
+                    placeholder="Enter new password (min 6 characters)"
+                    className="w-full pl-9 pr-3 py-2.5 text-xs font-mono font-bold border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none bg-stone-50"
+                  />
+                </div>
+                <p className="text-[10px] text-stone-400 mt-1">
+                  This overrides the login credentials across the portal and session manager.
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2 pt-2 border-t border-stone-100">
+                <button
+                  type="button"
+                  onClick={() => setEditPasswordModalUser(null)}
+                  className="flex-1 py-2.5 rounded-xl border border-stone-300 text-xs font-semibold text-stone-700 hover:bg-stone-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-black text-xs shadow-md flex items-center justify-center gap-1.5"
+                >
+                  <span>✓ Save & Override</span>
                 </button>
               </div>
             </form>
