@@ -35,7 +35,7 @@ import { BookingStatus, Worker } from '../../lib/database.types';
 import { GoogleMapViewer } from '../maps/GoogleMapViewer';
 
 export const WorkerDashboard: React.FC = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, openChangePasswordModal } = useAuth();
   const { t } = useLanguage();
   const {
     workers,
@@ -198,9 +198,9 @@ export const WorkerDashboard: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       {/* 1. URBAN COMPANY STYLE TOP COMMAND BAR */}
-      <div className="bg-gradient-to-r from-[#2C1810] via-[#3E2317] to-[#1C3B2E] rounded-3xl p-6 sm:p-8 text-white shadow-2xl border border-amber-900/30 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="bg-gradient-to-r from-[#2C1810] via-[#3E2317] to-[#1C3B2E] rounded-3xl p-5 sm:p-8 text-white shadow-2xl border border-amber-900/30 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
-          <div className="relative">
+          <div className="relative flex-shrink-0">
             <img
               src={
                 currentUser.avatar_url ||
@@ -208,18 +208,18 @@ export const WorkerDashboard: React.FC = () => {
                 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=200&auto=format&fit=crop&q=80'
               }
               alt={currentUser.name}
-              className="w-16 h-16 rounded-2xl object-cover border-2 border-amber-400 shadow-md"
+              className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover border-2 border-amber-400 shadow-md"
             />
             <span
-              className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[#2C1810] ${
+              className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full border-2 border-[#2C1810] ${
                 dutyStatus === 'online' ? 'bg-emerald-400' : 'bg-stone-400'
               }`}
             />
           </div>
 
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-black font-['Outfit']">{currentUser.name}</h1>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-lg sm:text-2xl font-black font-['Outfit']">{currentUser.name}</h1>
               <span className="text-[10px] bg-amber-400/20 text-amber-300 px-2.5 py-0.5 rounded-full font-bold border border-amber-400/30 uppercase tracking-wider">
                 Co-op Verified Artisan
               </span>
@@ -227,7 +227,7 @@ export const WorkerDashboard: React.FC = () => {
             <p className="text-xs text-stone-300 mt-0.5">
               {worker?.cooperative_name || 'Mumbai Shramik Sahakari Sanstha'} • ₹{worker?.hourly_rate || 350}/hr Floor Rate
             </p>
-            <div className="flex items-center gap-2 mt-1 text-[11px] text-amber-300 font-semibold">
+            <div className="flex items-center gap-2 mt-1 text-[11px] text-amber-300 font-semibold flex-wrap">
               <span>★ {worker?.rating || '4.9'} ({worker?.total_ratings_count || 128} Reviews)</span>
               <span>•</span>
               <span>{worker?.total_jobs_completed || 86} Completed Jobs</span>
@@ -235,25 +235,36 @@ export const WorkerDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Online / Offline Duty Switcher */}
-        <div className="flex items-center gap-4 bg-black/30 p-2.5 rounded-2xl border border-white/10">
-          <div className="text-right">
-            <span className="text-[10px] text-stone-400 uppercase font-bold block">Duty Status</span>
-            <span className={`text-xs font-black ${dutyStatus === 'online' ? 'text-emerald-400' : 'text-stone-400'}`}>
-              {dutyStatus === 'online' ? '🟢 ON DUTY (Radar Live)' : '⚪ OFF DUTY'}
-            </span>
-          </div>
-
+        {/* Top Actions: Change Password & Duty Switcher */}
+        <div className="flex flex-wrap items-center gap-3">
           <button
-            onClick={() => handleToggleDutyStatus(dutyStatus === 'online' ? 'offline' : 'online')}
-            className={`px-5 py-2.5 rounded-xl font-bold text-xs shadow-lg transition-all transform active:scale-95 ${
-              dutyStatus === 'online'
-                ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
-                : 'bg-stone-700 hover:bg-stone-600 text-stone-200'
-            }`}
+            onClick={openChangePasswordModal}
+            className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold shadow flex items-center gap-1.5 transition-colors"
+            title="Update Password"
           >
-            {dutyStatus === 'online' ? 'Go Offline' : 'Go Online'}
+            <span>🔑 Change Password</span>
           </button>
+
+          {/* Online / Offline Duty Switcher */}
+          <div className="flex items-center gap-3 bg-black/40 px-3.5 py-2 rounded-2xl border border-white/10">
+            <div className="text-right">
+              <span className="text-[9px] text-stone-400 uppercase font-bold block">Duty Radar</span>
+              <span className={`text-[11px] sm:text-xs font-black ${dutyStatus === 'online' ? 'text-emerald-400' : 'text-stone-400'}`}>
+                {dutyStatus === 'online' ? '🟢 ON DUTY' : '⚪ OFF DUTY'}
+              </span>
+            </div>
+
+            <button
+              onClick={() => handleToggleDutyStatus(dutyStatus === 'online' ? 'offline' : 'online')}
+              className={`px-4 py-2 rounded-xl font-bold text-xs shadow-lg transition-all transform active:scale-95 ${
+                dutyStatus === 'online'
+                  ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                  : 'bg-stone-700 hover:bg-stone-600 text-stone-200'
+              }`}
+            >
+              {dutyStatus === 'online' ? 'Go Offline' : 'Go Online'}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -510,18 +521,18 @@ export const WorkerDashboard: React.FC = () => {
               </div>
 
               {/* Horizontal Day Buttons */}
-              <div className="grid grid-cols-4 gap-1.5 text-center">
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 text-center no-scrollbar">
                 {scheduleDays.map((day, idx) => (
                   <button
                     key={day.fullDate}
                     onClick={() => setSelectedDayIdx(idx)}
-                    className={`p-2 rounded-2xl border transition-all ${
+                    className={`p-2.5 min-w-[58px] flex-1 rounded-2xl border transition-all flex-shrink-0 ${
                       selectedDayIdx === idx
                         ? 'bg-[#2C1810] text-white border-[#2C1810] shadow-md'
                         : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'
                     }`}
                   >
-                    <span className="text-[10px] block font-bold">{day.dayName}</span>
+                    <span className="text-[10px] block font-bold uppercase">{day.dayName}</span>
                     <span className="text-sm font-black">{day.dateNumber}</span>
                   </button>
                 ))}

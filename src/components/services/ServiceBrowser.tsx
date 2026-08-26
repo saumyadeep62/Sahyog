@@ -188,7 +188,7 @@ export const ServiceBrowser: React.FC<ServiceBrowserProps> = ({
         </div>
 
         {/* View mode toggle & Online filter */}
-        <div className="flex items-center justify-between pt-2 border-t border-stone-100 text-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-stone-100 text-xs">
           <label className="flex items-center gap-2 cursor-pointer select-none">
             <input
               type="checkbox"
@@ -200,23 +200,23 @@ export const ServiceBrowser: React.FC<ServiceBrowserProps> = ({
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping inline-block"></span>
           </label>
 
-          <div className="flex items-center gap-1 bg-stone-100 p-1 rounded-lg">
+          <div className="flex items-center gap-1 bg-stone-100 p-1 rounded-xl self-start sm:self-auto">
             <button
               onClick={() => setViewMode('grid')}
-              className={`px-2.5 py-1 rounded text-xs font-semibold transition-colors ${
-                viewMode === 'grid' ? 'bg-white shadow-xs text-stone-900' : 'text-stone-500 hover:text-stone-900'
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                viewMode === 'grid' ? 'bg-white shadow-xs text-stone-900 font-bold' : 'text-stone-500 hover:text-stone-900'
               }`}
             >
               Artisan Cards ({filteredWorkers.length})
             </button>
             <button
               onClick={() => setViewMode('map')}
-              className={`px-2.5 py-1 rounded text-xs font-semibold transition-colors flex items-center gap-1 ${
-                viewMode === 'map' ? 'bg-white shadow-xs text-stone-900' : 'text-stone-500 hover:text-stone-900'
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1 ${
+                viewMode === 'map' ? 'bg-white shadow-xs text-stone-900 font-bold' : 'text-stone-500 hover:text-stone-900'
               }`}
             >
               <Radio className="w-3 h-3 text-emerald-600" />
-              <span>Radar Map View</span>
+              <span>Radar Map</span>
             </button>
           </div>
         </div>
