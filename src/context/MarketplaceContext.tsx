@@ -455,9 +455,36 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const createEmergencyBooking = async (categoryId: string, address: string, task: string): Promise<Booking> => {
     const category = categories.find((c) => c.id === categoryId) || categories[0];
-    const availableWorker = workers.find(
-      (w) => w.service_category_ids.includes(categoryId) && w.availability === 'online'
-    ) || workers[0];
+    
+    // Auto-calculate nearest online/free worker in category
+    const custLat = 19.0596;
+    const custLng = 72.8295;
+
+    const matchingWorkers = workers
+      .filter((w) => w.service_category_ids.includes(categoryId))
+      .map((w) => {
+        const wLat = w.location?.lat || 19.082;
+        const wLng = w.location?.lng || 72.884;
+        const dLat = ((wLat - custLat) * Math.PI) / 180;
+        const dLon = ((wLng - custLng) * Math.PI) / 180;
+        const a =
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos((custLat * Math.PI) / 180) *
+            Math.cos((wLat * Math.PI) / 180) *
+            Math.sin(dLon / 2) *
+            Math.sin(dLon / 2);
+        const distKm = Math.round(6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * 10) / 10;
+        return { ...w, distKm };
+      })
+      .sort((a, b) => {
+        // 1. Free/Online workers first
+        if (a.availability === 'online' && b.availability !== 'online') return -1;
+        if (b.availability === 'online' && a.availability !== 'online') return 1;
+        // 2. Nearest distance
+        return a.distKm - b.distKm;
+      });
+
+    const availableWorker = matchingWorkers[0] || workers[0];
 
     const emergencyBooking = await createBooking({
       service_category_id: category.id,
@@ -471,8 +498,8 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       cooperative_name: availableWorker.cooperative_name || 'Mumbai Shramik Sahakari Sanstha',
       location: {
         address,
-        lat: 19.0596,
-        lng: 72.8295,
+        lat: custLat,
+        lng: custLng,
       },
       price_breakdown: {
         worker_wage: 150,

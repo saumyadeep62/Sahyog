@@ -116,12 +116,24 @@ export const BookingFlow: React.FC = () => {
       return { ...w, distKm, etaMins };
     });
 
-  const eligibleWorkers = [...eligibleWorkersWithDistance].sort((a, b) =>
-    sortMode === 'distance' ? a.distKm - b.distKm : (b.rating || 0) - (a.rating || 0)
-  );
+  const eligibleWorkers = [...eligibleWorkersWithDistance].sort((a, b) => {
+    // 1. Free/Online workers first
+    if (a.availability === 'online' && b.availability !== 'online') return -1;
+    if (b.availability === 'online' && a.availability !== 'online') return 1;
+    // 2. Proximity sort mode
+    return sortMode === 'distance' ? a.distKm - b.distKm : (b.rating || 0) - (a.rating || 0);
+  });
+
+  const nearestFreeWorker = eligibleWorkers.find((w) => w.availability === 'online') || eligibleWorkers[0];
+  const assignedWorkerPreview = autoMatch ? nearestFreeWorker : (selectedWorker || nearestFreeWorker);
+
+  const previewDistKm = assignedWorkerPreview
+    ? ((assignedWorkerPreview as any).distKm ?? getDistKm(customerLocation.lat, customerLocation.lng, assignedWorkerPreview.location?.lat || 19.082, assignedWorkerPreview.location?.lng || 72.884))
+    : 1.5;
+  const previewEtaMins = Math.max(5, Math.round(previewDistKm * 3.2 + 4));
 
   // Price calculations
-  const baseRate = selectedWorker ? selectedWorker.hourly_rate * 2 : 550;
+  const baseRate = assignedWorkerPreview ? assignedWorkerPreview.hourly_rate * 2 : 550;
   const workerWage = isEmergency ? baseRate + 200 : baseRate;
   const welfareContribution = Math.round(workerWage * 0.08);
   const coopAdminFee = Math.round(workerWage * 0.05);
@@ -130,9 +142,7 @@ export const BookingFlow: React.FC = () => {
 
   const handleFinalConfirm = async () => {
     setIsProcessingPayment(true);
-    const assignedWorker = autoMatch
-      ? eligibleWorkers.find((w) => w.availability === 'online') || eligibleWorkers[0]
-      : selectedWorker || eligibleWorkers[0];
+    const assignedWorker = autoMatch ? nearestFreeWorker : (selectedWorker || nearestFreeWorker);
 
     try {
       const bk = await createBooking({
@@ -399,29 +409,60 @@ export const BookingFlow: React.FC = () => {
                   setAutoMatch(true);
                   setSelectedWorker(null);
                 }}
-                className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
+                className={`p-3.5 rounded-2xl border cursor-pointer transition-all ${
                   autoMatch
-                    ? 'border-[#0C3B2E] bg-emerald-50/70 ring-2 ring-[#0C3B2E]/20'
+                    ? 'border-[#0C3B2E] bg-emerald-50/80 ring-2 ring-[#0C3B2E]/20 shadow-sm'
                     : 'border-stone-200 bg-stone-50 hover:bg-stone-100'
                 }`}
               >
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-[#0C3B2E] text-white">
-                    <UserCheck className="w-5 h-5 text-[#D4A373]" />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-xl bg-[#0C3B2E] text-white">
+                      <UserCheck className="w-5 h-5 text-[#D4A373]" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <h4 className="font-bold text-stone-900 text-xs">⚡ Proximity Auto-Dispatch (Recommended)</h4>
+                        <span className="text-[10px] bg-emerald-600 text-white font-bold px-2 py-0.5 rounded-full">
+                          Fastest Free Artisan
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-stone-500 mt-0.5">
+                        Automatically assigns the closest verified cooperative artisan who is on-duty and free.
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <h4 className="font-bold text-stone-900 text-xs">⚡ Proximity Auto-Dispatch (Recommended)</h4>
-                      <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
-                        Shortest ETA
+                  {autoMatch && <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />}
+                </div>
+
+                {/* Auto-matched preview chip */}
+                {nearestFreeWorker && (
+                  <div className="mt-3 pt-2.5 border-t border-emerald-200/60 flex items-center justify-between bg-white/90 p-2.5 rounded-xl border border-emerald-200">
+                    <div className="flex items-center gap-2.5">
+                      <img
+                        src={nearestFreeWorker.avatar_url}
+                        alt={nearestFreeWorker.full_name}
+                        className="w-9 h-9 rounded-lg object-cover border border-[#D4A373]"
+                      />
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-bold text-stone-900 text-xs">{nearestFreeWorker.full_name}</span>
+                          <span className="text-[9px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded-full">
+                            🟢 Free & On Duty
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-stone-500">
+                          {nearestFreeWorker.cooperative_name || 'Mumbai Shramik Co-op'} • ★ {nearestFreeWorker.rating}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 block font-mono">
+                        📍 {nearestFreeWorker.distKm} km • ~{nearestFreeWorker.etaMins}m ETA
                       </span>
                     </div>
-                    <p className="text-[11px] text-stone-500 mt-0.5">
-                      Dispatches the closest verified online artisan within your neighborhood cluster (~8 min arrival)
-                    </p>
                   </div>
-                </div>
-                {autoMatch && <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />}
+                )}
               </div>
 
               {/* Sort Toggle Bar */}
@@ -459,6 +500,7 @@ export const BookingFlow: React.FC = () => {
               <div className="space-y-2 max-h-56 overflow-y-auto">
                 {eligibleWorkers.map((w, idx) => {
                   const isSelected = selectedWorker?.id === w.id;
+                  const isOnline = w.availability === 'online';
                   return (
                     <div
                       key={w.id}
@@ -473,16 +515,30 @@ export const BookingFlow: React.FC = () => {
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <img
-                          src={w.avatar_url}
-                          alt={w.full_name}
-                          className="w-10 h-10 rounded-xl object-cover border border-[#D4A373]"
-                        />
+                        <div className="relative">
+                          <img
+                            src={w.avatar_url}
+                            alt={w.full_name}
+                            className="w-10 h-10 rounded-xl object-cover border border-[#D4A373]"
+                          />
+                          <span
+                            className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border border-white ${
+                              isOnline ? 'bg-emerald-500' : 'bg-stone-400'
+                            }`}
+                          />
+                        </div>
                         <div>
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="font-bold text-stone-900 text-xs">{w.full_name}</span>
                             <span className="text-[10px] px-1.5 py-0.2 bg-emerald-100 text-emerald-800 rounded font-bold">
                               ★ {w.rating}
+                            </span>
+                            <span
+                              className={`text-[9px] px-1.5 py-0.2 rounded font-bold ${
+                                isOnline ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-stone-100 text-stone-600'
+                              }`}
+                            >
+                              {isOnline ? '🟢 Free' : '⚪ Busy'}
                             </span>
                             {idx === 0 && sortMode === 'distance' && (
                               <span className="text-[9px] bg-emerald-500 text-white font-extrabold px-1.5 py-0.5 rounded-md uppercase">
@@ -514,6 +570,43 @@ export const BookingFlow: React.FC = () => {
           {/* STEP 4: Transparent Cost Breakdown & Payment */}
           {currentStep === 4 && (
             <div className="space-y-4">
+              {/* Assigned Artisan Review Card */}
+              {assignedWorkerPreview && (
+                <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-50/90 via-stone-50 to-amber-50/50 border border-emerald-200 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={assignedWorkerPreview.avatar_url}
+                      alt={assignedWorkerPreview.full_name}
+                      className="w-12 h-12 rounded-2xl object-cover border-2 border-[#D4A373] shadow-xs"
+                    />
+                    <div>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="font-bold text-stone-900 text-xs">{assignedWorkerPreview.full_name}</span>
+                        <span className="text-[9px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded-full">
+                          🟢 Assigned Artisan
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-stone-500 mt-0.5">
+                        {assignedWorkerPreview.cooperative_name || 'Mumbai Shramik Co-op'} • ★ {assignedWorkerPreview.rating}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/80 font-mono">
+                          📍 {previewDistKm} km away • ~{previewEtaMins}m ETA
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(3)}
+                    className="text-[11px] text-[#0C3B2E] font-bold hover:underline px-2.5 py-1 rounded-lg border border-stone-200 bg-white shadow-xs"
+                  >
+                    Change
+                  </button>
+                </div>
+              )}
+
               <div className="bg-[#FAF8F5] p-4 rounded-xl border border-[#E5DDD0] space-y-2.5">
                 <h4 className="font-bold text-stone-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
                   <Receipt className="w-4 h-4 text-[#0C3B2E]" />
@@ -607,26 +700,44 @@ export const BookingFlow: React.FC = () => {
                 </p>
               </div>
 
-              <div className="bg-stone-50 p-4 rounded-xl border border-stone-200 text-left text-xs space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-stone-500">Booking Code:</span>
-                  <span className="font-mono font-bold text-stone-800">{confirmedBooking.booking_code}</span>
+              <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200 text-left text-xs space-y-3">
+                <div className="flex items-center gap-3 bg-emerald-50/80 p-3 rounded-xl border border-emerald-200/80">
+                  <img
+                    src={confirmedBooking.worker_avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80'}
+                    alt={confirmedBooking.worker_name}
+                    className="w-12 h-12 rounded-xl object-cover border-2 border-[#D4A373]"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-stone-900 text-xs">{confirmedBooking.worker_name}</span>
+                      <span className="text-[10px] bg-emerald-600 text-white font-bold px-2 py-0.5 rounded-full">
+                        Assigned & Dispatched
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-stone-500">{confirmedBooking.cooperative_name}</p>
+                    <p className="text-[10px] text-emerald-800 font-semibold mt-0.5">
+                      📞 {confirmedBooking.worker_contact || '+91 98199 87654'}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-stone-500">Service:</span>
-                  <span className="font-semibold text-stone-800">{confirmedBooking.service_task}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-stone-500">Assigned Artisan:</span>
-                  <span className="font-semibold text-emerald-700">{confirmedBooking.worker_name}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-stone-500">Scheduled:</span>
-                  <span className="text-stone-800">{bookingDate} • {timeSlot}</span>
-                </div>
-                <div className="flex justify-between font-bold border-t border-stone-200 pt-2 text-stone-900">
-                  <span>Total Amount:</span>
-                  <span className="text-[#0C3B2E]">₹{confirmedBooking.price_breakdown.total_amount}</span>
+
+                <div className="divide-y divide-stone-200/80 space-y-2">
+                  <div className="flex justify-between pt-1">
+                    <span className="text-stone-500">Booking Code:</span>
+                    <span className="font-mono font-bold text-stone-800">{confirmedBooking.booking_code}</span>
+                  </div>
+                  <div className="flex justify-between pt-1.5">
+                    <span className="text-stone-500">Service Task:</span>
+                    <span className="font-semibold text-stone-800">{confirmedBooking.service_task}</span>
+                  </div>
+                  <div className="flex justify-between pt-1.5">
+                    <span className="text-stone-500">Scheduled Time:</span>
+                    <span className="text-stone-800 font-medium">{bookingDate} • {timeSlot}</span>
+                  </div>
+                  <div className="flex justify-between font-bold border-t border-stone-200 pt-2 text-stone-900">
+                    <span>Total Locked Amount:</span>
+                    <span className="text-[#0C3B2E] text-sm">₹{confirmedBooking.price_breakdown.total_amount}</span>
+                  </div>
                 </div>
               </div>
 
