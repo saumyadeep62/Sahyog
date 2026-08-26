@@ -1,0 +1,141 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --primary-900: #0c3b2e;
+    --primary-800: #144537;
+    --primary-700: #1d5c4b;
+    --primary-600: #297762;
+    --primary-500: #36957c;
+    --primary-100: #e4f4ee;
+    --primary-50: #f1f9f6;
+
+    --earth-900: #5c3d2e;
+    --earth-700: #8f5c38;
+    --earth-500: #c68b59;
+    --earth-400: #d4a373;
+    --earth-100: #faebd7;
+
+    --bg-cream: #faf8f5;
+    --bg-sand: #f3efe9;
+    --card-bg: #ffffff;
+  }
+
+  body {
+    background-color: var(--bg-cream);
+    color: #1a2e26;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+}
+
+/* Custom cooperative subtle gradients & glass */
+.coop-gradient-hero {
+  background: linear-gradient(135deg, #0c3b2e 0%, #164e3f 60%, #1d5c4b 100%);
+}
+
+.coop-gradient-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(250, 248, 245, 0.9) 100%);
+}
+
+.coop-gradient-gold {
+  background: linear-gradient(135deg, #d4a373 0%, #e0a96d 50%, #c68b59 100%);
+}
+
+.coop-gradient-emerald {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+/* Infinite Marquee Animation */
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 28s linear infinite;
+}
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* 3D Floating Float Keyframes */
+@keyframes float-slow {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-12px) rotate(2deg);
+  }
+}
+
+@keyframes float-reverse {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(12px) rotate(-2deg);
+  }
+}
+
+.animate-float {
+  animation: float-slow 5s ease-in-out infinite;
+}
+
+.animate-float-reverse {
+  animation: float-reverse 6s ease-in-out infinite;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #f1ece4;
+}
+::-webkit-scrollbar-thumb {
+  background: #c2b5a5;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #9d8c79;
+}
+
+/* Radar pulse animation */
+@keyframes radar-ping {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+  80%, 100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+.animate-radar-ping {
+  animation: radar-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Subtle badge pulse */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(20, 184, 166, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(20, 184, 166, 0);
+  }
+}
+
+.pulse-trust {
+  animation: pulse-glow 2.5s infinite;
+}
