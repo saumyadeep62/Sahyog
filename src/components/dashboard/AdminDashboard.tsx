@@ -64,12 +64,14 @@ export const AdminDashboard: React.FC = () => {
   const { currentUser, openChangePasswordModal } = useAuth();
   const { t } = useLanguage();
   const {
+    categories,
     cooperatives,
     workers,
     bookings,
     grievances,
     welfareList,
     verifyWorkerKyc,
+    addWorker,
     resolveGrievance,
     openInvoiceModal,
     refreshData,
@@ -91,6 +93,28 @@ export const AdminDashboard: React.FC = () => {
   const [selectedGrievanceId, setSelectedGrievanceId] = useState<string | null>(null);
   const [resolutionNote, setResolutionNote] = useState('');
   const [localWorkers, setLocalWorkers] = useState<Worker[]>(workers);
+
+  // Add Worker Modal State
+  const [isAddWorkerModalOpen, setIsAddWorkerModalOpen] = useState(false);
+  const [newWorkerForm, setNewWorkerForm] = useState({
+    full_name: '',
+    cooperative_id: 'coop-1',
+    category_id: 'cat-1',
+    skills: '',
+    hourly_rate: 280,
+    base_visit_fee: 150,
+    experience_years: 5,
+    area: 'Bandra West',
+    city: 'Mumbai',
+    lat: 19.0596,
+    lng: 72.8295,
+    bio: '',
+    avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80',
+  });
+
+  useEffect(() => {
+    setLocalWorkers(workers);
+  }, [workers]);
 
   // 1. Strict Security Guard: Only admin@gmail.com is authorized
   if (!currentUser || currentUser.email !== 'admin@gmail.com') {
@@ -494,7 +518,7 @@ export const AdminDashboard: React.FC = () => {
               />
             </div>
 
-            <div className="flex items-center gap-2 text-xs">
+            <div className="flex flex-wrap items-center gap-2 text-xs">
               <select
                 value={artisanDutyFilter}
                 onChange={(e) => setArtisanDutyFilter(e.target.value as any)}
@@ -515,6 +539,13 @@ export const AdminDashboard: React.FC = () => {
                 <option value="verified">KYC Verified ✓</option>
                 <option value="pending">Pending KYC Review</option>
               </select>
+
+              <button
+                onClick={() => setIsAddWorkerModalOpen(true)}
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-bold text-xs shadow-md flex items-center gap-1.5 whitespace-nowrap transition-all"
+              >
+                <span>+ Onboard New Artisan</span>
+              </button>
             </div>
           </div>
 
@@ -975,6 +1006,239 @@ export const AdminDashboard: React.FC = () => {
       {activeAdminTab === 'ai_forecast' && (
         <div className="space-y-4">
           <AiDemandForecast />
+        </div>
+      )}
+
+      {/* 10. ONBOARD NEW ARTISAN MODAL */}
+      {isAddWorkerModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-stone-200 flex flex-col max-h-[92vh]">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-[#0F172A] to-[#0D9488] p-5 text-white flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-teal-400/20 text-teal-300 border border-teal-400/30 flex items-center justify-center font-bold text-lg">
+                  🛠️
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base font-['Outfit']">Onboard & Register Cooperative Artisan</h3>
+                  <p className="text-[11px] text-teal-200">Adds artisan immediately to live marketplace & directory</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsAddWorkerModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-stone-300 hover:text-white flex items-center justify-center transition-colors text-xs"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Form Body */}
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (!newWorkerForm.full_name.trim()) return;
+
+                const coop = cooperatives.find((c) => c.id === newWorkerForm.cooperative_id) || cooperatives[0];
+                const skillsArray = newWorkerForm.skills
+                  ? newWorkerForm.skills.split(',').map((s) => s.trim()).filter(Boolean)
+                  : ['General Certified Technician', 'Cooperative Trained'];
+
+                await addWorker({
+                  user_id: `usr-${Date.now()}`,
+                  cooperative_id: coop.id,
+                  cooperative_name: coop.name,
+                  full_name: newWorkerForm.full_name,
+                  skills: skillsArray,
+                  service_category_ids: [newWorkerForm.category_id],
+                  experience_years: Number(newWorkerForm.experience_years) || 3,
+                  verification_status: 'verified',
+                  insurance_status: true,
+                  availability: 'online',
+                  hourly_rate: Number(newWorkerForm.hourly_rate) || 280,
+                  base_visit_fee: Number(newWorkerForm.base_visit_fee) || 150,
+                  location: {
+                    lat: Number(newWorkerForm.lat) || 19.076,
+                    lng: Number(newWorkerForm.lng) || 72.8777,
+                    area: newWorkerForm.area || 'Central District',
+                    city: newWorkerForm.city || 'Mumbai',
+                  },
+                  police_verified: true,
+                  kyc_verified: true,
+                  bank_account_verified: true,
+                  bio:
+                    newWorkerForm.bio ||
+                    `${newWorkerForm.full_name} is an active cooperative artisan of ${coop.name} with ${newWorkerForm.experience_years} years of professional trade experience.`,
+                  avatar_url:
+                    newWorkerForm.avatar_url ||
+                    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80',
+                });
+
+                setIsAddWorkerModalOpen(false);
+                setNewWorkerForm({
+                  full_name: '',
+                  cooperative_id: 'coop-1',
+                  category_id: 'cat-1',
+                  skills: '',
+                  hourly_rate: 280,
+                  base_visit_fee: 150,
+                  experience_years: 5,
+                  area: 'Bandra West',
+                  city: 'Mumbai',
+                  lat: 19.0596,
+                  lng: 72.8295,
+                  bio: '',
+                  avatar_url:
+                    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80',
+                });
+              }}
+              className="p-5 sm:p-6 overflow-y-auto space-y-4 text-xs text-stone-700 flex-1"
+            >
+              {/* Full Name */}
+              <div>
+                <label className="block font-bold text-stone-900 mb-1">Artisan Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Ramesh Kumar Patel"
+                  value={newWorkerForm.full_name}
+                  onChange={(e) => setNewWorkerForm({ ...newWorkerForm, full_name: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:ring-2 focus:ring-teal-600 focus:outline-none bg-stone-50"
+                />
+              </div>
+
+              {/* Trade Category & Cooperative Guild */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-stone-900 mb-1">Primary Trade Category</label>
+                  <select
+                    value={newWorkerForm.category_id}
+                    onChange={(e) => setNewWorkerForm({ ...newWorkerForm, category_id: e.target.value })}
+                    className="w-full px-3 py-2.5 rounded-xl border border-stone-300 focus:ring-2 focus:ring-teal-600 focus:outline-none bg-white font-medium"
+                  >
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-stone-900 mb-1">Affiliated Cooperative Society</label>
+                  <select
+                    value={newWorkerForm.cooperative_id}
+                    onChange={(e) => setNewWorkerForm({ ...newWorkerForm, cooperative_id: e.target.value })}
+                    className="w-full px-3 py-2.5 rounded-xl border border-stone-300 focus:ring-2 focus:ring-teal-600 focus:outline-none bg-white font-medium"
+                  >
+                    {cooperatives.map((coop) => (
+                      <option key={coop.id} value={coop.id}>
+                        {coop.city} ({coop.name.split(' ')[0]})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Skills */}
+              <div>
+                <label className="block font-bold text-stone-900 mb-1">Skills & Specializations (Comma Separated)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Inverter Wiring, MCB Setup, 3-Phase Industrial"
+                  value={newWorkerForm.skills}
+                  onChange={(e) => setNewWorkerForm({ ...newWorkerForm, skills: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:ring-2 focus:ring-teal-600 focus:outline-none bg-stone-50"
+                />
+              </div>
+
+              {/* Rates & Experience */}
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block font-bold text-stone-900 mb-1">Hourly Wage (₹)</label>
+                  <input
+                    type="number"
+                    min="150"
+                    value={newWorkerForm.hourly_rate}
+                    onChange={(e) => setNewWorkerForm({ ...newWorkerForm, hourly_rate: Number(e.target.value) })}
+                    className="w-full px-3 py-2 rounded-xl border border-stone-300 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-stone-900 mb-1">Visit Fee (₹)</label>
+                  <input
+                    type="number"
+                    min="50"
+                    value={newWorkerForm.base_visit_fee}
+                    onChange={(e) => setNewWorkerForm({ ...newWorkerForm, base_visit_fee: Number(e.target.value) })}
+                    className="w-full px-3 py-2 rounded-xl border border-stone-300 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-stone-900 mb-1">Experience (Yrs)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={newWorkerForm.experience_years}
+                    onChange={(e) => setNewWorkerForm({ ...newWorkerForm, experience_years: Number(e.target.value) })}
+                    className="w-full px-3 py-2 rounded-xl border border-stone-300 font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* Location & City */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-stone-900 mb-1">Area / Neighborhood</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Bandra West"
+                    value={newWorkerForm.area}
+                    onChange={(e) => setNewWorkerForm({ ...newWorkerForm, area: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl border border-stone-300"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-stone-900 mb-1">City</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Mumbai"
+                    value={newWorkerForm.city}
+                    onChange={(e) => setNewWorkerForm({ ...newWorkerForm, city: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl border border-stone-300"
+                  />
+                </div>
+              </div>
+
+              {/* Bio */}
+              <div>
+                <label className="block font-bold text-stone-900 mb-1">Artisan Bio & Credentials</label>
+                <textarea
+                  rows={2}
+                  placeholder="Summary of experience, ITI credentials, safety record..."
+                  value={newWorkerForm.bio}
+                  onChange={(e) => setNewWorkerForm({ ...newWorkerForm, bio: e.target.value })}
+                  className="w-full px-3.5 py-2 rounded-xl border border-stone-300 focus:ring-2 focus:ring-teal-600 focus:outline-none"
+                ></textarea>
+              </div>
+
+              {/* Submit Action */}
+              <div className="pt-2 flex items-center justify-end gap-3 border-t border-stone-100">
+                <button
+                  type="button"
+                  onClick={() => setIsAddWorkerModalOpen(false)}
+                  className="px-4 py-2.5 rounded-xl border border-stone-300 text-stone-700 font-semibold hover:bg-stone-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 text-white font-black text-xs shadow-lg hover:opacity-95 flex items-center gap-1.5"
+                >
+                  <span>✓ Save & Publish Artisan</span>
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Search,
   Filter,
@@ -35,11 +35,72 @@ export const ServiceBrowser: React.FC<ServiceBrowserProps> = ({
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>(initialCategory?.id || 'all');
   const [selectedCoopId, setSelectedCoopId] = useState<string>('all');
   const [onlyOnline, setOnlyOnline] = useState(false);
-  const [sortBy, setSortBy] = useState<'rating' | 'experience' | 'price_low' | 'price_high'>('rating');
+  const [sortBy, setSortBy] = useState<'distance' | 'rating' | 'experience' | 'price_low' | 'price_high'>('distance');
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
+
+  // GPS User Location State
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [locationName, setLocationName] = useState<string>('');
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+  const [maxDistanceKm, setMaxDistanceKm] = useState<number | 'all'>('all');
+
+  // Haversine distance calculator (in kilometers)
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // Earth radius in km
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * (Math.PI / 180)) *
+        Math.cos(lat2 * (Math.PI / 180)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return Math.round(R * c * 10) / 10;
+  };
+
+  // Request browser geolocation
+  const handleDetectLocation = () => {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by your browser.');
+      return;
+    }
+    setIsDetectingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+        setLocationName('Live GPS Coordinates');
+        setIsDetectingLocation(false);
+        setSortBy('distance');
+      },
+      (error) => {
+        console.warn('Geolocation denied or timed out:', error.message);
+        // Fallback to default central city hub
+        setUserLocation({ lat: 19.076, lng: 72.8777 });
+        setLocationName('Mumbai Central (Auto-Fallback)');
+        setIsDetectingLocation(false);
+      },
+      { timeout: 8000 }
+    );
+  };
+
+  // Auto-request location once on mount
+  useEffect(() => {
+    handleDetectLocation();
+  }, []);
 
   // Filtering
   const filteredWorkers = workers
+    .map((w) => {
+      let dist = 3.5;
+      if (userLocation && w.location?.lat && w.location?.lng) {
+        dist = calculateDistance(userLocation.lat, userLocation.lng, w.location.lat, w.location.lng);
+      }
+      return { ...w, distanceKm: dist };
+    })
     .filter((w) => {
       // Search match
       const query = searchQuery.toLowerCase();
@@ -59,9 +120,13 @@ export const ServiceBrowser: React.FC<ServiceBrowserProps> = ({
       // Online status
       const matchesOnline = !onlyOnline || w.availability === 'online';
 
-      return matchesSearch && matchesCategory && matchesCoop && matchesOnline;
+      // Distance filter
+      const matchesDistance = maxDistanceKm === 'all' || w.distanceKm <= maxDistanceKm;
+
+      return matchesSearch && matchesCategory && matchesCoop && matchesOnline && matchesDistance;
     })
     .sort((a, b) => {
+      if (sortBy === 'distance') return a.distanceKm - b.distanceKm;
       if (sortBy === 'rating') return b.rating - a.rating;
       if (sortBy === 'experience') return b.experience_years - a.experience_years;
       if (sortBy === 'price_low') return a.hourly_rate - b.hourly_rate;
@@ -131,7 +196,7 @@ export const ServiceBrowser: React.FC<ServiceBrowserProps> = ({
         {/* Search & Main Selectors */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
           {/* Search Bar */}
-          <div className="md:col-span-5 relative">
+          <div className="md:col-span-4 relative">
             <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-3" />
             <input
               type="text"
@@ -158,35 +223,68 @@ export const ServiceBrowser: React.FC<ServiceBrowserProps> = ({
             </select>
           </div>
 
-          {/* Cooperative Society Filter */}
+          {/* Proximity Filter */}
           <div className="md:col-span-2">
             <select
-              value={selectedCoopId}
-              onChange={(e) => setSelectedCoopId(e.target.value)}
+              value={maxDistanceKm}
+              onChange={(e) => setMaxDistanceKm(e.target.value === 'all' ? 'all' : Number(e.target.value))}
               className="w-full py-2.5 px-3 text-xs border border-stone-300 rounded-xl focus:ring-2 focus:ring-[#0C3B2E] focus:outline-none bg-white font-medium text-stone-700"
             >
-              <option value="all">All Societies</option>
-              {cooperatives.map((coop) => (
-                <option key={coop.id} value={coop.id}>
-                  {coop.city} ({coop.name.split(' ')[0]})
-                </option>
-              ))}
+              <option value="all">📍 Any Distance</option>
+              <option value="5">📍 Within 5 km</option>
+              <option value="15">📍 Within 15 km</option>
+              <option value="30">📍 Within 30 km</option>
             </select>
           </div>
 
           {/* Sort Filter */}
-          <div className="md:col-span-2">
+          <div className="md:col-span-3">
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
               className="w-full py-2.5 px-3 text-xs border border-stone-300 rounded-xl focus:ring-2 focus:ring-[#0C3B2E] focus:outline-none bg-white font-medium text-stone-700"
             >
-              <option value="rating">Top Rated ★</option>
-              <option value="experience">Most Experienced</option>
-              <option value="price_low">Floor Rate (Low to High)</option>
-              <option value="price_high">Floor Rate (High to Low)</option>
+              <option value="distance">📍 Nearest Proximity First</option>
+              <option value="rating">★ Top Rated First</option>
+              <option value="experience">🎖️ Most Experienced First</option>
+              <option value="price_low">💰 Floor Rate (Low to High)</option>
+              <option value="price_high">💎 Floor Rate (High to Low)</option>
             </select>
           </div>
+        </div>
+
+        {/* GPS Live Geolocation Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 pb-1 border-t border-stone-100 text-xs">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleDetectLocation}
+              disabled={isDetectingLocation}
+              className="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold flex items-center gap-1.5 transition-colors"
+            >
+              <MapPin className={`w-3.5 h-3.5 text-emerald-600 ${isDetectingLocation ? 'animate-bounce' : ''}`} />
+              <span>
+                {isDetectingLocation
+                  ? 'Accessing GPS Location...'
+                  : userLocation
+                  ? `📍 GPS Active (${userLocation.lat.toFixed(2)}, ${userLocation.lng.toFixed(2)})`
+                  : '📍 Detect My Location'}
+              </span>
+            </button>
+            <span className="text-[11px] text-stone-500 hidden sm:inline">
+              {maxDistanceKm === 'all' ? 'Showing all verified artisans sorted by proximity' : `Showing artisans within ${maxDistanceKm} km`}
+            </span>
+          </div>
+
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={onlyOnline}
+              onChange={(e) => setOnlyOnline(e.target.checked)}
+              className="w-4 h-4 text-[#0C3B2E] rounded focus:ring-[#0C3B2E]"
+            />
+            <span className="font-semibold text-stone-700">Show Available Now Only</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping inline-block"></span>
+          </label>
         </div>
 
         {/* Category Pills Slider */}
@@ -413,10 +511,16 @@ export const ServiceBrowser: React.FC<ServiceBrowserProps> = ({
                   </p>
                 </div>
 
-                {/* Location */}
-                <div className="flex items-center gap-1 text-[11px] text-stone-500">
-                  <MapPin className="w-3.5 h-3.5 text-stone-400" />
-                  <span>{worker.location.area}, {worker.location.city}</span>
+                {/* Location & Proximity Badge */}
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-stone-100 text-[11px]">
+                  <div className="flex items-center gap-1 text-stone-600 font-medium">
+                    <MapPin className="w-3.5 h-3.5 text-stone-400" />
+                    <span>{worker.location.area}, {worker.location.city}</span>
+                  </div>
+                  <span className="px-2 py-0.5 rounded-md bg-emerald-100/70 text-emerald-900 font-bold text-[10px] flex items-center gap-1">
+                    <span>📍</span>
+                    <span>{worker.distanceKm} km (~{Math.max(10, Math.round(worker.distanceKm * 3.5))}m ETA)</span>
+                  </span>
                 </div>
               </div>
 
@@ -440,6 +544,77 @@ export const ServiceBrowser: React.FC<ServiceBrowserProps> = ({
           ))}
         </div>
       )}
+
+      {/* URBAN COMPANY VS SAHYOG LIVE COMPARISON MATRIX */}
+      <div className="bg-white rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-xl space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-100 pb-4">
+          <div>
+            <span className="text-[10px] font-bold text-teal-800 bg-teal-50 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+              Transparency Audit
+            </span>
+            <h2 className="text-xl sm:text-2xl font-black text-stone-900 font-['Outfit'] mt-1">
+              Why SAHYOG Outperforms Private Gig Monopolies (Urban Company)
+            </h2>
+            <p className="text-xs text-stone-600">
+              Direct comparison of ethical cooperative governance vs. VC-backed gig extraction.
+            </p>
+          </div>
+          <div className="text-right">
+            <span className="text-xs font-black text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200 inline-block">
+              0% Platform Extraction Standard
+            </span>
+          </div>
+        </div>
+
+        {/* Comparison Grid Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr className="border-b border-stone-200">
+                <th className="py-3 px-4 text-stone-500 font-bold">Feature / Metric</th>
+                <th className="py-3 px-4 bg-red-50/50 text-red-950 font-extrabold rounded-t-xl">
+                  🏢 Urban Company & Gig Aggregators
+                </th>
+                <th className="py-3 px-4 bg-emerald-50/70 text-[#0C3B2E] font-black rounded-t-xl">
+                  🤝 SAHYOG Cooperative Platform
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-stone-100 font-medium text-stone-700">
+              <tr>
+                <td className="py-3.5 px-4 font-bold text-stone-900">Artisan Commission Cut</td>
+                <td className="py-3.5 px-4 bg-red-50/30 text-red-700 font-bold">❌ 25% – 35% on every booking</td>
+                <td className="py-3.5 px-4 bg-emerald-50/40 text-emerald-800 font-extrabold">✅ 0% Commission (Flat ₹1,000/mo dues)</td>
+              </tr>
+              <tr>
+                <td className="py-3.5 px-4 font-bold text-stone-900">Surge Pricing on Customers</td>
+                <td className="py-3.5 px-4 bg-red-50/30 text-red-700">❌ Up to 300% surge in peak weather/hours</td>
+                <td className="py-3.5 px-4 bg-emerald-50/40 text-emerald-800 font-bold">✅ 0% Surge Pricing (Fixed statutory floor rates)</td>
+              </tr>
+              <tr>
+                <td className="py-3.5 px-4 font-bold text-stone-900">Lead & Onboarding Charges</td>
+                <td className="py-3.5 px-4 bg-red-50/30 text-red-700">❌ Worker pays ₹50–₹200 for job leads</td>
+                <td className="py-3.5 px-4 bg-emerald-50/40 text-emerald-800 font-bold">✅ ₹0 Lead charges (Direct dispatch by GPS)</td>
+              </tr>
+              <tr>
+                <td className="py-3.5 px-4 font-bold text-stone-900">Worker Ownership & Equity</td>
+                <td className="py-3.5 px-4 bg-red-50/30 text-red-700">❌ 0% Ownership (Classified as contract gig)</td>
+                <td className="py-3.5 px-4 bg-emerald-50/40 text-emerald-800 font-bold">✅ 100% Democratic Co-ownership & Annual Dividends</td>
+              </tr>
+              <tr>
+                <td className="py-3.5 px-4 font-bold text-stone-900">Accidental & Healthcare Cover</td>
+                <td className="py-3.5 px-4 bg-red-50/30 text-red-700">❌ Optional / Deducted from worker payout</td>
+                <td className="py-3.5 px-4 bg-emerald-50/40 text-emerald-800 font-bold">✅ ₹5 Lakh Universal Accidental Cover + Ayushman Bharat</td>
+              </tr>
+              <tr>
+                <td className="py-3.5 px-4 font-bold text-stone-900">Dispute & Account Ban Rights</td>
+                <td className="py-3.5 px-4 bg-red-50/30 text-red-700">❌ Instant algorithmic AI deactivation</td>
+                <td className="py-3.5 px-4 bg-emerald-50/40 text-emerald-800 font-bold">✅ Democratic Peer Grievance Redressal Board</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 };

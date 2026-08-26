@@ -58,6 +58,25 @@ export async function updateWorkerVerification(workerId: string, verification_st
   if (error) throw error;
 }
 
+export async function createWorkerProfile(worker: {
+  user_id: string;
+  cooperative_id: string;
+  skills: string[];
+  experience_years: number;
+  hourly_rate: number;
+  base_visit_fee: number;
+  bio?: string;
+}) {
+  const { data, error } = await supabase.from('workers').insert(worker).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateWorkerProfile(workerId: string, updates: Partial<Worker>) {
+  const { error } = await supabase.from('workers').update(updates).eq('id', workerId);
+  if (error) throw error;
+}
+
 export async function fetchCertifications(workerId: string): Promise<WorkerCertification[]> {
   const { data, error } = await supabase
     .from('worker_certifications')

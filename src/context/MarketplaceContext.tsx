@@ -72,6 +72,8 @@ interface MarketplaceContextType {
   fileGrievance: (grievance: Omit<Grievance, 'id' | 'ticket_number' | 'status' | 'created_at'>) => Promise<void>;
   resolveGrievance: (grievanceId: string, resolutionNotes: string) => Promise<void>;
   verifyWorkerKyc: (workerId: string, verified: boolean) => Promise<void>;
+  addWorker: (newWorkerData: Omit<Worker, 'id' | 'rating' | 'total_ratings_count' | 'total_jobs_completed'>) => Promise<Worker>;
+  updateWorker: (workerId: string, updates: Partial<Worker>) => Promise<void>;
   uploadCertificationFile: (workerId: string, file: File, meta: { certificate_name: string; issuing_body: string; issue_date?: string }) => Promise<string>;
   uploadCertification: (workerId: string, certName: string, issuingBody: string, fileUrl: string) => void;
   claimWelfareEmergency: (workerId: string, amount: number, notes: string) => void;
@@ -570,6 +572,48 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   };
 
+  const addWorker = async (
+    newWorkerData: Omit<Worker, 'id' | 'rating' | 'total_ratings_count' | 'total_jobs_completed'>
+  ): Promise<Worker> => {
+    const newId = `wrk-${Date.now()}`;
+    const newWorker: Worker = {
+      ...newWorkerData,
+      id: newId,
+      rating: 5.0,
+      total_ratings_count: 1,
+      total_jobs_completed: 0,
+    };
+
+    setWorkers((prev) => [newWorker, ...prev]);
+
+    try {
+      await api.createWorkerProfile({
+        user_id: newWorker.user_id,
+        cooperative_id: newWorker.cooperative_id,
+        skills: newWorker.skills,
+        experience_years: newWorker.experience_years,
+        hourly_rate: newWorker.hourly_rate,
+        base_visit_fee: newWorker.base_visit_fee,
+        bio: newWorker.bio,
+      });
+    } catch {
+      // handled
+    }
+
+    return newWorker;
+  };
+
+  const updateWorker = async (workerId: string, updates: Partial<Worker>) => {
+    setWorkers((prev) =>
+      prev.map((w) => (w.id === workerId ? { ...w, ...updates } : w))
+    );
+    try {
+      await api.updateWorkerProfile(workerId, updates);
+    } catch {
+      // handled
+    }
+  };
+
   const uploadCertificationFile = async (
     workerId: string,
     file: File,
@@ -687,6 +731,8 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         fileGrievance,
         resolveGrievance,
         verifyWorkerKyc,
+        addWorker,
+        updateWorker,
         uploadCertificationFile,
         uploadCertification,
         claimWelfareEmergency,
