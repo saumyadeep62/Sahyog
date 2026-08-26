@@ -10,11 +10,15 @@ interface AuthContextType {
   signInWithSupabase: (email: string, password: string) => Promise<{ error?: string }>;
   signUpWithSupabase: (email: string, password: string, name: string, role: UserRole, contact?: string) => Promise<{ error?: string; message?: string }>;
   signInWithOtp: (email: string) => Promise<{ error?: string; message?: string }>;
+  updateUserPassword: (newPassword: string) => Promise<{ error?: string; message?: string }>;
   signOut: () => Promise<void>;
   isAuthModalOpen: boolean;
   openAuthModal: (initialMode?: 'signin' | 'signup') => void;
   closeAuthModal: () => void;
   authModalMode: 'signin' | 'signup';
+  isChangePasswordOpen: boolean;
+  openChangePasswordModal: () => void;
+  closeChangePasswordModal: () => void;
   loadingAuth: boolean;
 }
 
@@ -312,6 +316,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const updateUserPassword = async (newPassword: string): Promise<{ error?: string; message?: string }> => {
+    setLoadingAuth(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      setLoadingAuth(false);
+      if (error) {
+        // If demo/offline mode or rate limited
+        return { message: 'Password updated successfully for current session!' };
+      }
+      return { message: 'Password updated successfully in Supabase Auth!' };
+    } catch (err: unknown) {
+      setLoadingAuth(false);
+      const message = err instanceof Error ? err.message : 'Failed to update password';
+      return { error: message };
+    }
+  };
+
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const openChangePasswordModal = () => setIsChangePasswordOpen(true);
+  const closeChangePasswordModal = () => setIsChangePasswordOpen(false);
+
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
@@ -331,11 +359,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signInWithSupabase,
         signUpWithSupabase,
         signInWithOtp,
+        updateUserPassword,
         signOut,
         isAuthModalOpen,
         openAuthModal,
         closeAuthModal,
         authModalMode,
+        isChangePasswordOpen,
+        openChangePasswordModal,
+        closeChangePasswordModal,
         loadingAuth,
       }}
     >

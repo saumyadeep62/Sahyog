@@ -16,6 +16,7 @@ import { CustomerDashboard } from './components/dashboard/CustomerDashboard';
 import { WorkerDashboard } from './components/dashboard/WorkerDashboard';
 import { AdminDashboard } from './components/dashboard/AdminDashboard';
 import { SahyogChatbot } from './components/common/SahyogChatbot';
+import { ChangePasswordModal } from './components/common/ChangePasswordModal';
 import { ServiceCategory, Worker } from './lib/database.types';
 
 const MainAppContent: React.FC = () => {
@@ -106,6 +107,7 @@ const MainAppContent: React.FC = () => {
       <WorkerProfileModal />
       <EmergencyBookingModal />
       <BookingFlow />
+      <ChangePasswordModal />
 
       {/* Sahyog Sahayak AI Chatbot */}
       <SahyogChatbot onNavigateTab={(tab: any) => setActiveTab(tab)} />

@@ -21,6 +21,7 @@ import {
   TrendingUp,
   Scale,
   Receipt,
+  KeyRound,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage, LanguageCode } from '../../context/LanguageContext';
@@ -33,7 +34,14 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
-  const { currentUser, currentRole, isAuthenticated, signOut, openAuthModal } = useAuth();
+  const {
+    currentUser,
+    currentRole,
+    isAuthenticated,
+    signOut,
+    openAuthModal,
+    openChangePasswordModal,
+  } = useAuth();
   const { language, setLanguage, t } = useLanguage();
   const { notifications, markNotificationRead, openEmergencyModal } = useMarketplace();
 
@@ -347,6 +355,16 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
                     className="w-full text-left px-4 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-50 transition-colors"
                   >
                     View Dashboard
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      openChangePasswordModal();
+                    }}
+                    className="w-full text-left px-4 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-50 flex items-center gap-1.5 transition-colors"
+                  >
+                    <KeyRound className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Change Password</span>
                   </button>
                   <button
                     onClick={async () => {
