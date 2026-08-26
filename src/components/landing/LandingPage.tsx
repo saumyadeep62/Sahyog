@@ -32,6 +32,7 @@ interface LandingPageProps {
 export const LandingPage: React.FC<LandingPageProps> = ({ onSelectCategory, onExploreServices }) => {
   const { t, language } = useLanguage();
   const { categories, workers, openWorkerModal, openEmergencyModal, openBookingFlow } = useMarketplace();
+  const [monthlyGrossIncome, setMonthlyGrossIncome] = React.useState<number>(40000);
 
   return (
     <div className="space-y-12 sm:space-y-20 pb-16">
@@ -160,9 +161,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectCategory, onEx
         </div>
       </section>
 
-      {/* 4. WHY COOPERATIVE OWNERSHIP MATTERS (3D TILT CARDS) */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-3xl mx-auto mb-12 space-y-3">
+      {/* 4. WHY COOPERATIVE OWNERSHIP MATTERS (INTERACTIVE EARNING COMPARISON) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        <div className="text-center max-w-3xl mx-auto space-y-3">
           <span className="px-3.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider">
             {t('why_badge', 'Ethical Paradigm Shift')}
           </span>
@@ -170,74 +171,165 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectCategory, onEx
             {t('why_title', 'Why Cooperative Ownership Changes Everything')}
           </h2>
           <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
-            {t('why_subtext', 'Private tech aggregators commodify labour. SAHYOG is democratically owned by worker-members with legal governance, dividend rights, and social security.')}
+            {t('why_subtext', 'Private tech aggregators charge up to 35% commission on every booking. SAHYOG charges a flat minimal ₹1,000/month solidarity subscription for UNLIMITED 0% commission earnings.')}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Corporate Gig Aggregators */}
-          <TiltCard maxTilt={6} className="bg-rose-50/70 rounded-3xl p-6 sm:p-8 border border-rose-200 shadow-md space-y-4">
-            <div className="flex items-center justify-between border-b border-rose-200 pb-4">
-              <div>
-                <h3 className="font-extrabold text-lg text-rose-950">{t('corp_title', 'Corporate Gig Aggregators')}</h3>
-                <p className="text-xs text-rose-700">{t('corp_sub', 'Profit Extraction Model')}</p>
-              </div>
-              <span className="px-3 py-1 rounded-full bg-rose-200 text-rose-900 text-xs font-bold">
-                {t('corp_cut', '25-35% Cuts')}
+        {/* Interactive Earning Comparison Slider */}
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-xl space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-100">
+            <div>
+              <h3 className="font-extrabold text-base sm:text-lg text-stone-900 font-['Outfit'] flex items-center gap-2">
+                <Scale className="w-5 h-5 text-[#0C3B2E]" />
+                <span>Simulate Monthly Artisan Earnings</span>
+              </h3>
+              <p className="text-xs text-stone-500">
+                Adjust monthly customer bookings to see exact net take-home and platform deductions.
+              </p>
+            </div>
+            <div className="bg-emerald-50 px-4 py-2 rounded-2xl border border-emerald-200 flex items-center gap-2">
+              <span className="text-xs text-stone-500 font-semibold">Monthly Bookings:</span>
+              <span className="text-lg sm:text-xl font-black text-[#0C3B2E] font-mono">
+                ₹{monthlyGrossIncome.toLocaleString('en-IN')}
               </span>
             </div>
+          </div>
 
-            <ul className="space-y-3 text-xs text-rose-900">
-              <li className="flex items-start gap-2.5">
-                <span className="text-rose-600 font-bold">✕</span>
-                <span>{t('corp_point1', 'Extracts up to 35% commission on every job from artisan earnings')}</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <span className="text-rose-600 font-bold">✕</span>
-                <span>{t('corp_point2', 'Workers can be abruptly deactivated/banned by black-box algorithms')}</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <span className="text-rose-600 font-bold">✕</span>
-                <span>{t('corp_point3', 'Zero health insurance, no provident fund, no accident protection')}</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <span className="text-rose-600 font-bold">✕</span>
-                <span>{t('corp_point4', 'Predatory 300% surge pricing that gouges consumers without benefiting workers')}</span>
-              </li>
-            </ul>
-          </TiltCard>
+          {/* Range Slider */}
+          <div className="space-y-2">
+            <input
+              type="range"
+              min="15000"
+              max="100000"
+              step="5000"
+              value={monthlyGrossIncome}
+              onChange={(e) => setMonthlyGrossIncome(Number(e.target.value))}
+              className="w-full h-2.5 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-[#0C3B2E]"
+            />
+            <div className="flex justify-between text-[11px] text-stone-400 font-semibold">
+              <span>₹15,000 (Part-time)</span>
+              <span>₹40,000 (Average)</span>
+              <span>₹70,000 (Pro Guild)</span>
+              <span>₹1,00,000+ (Master Artisan)</span>
+            </div>
+          </div>
 
-          {/* SAHYOG Cooperative Network */}
-          <TiltCard maxTilt={6} className="bg-emerald-50/80 rounded-3xl p-6 sm:p-8 border-2 border-[#0C3B2E] shadow-xl space-y-4 relative">
-            <div className="flex items-center justify-between border-b border-emerald-200 pb-4">
-              <div>
-                <h3 className="font-extrabold text-lg text-[#0C3B2E]">{t('coop_title', 'SAHYOG Cooperative Network')}</h3>
-                <p className="text-xs text-emerald-800 font-medium">{t('coop_sub', 'Worker-Owned & Community Governed')}</p>
+          {/* Side by Side Mathematical Comparison */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+            {/* Corporate Gig Platform Column */}
+            <div className="bg-rose-50/70 rounded-2xl p-5 sm:p-6 border border-rose-200 space-y-4 flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-extrabold text-base text-rose-950">Corporate Gig Platform</h4>
+                    <p className="text-[11px] text-rose-700">Urban Company / Private Aggregators</p>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full bg-rose-200 text-rose-900 text-[11px] font-black">
+                    25-35% Commission
+                  </span>
+                </div>
+
+                <div className="space-y-1.5 text-xs text-rose-950 bg-white/80 p-3 rounded-xl border border-rose-100">
+                  <div className="flex justify-between">
+                    <span>Gross Customer Bookings:</span>
+                    <span className="font-mono font-bold">₹{monthlyGrossIncome.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex justify-between text-rose-600 font-semibold">
+                    <span>30% Platform Cut:</span>
+                    <span className="font-mono">-₹{Math.round(monthlyGrossIncome * 0.3).toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex justify-between text-rose-600 font-semibold">
+                    <span>Lead Fees & Equipment Deductions:</span>
+                    <span className="font-mono">-₹1,200</span>
+                  </div>
+                  <div className="pt-2 border-t border-rose-100 flex justify-between font-black text-sm text-rose-950">
+                    <span>Artisan Net Take-Home:</span>
+                    <span className="font-mono text-base text-rose-700">
+                      ₹{(monthlyGrossIncome - Math.round(monthlyGrossIncome * 0.3) - 1200).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                </div>
+
+                <ul className="space-y-2 text-xs text-rose-900">
+                  <li className="flex items-start gap-2">
+                    <span className="text-rose-600 font-bold">✕</span>
+                    <span>Zero accident or health insurance included</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-rose-600 font-bold">✕</span>
+                    <span>Arbitrary account bans with 0 human appeal rights</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-rose-600 font-bold">✕</span>
+                    <span>0% ownership & no profit dividend sharing</span>
+                  </li>
+                </ul>
               </div>
-              <span className="px-3 py-1 rounded-full bg-emerald-200 text-emerald-900 text-xs font-bold">
-                {t('coop_cut', '0% Cuts')}
-              </span>
             </div>
 
-            <ul className="space-y-3 text-xs text-emerald-950">
-              <li className="flex items-start gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-700 flex-shrink-0 mt-0.5" />
-                <span className="font-medium">{t('coop_point1', '100% fair floor wages paid directly to verified artisan members')}</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-700 flex-shrink-0 mt-0.5" />
-                <span className="font-medium">{t('coop_point2', 'Democratic dispute redressal — no automated algorithm account bans')}</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-700 flex-shrink-0 mt-0.5" />
-                <span className="font-medium">{t('coop_point3', 'Ayushman Bharat & ₹5 Lakh accidental cover standard for all active members')}</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-700 flex-shrink-0 mt-0.5" />
-                <span className="font-medium">{t('coop_point4', 'Annual surplus dividend distributed back to registered cooperative artisans')}</span>
-              </li>
-            </ul>
-          </TiltCard>
+            {/* SAHYOG Democratic Model Column */}
+            <div className="bg-emerald-50/90 rounded-2xl p-5 sm:p-6 border-2 border-[#0C3B2E] shadow-xl space-y-4 flex flex-col justify-between relative overflow-hidden">
+              <div className="absolute top-0 right-0 bg-gradient-to-l from-emerald-600 to-[#0C3B2E] text-white text-[10px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-wider">
+                0% Commission • Unlimited
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-extrabold text-base text-[#0C3B2E]">SAHYOG Cooperative</h4>
+                    <p className="text-[11px] text-emerald-800 font-medium">Worker-Owned Solidarity Model</p>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full bg-emerald-200 text-emerald-950 text-[11px] font-black">
+                    Flat ₹1,000/mo
+                  </span>
+                </div>
+
+                <div className="space-y-1.5 text-xs text-emerald-950 bg-white/90 p-3 rounded-xl border border-emerald-100">
+                  <div className="flex justify-between">
+                    <span>Gross Customer Bookings:</span>
+                    <span className="font-mono font-bold">₹{monthlyGrossIncome.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex justify-between text-emerald-700 font-bold">
+                    <span>Platform Commission (0%):</span>
+                    <span className="font-mono text-emerald-600">₹0 (Zero Cut)</span>
+                  </div>
+                  <div className="flex justify-between text-stone-600">
+                    <span>Solidarity & Welfare Subscription:</span>
+                    <span className="font-mono font-bold text-stone-800">-₹1,000/mo</span>
+                  </div>
+                  <div className="pt-2 border-t border-emerald-100 flex justify-between font-black text-sm text-[#0C3B2E]">
+                    <span>Artisan Net Take-Home:</span>
+                    <span className="font-mono text-base text-emerald-700">
+                      ₹{(monthlyGrossIncome - 1000).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                </div>
+
+                <ul className="space-y-2 text-xs text-emerald-950">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-700 flex-shrink-0 mt-0.5" />
+                    <span><strong>₹5 Lakh Accidental Cover</strong> + Ayushman Shield funded by the ₹1,000 dues</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-700 flex-shrink-0 mt-0.5" />
+                    <span><strong>100% Unlimited Jobs:</strong> Keep every single rupee from all customer visits</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-700 flex-shrink-0 mt-0.5" />
+                    <span><strong>Cooperative Shareholding:</strong> Annual surplus dividend returned to artisans</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Extra Savings Callout Banner */}
+              <div className="bg-gradient-to-r from-[#0C3B2E] to-[#144537] text-white p-3 rounded-xl flex items-center justify-between shadow-md">
+                <span className="text-xs font-bold text-amber-300">Extra Income in Artisan's Pocket:</span>
+                <span className="font-mono font-black text-sm sm:text-base text-white">
+                  +₹{((monthlyGrossIncome - 1000) - (monthlyGrossIncome - Math.round(monthlyGrossIncome * 0.3) - 1200)).toLocaleString('en-IN')}/mo
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

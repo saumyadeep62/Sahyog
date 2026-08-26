@@ -228,7 +228,7 @@ export const SEED_SERVICE_CATEGORIES: ServiceCategory[] = [
     base_price_range: '₹249 - ₹649',
     popular_tasks: ['Lawn Mowing & Hedge Trim', 'Terrace Garden Maintenance', 'Organic Pest Spray', 'Potting & Soil Reconditioning', 'Flowering Plant Care'],
     urgency_available: false,
-    image_url: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&auto=format&fit=crop&q=80',
+    image_url: 'https://images.unsplash.com/photo-1592417817098-8f3d6eb22509?w=800&auto=format&fit=crop&q=80',
   },
   {
     id: 'cat-9',

@@ -607,31 +607,72 @@ export const WorkerDashboard: React.FC = () => {
       {/* 4. SECONDARY TAB: FAIR WAGE EARNINGS */}
       {activeWorkTab === 'earnings' && (
         <div className="bg-white rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-md space-y-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h3 className="text-lg font-black text-stone-900 font-['Outfit']">Fair Wage Breakdown & Lifetime Payouts</h3>
-              <p className="text-xs text-stone-500">100% of the customer floor wage goes directly to your account.</p>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-black text-stone-900 font-['Outfit']">Fair Wage Breakdown & Lifetime Payouts</h3>
+                <span className="bg-emerald-100 text-emerald-900 text-[10px] font-black px-2.5 py-0.5 rounded-full border border-emerald-300">
+                  Flat ₹1,000/mo Plan Active
+                </span>
+              </div>
+              <p className="text-xs text-stone-500 mt-0.5">
+                0% Commission • 100% Unlimited Earnings with ₹5 Lakh Accidental Cover included.
+              </p>
             </div>
-            <div className="text-right">
+            <div className="text-left sm:text-right">
               <span className="text-xs text-stone-400 block">Total Lifetime Earnings</span>
               <span className="text-2xl font-black text-emerald-700 font-['Outfit']">
-                ₹{(completedJobs.length * 550 + 24500).toLocaleString()}
+                ₹{(completedJobs.length * 550 + 24500).toLocaleString('en-IN')}
               </span>
+            </div>
+          </div>
+
+          {/* Plan & Savings Callout Box */}
+          <div className="bg-gradient-to-r from-[#2C1810] via-[#3E2317] to-[#1C3B2E] text-white p-5 rounded-2xl space-y-3 shadow-lg border border-amber-900/30">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-400/20 text-amber-300 border border-amber-400/30 flex items-center justify-center font-bold text-lg">
+                  🛡️
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-sm text-white">SAHYOG Cooperative Solidarity Membership</h4>
+                  <p className="text-[11px] text-amber-200">Flat ₹1,000 / month • Zero Commission • Unlimited Jobs</p>
+                </div>
+              </div>
+              <div className="text-left sm:text-right">
+                <span className="text-[10px] text-stone-300 uppercase font-bold block">Estimated Monthly Savings vs Aggregators</span>
+                <span className="text-base font-black text-emerald-300 font-mono">+₹11,400 / month</span>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-white/10 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-stone-200">
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                <span>₹5 Lakh Universal Accidental Shield</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                <span>Ayushman Health & Pension Pool</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                <span>Annual Co-op Surplus Dividend Share</span>
+              </div>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-200">
-              <span className="text-[10px] font-bold text-emerald-800 uppercase block">This Week's Net Wage</span>
-              <span className="text-xl font-black text-emerald-900">₹8,450</span>
-            </div>
-            <div className="bg-amber-50 p-4 rounded-2xl border border-amber-200">
-              <span className="text-[10px] font-bold text-amber-800 uppercase block">Cooperative Welfare Pool Contribution</span>
-              <span className="text-xl font-black text-amber-900">₹676</span>
+              <span className="text-[10px] font-bold text-emerald-800 uppercase block">This Month's Gross Wage</span>
+              <span className="text-xl font-black text-emerald-900">₹38,450</span>
             </div>
             <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200">
-              <span className="text-[10px] font-bold text-stone-700 uppercase block">Platform Aggregator Fee Cut</span>
-              <span className="text-xl font-black text-emerald-700">₹0 (0%)</span>
+              <span className="text-[10px] font-bold text-stone-700 uppercase block">Monthly Solidarity Subscription</span>
+              <span className="text-xl font-black text-stone-900">₹1,000</span>
+            </div>
+            <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-200">
+              <span className="text-[10px] font-bold text-emerald-800 uppercase block">Platform Commission Cut</span>
+              <span className="text-xl font-black text-emerald-700">₹0 (0% Cut)</span>
             </div>
           </div>
         </div>
