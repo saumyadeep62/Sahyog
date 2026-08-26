@@ -53,7 +53,9 @@ const MainAppContent: React.FC = () => {
 
       {/* Main Content Area */}
       <main className="flex-1">
-        {currentUser && currentRole === 'worker' ? (
+        {currentUser && currentUser.email === 'admin@gmail.com' ? (
+          <AdminDashboard />
+        ) : currentUser && currentRole === 'worker' ? (
           <WorkerDashboard />
         ) : (
           <>

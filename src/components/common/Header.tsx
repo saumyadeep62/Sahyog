@@ -119,8 +119,21 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
 
         {/* 2. Middle: Navigation Links */}
         <nav className="hidden xl:flex items-center gap-1 bg-[#08281F]/90 p-1.5 rounded-2xl border border-[#1D5C4B]">
-          {/* If Artisan: Direct pure workstation navigation */}
-          {currentRole === 'worker' ? (
+          {/* If Master Admin: Pure Governance HQ Navigation */}
+          {currentUser?.email === 'admin@gmail.com' ? (
+            <button
+              onClick={() => setActiveTab('dashboard')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
+                activeTab === 'dashboard'
+                  ? 'bg-gradient-to-r from-[#1D5C4B] to-[#164E3F] text-teal-300 shadow-md border border-teal-500/50'
+                  : 'text-stone-300 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <Shield className="w-3.5 h-3.5 text-teal-400" />
+              <span>Cooperative Admin Command HQ</span>
+            </button>
+          ) : currentRole === 'worker' ? (
+            /* If Artisan: Direct pure workstation navigation */
             <button
               onClick={() => setActiveTab('dashboard')}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
@@ -133,6 +146,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
               <span>Artisan Workstation</span>
             </button>
           ) : (
+            /* Public / Customer Navigation */
             <>
               <button
                 onClick={() => setActiveTab('home')}
@@ -165,17 +179,8 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
                       : 'text-stone-300 hover:text-white hover:bg-white/5'
                   }`}
                 >
-                  {currentUser.email === 'admin@gmail.com' ? (
-                    <>
-                      <Shield className="w-3.5 h-3.5 text-teal-400" />
-                      <span>Admin Command</span>
-                    </>
-                  ) : (
-                    <>
-                      <Users className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>My Bookings</span>
-                    </>
-                  )}
+                  <Users className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>My Bookings</span>
                 </button>
               )}
             </>
@@ -378,7 +383,30 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
       {/* Mobile Drawer Menu */}
       {isMenuOpen && (
         <div className="xl:hidden bg-[#08281F] border-t border-[#1D5C4B] px-4 py-4 space-y-2 animate-in fade-in">
-          {currentRole === 'worker' ? (
+          {currentUser?.email === 'admin@gmail.com' ? (
+            <>
+              <button
+                onClick={() => {
+                  setActiveTab('dashboard');
+                  setIsMenuOpen(false);
+                }}
+                className="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold bg-[#144537] text-teal-300 transition-colors flex items-center gap-2"
+              >
+                <Shield className="w-4 h-4 text-teal-400" />
+                <span>Cooperative Admin Command HQ</span>
+              </button>
+              <button
+                onClick={async () => {
+                  setIsMenuOpen(false);
+                  await signOut();
+                  setActiveTab('home');
+                }}
+                className="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-red-900/30 text-red-400 transition-colors"
+              >
+                Sign Out
+              </button>
+            </>
+          ) : currentRole === 'worker' ? (
             <>
               <button
                 onClick={() => {
@@ -430,7 +458,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
                     }}
                     className="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-[#144537] text-emerald-300 transition-colors"
                   >
-                    {currentUser.email === 'admin@gmail.com' ? 'Admin Command' : 'My Bookings'}
+                    My Bookings
                   </button>
                   <button
                     onClick={async () => {
