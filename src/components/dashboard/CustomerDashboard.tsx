@@ -55,14 +55,6 @@ export const CustomerDashboard: React.FC = () => {
     return statusSteps.findIndex((s) => s.key === status);
   };
 
-  const handleAdvanceStatusForDemo = (bookingId: string, currentStatus: BookingStatus) => {
-    const sequence: BookingStatus[] = ['requested', 'confirmed', 'en_route', 'in_progress', 'completed'];
-    const nextIdx = sequence.indexOf(currentStatus) + 1;
-    if (nextIdx < sequence.length) {
-      updateBookingStatus(bookingId, sequence[nextIdx]);
-    }
-  };
-
   const handleOpenRating = (bk: Booking) => {
     setRatingModalBooking(bk);
     setRatingStars(5);
@@ -248,17 +240,6 @@ export const CustomerDashboard: React.FC = () => {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
-                      {/* Advance status helper button for demo */}
-                      {bk.status !== 'completed' && (
-                        <button
-                          onClick={() => handleAdvanceStatusForDemo(bk.id, bk.status)}
-                          className="px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold transition-colors"
-                          title="Advance progress status"
-                        >
-                          Advance Step →
-                        </button>
-                      )}
-
                       <button
                         onClick={() => openInvoiceModal(bk)}
                         className="px-3 py-1.5 rounded-lg border border-stone-300 bg-white hover:bg-stone-50 text-stone-800 text-xs font-semibold flex items-center gap-1 transition-colors"

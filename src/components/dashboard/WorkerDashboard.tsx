@@ -28,6 +28,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useMarketplace } from '../../context/MarketplaceContext';
 import { GrievanceModal } from '../common/GrievanceModal';
 import { TiltCard } from '../3d/TiltCard';
+import { BookingStatus } from '../../lib/database.types';
 
 export const WorkerDashboard: React.FC = () => {
   const { currentUser } = useAuth();
@@ -76,8 +77,28 @@ export const WorkerDashboard: React.FC = () => {
     } catch {}
   };
 
+  const handleStartWork = (bookingId: string) => {
+    updateBookingStatus(bookingId, 'in_progress');
+  };
+
   const handleCompleteJob = (bookingId: string) => {
     updateBookingStatus(bookingId, 'completed');
+    try {
+      confetti({ particleCount: 50, spread: 60 });
+    } catch {}
+  };
+
+  const handleAdvanceJobStatus = (bookingId: string, currentStatus: BookingStatus) => {
+    const sequence: BookingStatus[] = ['requested', 'confirmed', 'en_route', 'in_progress', 'completed'];
+    const nextIdx = sequence.indexOf(currentStatus) + 1;
+    if (nextIdx < sequence.length) {
+      updateBookingStatus(bookingId, sequence[nextIdx]);
+      if (sequence[nextIdx] === 'completed') {
+        try {
+          confetti({ particleCount: 50, spread: 60 });
+        } catch {}
+      }
+    }
   };
 
   const handleUploadCertSubmit = async (e: React.FormEvent) => {
@@ -271,10 +292,15 @@ export const WorkerDashboard: React.FC = () => {
           {inProgressJobs.length > 0 && (
             <div className="bg-gradient-to-r from-emerald-900 to-[#0C3B2E] text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-emerald-700 space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-xs px-3 py-1 rounded-full bg-emerald-500 text-white font-black tracking-wider animate-pulse flex items-center gap-1.5">
-                  <Flame className="w-3.5 h-3.5 fill-white text-white" />
-                  CURRENT ACTIVE DISPATCH
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs px-3 py-1 rounded-full bg-emerald-500 text-white font-black tracking-wider animate-pulse flex items-center gap-1.5">
+                    <Flame className="w-3.5 h-3.5 fill-white text-white" />
+                    CURRENT ACTIVE DISPATCH
+                  </span>
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-white/20 text-emerald-200 font-bold">
+                    {inProgressJobs[0].status === 'en_route' ? '🚗 En Route' : '🛠️ Work In Progress'}
+                  </span>
+                </div>
                 <span className="text-xs font-mono font-bold text-emerald-300">
                   {inProgressJobs[0].booking_code}
                 </span>
@@ -301,13 +327,35 @@ export const WorkerDashboard: React.FC = () => {
                     ₹{inProgressJobs[0].price_breakdown.worker_wage}
                   </span>
                 </div>
-                <button
-                  onClick={() => handleCompleteJob(inProgressJobs[0].id)}
-                  className="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xs shadow-lg flex items-center justify-center gap-2 transition-all transform hover:scale-105"
-                >
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>Mark Job Completed ✓</span>
-                </button>
+
+                <div className="flex flex-wrap items-center gap-2.5">
+                  {inProgressJobs[0].status === 'en_route' ? (
+                    <>
+                      <button
+                        onClick={() => handleStartWork(inProgressJobs[0].id)}
+                        className="px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-black text-xs shadow-lg flex items-center justify-center gap-2 transition-all transform hover:scale-105"
+                      >
+                        <MapPin className="w-4 h-4" />
+                        <span>Arrived • Start Work →</span>
+                      </button>
+                      <button
+                        onClick={() => handleAdvanceJobStatus(inProgressJobs[0].id, inProgressJobs[0].status)}
+                        className="px-4 py-3 rounded-2xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs shadow transition-colors"
+                        title="Advance to next step"
+                      >
+                        Advance Step →
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => handleCompleteJob(inProgressJobs[0].id)}
+                      className="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xs shadow-lg flex items-center justify-center gap-2 transition-all transform hover:scale-105"
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Mark Job Completed ✓</span>
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -362,7 +410,14 @@ export const WorkerDashboard: React.FC = () => {
                       <p><strong className="text-stone-800">Task Notes:</strong> {bk.description}</p>
                     </div>
 
-                    <div className="flex items-center justify-end gap-3 pt-1">
+                    <div className="flex items-center justify-end gap-2.5 pt-1">
+                      <button
+                        onClick={() => handleAdvanceJobStatus(bk.id, bk.status)}
+                        className="px-4 py-2.5 rounded-xl border border-stone-300 text-stone-700 hover:bg-stone-50 font-bold text-xs shadow-xs transition-colors"
+                        title="Advance job to next step"
+                      >
+                        Advance Step →
+                      </button>
                       <button
                         onClick={() => handleAcceptJob(bk.id)}
                         className="px-6 py-2.5 rounded-xl bg-[#2C1810] hover:bg-[#3E2317] text-white font-extrabold text-xs shadow-md transition-all flex items-center gap-1.5 transform hover:scale-105"
