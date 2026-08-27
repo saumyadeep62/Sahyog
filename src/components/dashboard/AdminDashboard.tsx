@@ -676,24 +676,6 @@ export const AdminDashboard: React.FC = () => {
             <Lock className="w-3.5 h-3.5 text-teal-300" />
             <span>Password</span>
           </button>
-
-          <div className="bg-[#0A0F1D]/80 px-4 py-2.5 rounded-2xl border border-teal-700/60 shadow-inner text-right">
-            <span className="text-[10px] text-teal-400 block font-bold uppercase tracking-wider">
-              Welfare Pool Reserve
-            </span>
-            <span className="text-lg sm:text-xl font-black text-white font-mono">
-              ₹{(currentCoop.welfare_fund_pool / 100000).toFixed(1)} Lakh
-            </span>
-          </div>
-
-          <div className="bg-[#0A0F1D]/80 px-4 py-2.5 rounded-2xl border border-teal-700/60 shadow-inner text-right">
-            <span className="text-[10px] text-emerald-400 block font-bold uppercase tracking-wider">
-              Total Wages Disbursed
-            </span>
-            <span className="text-lg sm:text-xl font-black text-emerald-400 font-mono">
-              ₹{totalWagesDistributed.toLocaleString('en-IN')}
-            </span>
-          </div>
         </div>
       </div>
 
