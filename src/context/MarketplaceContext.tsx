@@ -99,8 +99,69 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const [workers, setWorkers] = useState<Worker[]>(() => {
     const saved = localStorage.getItem('sahyog_workers');
-    return saved ? JSON.parse(saved) : SEED_WORKERS;
+    let list: Worker[] = saved ? JSON.parse(saved) : SEED_WORKERS;
+
+    // Merge persistent profile customizations
+    try {
+      const rawDb = localStorage.getItem('sahyog_profiles_db');
+      const db = rawDb ? JSON.parse(rawDb) : {};
+      list = list.map((w) => {
+        const customProfile =
+          db[w.user_id?.toLowerCase() || ''] ||
+          (w.id === 'wrk-1' ? db['artisan@gmail.com'] : null);
+        const directAvatar =
+          localStorage.getItem(`sahyog_avatar_${w.user_id?.toLowerCase()}`) ||
+          (w.id === 'wrk-1' ? localStorage.getItem('sahyog_avatar_artisan@gmail.com') : null);
+        const directName =
+          localStorage.getItem(`sahyog_name_${w.user_id?.toLowerCase()}`) ||
+          (w.id === 'wrk-1' ? localStorage.getItem('sahyog_name_artisan@gmail.com') : null);
+
+        return {
+          ...w,
+          full_name: directName || customProfile?.name || w.full_name,
+          avatar_url: directAvatar || customProfile?.avatar_url || w.avatar_url,
+        };
+      });
+    } catch {}
+
+    return list;
   });
+
+  // Listen to live profile updates from AuthContext
+  useEffect(() => {
+    const handleWorkerProfileUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent<{
+        userId?: string;
+        email?: string;
+        name?: string;
+        avatar_url?: string;
+        contact?: string;
+      }>;
+      const detail = customEvent.detail;
+      if (!detail) return;
+
+      setWorkers((prevWorkers) =>
+        prevWorkers.map((w) => {
+          const isMatch =
+            (detail.userId && w.user_id === detail.userId) ||
+            w.id === 'wrk-1';
+          if (isMatch) {
+            return {
+              ...w,
+              ...(detail.name ? { full_name: detail.name } : {}),
+              ...(detail.avatar_url ? { avatar_url: detail.avatar_url } : {}),
+            };
+          }
+          return w;
+        })
+      );
+    };
+
+    window.addEventListener('sahyog_worker_profile_updated', handleWorkerProfileUpdate);
+    return () => {
+      window.removeEventListener('sahyog_worker_profile_updated', handleWorkerProfileUpdate);
+    };
+  }, []);
 
   const [certifications, setCertifications] = useState<WorkerCertification[]>(() => {
     const saved = localStorage.getItem('sahyog_certifications');
