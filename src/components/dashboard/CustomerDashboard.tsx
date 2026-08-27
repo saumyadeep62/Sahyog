@@ -250,62 +250,7 @@ export const CustomerDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. STATS & SOLIDARITY VALUE METRICS CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-3xl border border-stone-200 shadow-xs hover:shadow-md transition-shadow space-y-1">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] uppercase font-bold text-stone-500 tracking-wider">Active Deliveries</span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
-              ⚡
-            </div>
-          </div>
-          <span className="text-2xl font-black text-stone-900 font-['Outfit'] block">
-            {activeBookings.length} Active
-          </span>
-          <p className="text-[11px] text-emerald-700 font-semibold">Live GPS ETA Tracking</p>
-        </div>
-
-        <div className="bg-white p-5 rounded-3xl border border-stone-200 shadow-xs hover:shadow-md transition-shadow space-y-1">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] uppercase font-bold text-stone-500 tracking-wider">Completed Services</span>
-            <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold">
-              ✓
-            </div>
-          </div>
-          <span className="text-2xl font-black text-stone-900 font-['Outfit'] block">
-            {pastBookings.length + 3} Orders
-          </span>
-          <p className="text-[11px] text-stone-500 font-medium">100% On-Time Verified</p>
-        </div>
-
-        <div className="bg-white p-5 rounded-3xl border border-stone-200 shadow-xs hover:shadow-md transition-shadow space-y-1">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] uppercase font-bold text-stone-500 tracking-wider">Direct Floor Wage Paid</span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
-              ₹
-            </div>
-          </div>
-          <span className="text-2xl font-black text-emerald-800 font-['Outfit'] block">
-            ₹{(totalWorkerWagesPaid + 1850).toLocaleString('en-IN')}
-          </span>
-          <p className="text-[11px] text-emerald-700 font-semibold">100% to Artisan Pockets</p>
-        </div>
-
-        <div className="bg-white p-5 rounded-3xl border border-stone-200 shadow-xs hover:shadow-md transition-shadow space-y-1">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] uppercase font-bold text-stone-500 tracking-wider">Savings vs Aggregators</span>
-            <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-800 flex items-center justify-center font-bold">
-              🛡️
-            </div>
-          </div>
-          <span className="text-2xl font-black text-amber-800 font-['Outfit'] block">
-            +₹{estimatedSavings.toLocaleString('en-IN')}
-          </span>
-          <p className="text-[11px] text-stone-500 font-medium">0% Commission Surcharge Saved</p>
-        </div>
-      </div>
-
-      {/* 3. PROMINENT "ARTISAN ARRIVING IN 14 MINUTES" BLINKIT STYLE LIVE RADAR BANNER */}
+      {/* 2. PROMINENT "ARTISAN ARRIVING IN 14 MINUTES" BLINKIT STYLE LIVE RADAR BANNER */}
       {activeBookings.length > 0 && (
         <div className="bg-gradient-to-r from-[#0C3B2E] via-[#144537] to-[#0A261D] text-white p-6 sm:p-7 rounded-3xl shadow-2xl border-2 border-emerald-400/50 relative overflow-hidden space-y-5 animate-in fade-in">
           {/* Ambient Lighting Orbs */}
