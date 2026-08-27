@@ -25,7 +25,7 @@ const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
     nav_artisan_portal: 'Artisan Portal',
     nav_federation_admin: 'Admin Dashboard',
     nav_super_admin: 'Super Admin',
-    nav_auth: 'Sign In / Sign Up',
+    nav_auth: 'Log In / Register',
     role_customer: 'Customer',
     role_worker: 'Artisan / Worker',
     role_admin: 'Federation Admin',

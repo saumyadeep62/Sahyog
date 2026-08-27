@@ -325,7 +325,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
               }`}
             >
               <Lock className="w-3.5 h-3.5" />
-              <span>{t('nav_auth', 'Sign In / Sign Up')}</span>
+              <span>{t('nav_auth', 'Log In / Register')}</span>
             </button>
           )}
         </nav>
@@ -515,7 +515,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
               onClick={() => setActiveTab('auth')}
               className="hidden lg:block px-4 py-2 rounded-xl bg-gradient-to-r from-[#D4A373] to-[#E0A96D] text-[#0C3B2E] font-bold text-xs shadow-md hover:opacity-95 transition-opacity whitespace-nowrap"
             >
-              Sign In
+              Log In
             </button>
           )}
 
@@ -541,7 +541,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
             <button
               onClick={() => setActiveTab('auth')}
               className="lg:hidden p-1.5 rounded-xl bg-[#144537] border border-[#297762] text-stone-200 hover:bg-[#1D5C4B] transition-colors flex-shrink-0"
-              title="Sign In"
+              title="Log In"
             >
               <User className="w-4 h-4 text-amber-300" />
             </button>
@@ -625,7 +625,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
               className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#D4A373] to-[#E0A96D] text-[#0C3B2E] font-black text-xs shadow flex items-center justify-center gap-2"
             >
               <Lock className="w-4 h-4" />
-              <span>Sign In / Sign Up</span>
+              <span>Log In / Register</span>
             </button>
           )}
 
@@ -845,7 +845,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
               ? 'Workstation'
               : currentUser
               ? 'Bookings'
-              : 'Sign In'}
+              : 'Log In'}
           </span>
         </button>
 

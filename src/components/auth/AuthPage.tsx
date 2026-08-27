@@ -13,7 +13,6 @@ import {
   Briefcase,
   ArrowLeft,
   Crown,
-  KeyRound,
   Building2,
   AlertTriangle,
 } from 'lucide-react';
@@ -36,11 +35,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({
   const { signInWithSupabase, signUpWithSupabase, loadingAuth } = useAuth();
 
   const [mode, setMode] = useState<'signin' | 'signup' | 'admin'>(initialMode);
+  const [loginPersona, setLoginPersona] = useState<'customer' | 'artisan'>('customer');
   const [email, setEmail] = useState(initialMode === 'admin' ? 'admin@gmail.com' : '');
   const [password, setPassword] = useState(initialMode === 'admin' ? 'admin123' : '');
   const [name, setName] = useState('');
   const [contact, setContact] = useState('');
-  const [role, setRole] = useState<UserRole>('customer');
+  const [role] = useState<UserRole>('customer');
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
@@ -51,9 +51,32 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     if (newMode === 'admin') {
       setEmail('admin@gmail.com');
       setPassword('admin123');
-    } else if (email === 'admin@gmail.com') {
+    } else if (newMode === 'signin') {
+      if (loginPersona === 'customer') {
+        setEmail('customer@gmail.com');
+        setPassword('password123');
+      } else {
+        setEmail('artisan@gmail.com');
+        setPassword('artisan123');
+      }
+    } else {
       setEmail('');
       setPassword('');
+    }
+  };
+
+  const handlePersonaSwitch = (persona: 'customer' | 'artisan') => {
+    setLoginPersona(persona);
+    setErrorMsg('');
+    setSuccessMsg('');
+    if (persona === 'customer') {
+      setEmail('customer@gmail.com');
+      setPassword('password123');
+      setSuccessMsg('Customer credentials selected: customer@gmail.com');
+    } else {
+      setEmail('artisan@gmail.com');
+      setPassword('artisan123');
+      setSuccessMsg('Artisan credentials selected: artisan@gmail.com');
     }
   };
 
@@ -81,7 +104,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         setSuccessMsg('Cooperative Administrator authenticated successfully! Redirecting...');
         setTimeout(() => {
           onLoginSuccess();
-        }, 600);
+        }, 500);
       }
       return;
     }
@@ -101,7 +124,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         setSuccessMsg(res.message || 'Account created successfully! Welcome to SAHYOG.');
         setTimeout(() => {
           onLoginSuccess();
-        }, 1200);
+        }, 1000);
       }
     }
   };
@@ -170,7 +193,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 }`}
               >
                 <Lock className="w-3.5 h-3.5" />
-                <span>Sign In</span>
+                <span>Log In</span>
               </button>
 
               <button
@@ -202,6 +225,54 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
             {/* Form Body */}
             <div className="p-6 sm:p-8 space-y-4">
+              {/* Customer vs Artisan Log In Persona Selection */}
+              {mode === 'signin' && (
+                <div className="space-y-2">
+                  <label className="block font-bold text-stone-700 text-xs">Choose Account Type to Log In:</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handlePersonaSwitch('customer')}
+                      className={`p-3 rounded-2xl border text-left transition-all flex items-center gap-2.5 ${
+                        loginPersona === 'customer'
+                          ? 'border-[#0C3B2E] bg-emerald-50 text-[#0C3B2E] ring-2 ring-[#0C3B2E]/20 shadow-xs font-bold'
+                          : 'border-stone-200 bg-stone-50 text-stone-600 hover:bg-stone-100 font-medium'
+                      }`}
+                    >
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold ${
+                        loginPersona === 'customer' ? 'bg-[#0C3B2E] text-white' : 'bg-stone-200 text-stone-700'
+                      }`}>
+                        <Users className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs">Customer</p>
+                        <p className="text-[10px] text-stone-500 font-normal">Household Member</p>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handlePersonaSwitch('artisan')}
+                      className={`p-3 rounded-2xl border text-left transition-all flex items-center gap-2.5 ${
+                        loginPersona === 'artisan'
+                          ? 'border-[#0C3B2E] bg-amber-50 text-amber-950 ring-2 ring-[#0C3B2E]/20 shadow-xs font-bold'
+                          : 'border-stone-200 bg-stone-50 text-stone-600 hover:bg-stone-100 font-medium'
+                      }`}
+                    >
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold ${
+                        loginPersona === 'artisan' ? 'bg-amber-600 text-white' : 'bg-stone-200 text-stone-700'
+                      }`}>
+                        <Briefcase className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs">Artisan</p>
+                        <p className="text-[10px] text-stone-500 font-normal">Trade Master</p>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Admin Mode Spotlight Banner */}
               {mode === 'admin' && (
                 <div className="p-3.5 rounded-2xl bg-gradient-to-r from-teal-900 via-[#0C3B2E] to-teal-950 text-white text-xs border border-teal-500/40 space-y-2 animate-in fade-in">
@@ -304,15 +375,32 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 )}
 
                 <div>
-                  <label className="block font-bold text-stone-700 mb-1">
-                    {mode === 'admin' ? 'Administrator Email' : 'Email Address'}
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block font-bold text-stone-700">
+                      {mode === 'admin'
+                        ? 'Administrator Email'
+                        : mode === 'signin' && loginPersona === 'artisan'
+                        ? 'Artisan Email'
+                        : 'Customer Email Address'}
+                    </label>
+                    {mode === 'signin' && (
+                      <span className="text-[10px] text-stone-500 font-medium">
+                        {loginPersona === 'customer' ? 'Demo: customer@gmail.com' : 'Demo: artisan@gmail.com'}
+                      </span>
+                    )}
+                  </div>
                   <div className="relative">
                     <Mail className="w-4 h-4 text-stone-400 absolute left-3 top-2.5" />
                     <input
                       type="email"
                       required
-                      placeholder={mode === 'admin' ? 'admin@gmail.com' : 'your.email@example.com'}
+                      placeholder={
+                        mode === 'admin'
+                          ? 'admin@gmail.com'
+                          : loginPersona === 'artisan'
+                          ? 'artisan@gmail.com'
+                          : 'customer@gmail.com'
+                      }
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className={`w-full pl-9 pr-3 py-2.5 border rounded-xl focus:ring-2 focus:outline-none ${
@@ -327,9 +415,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="block font-bold text-stone-700">Password</label>
-                    {mode === 'admin' && (
+                    {mode === 'admin' ? (
                       <span className="text-[10px] text-teal-700 font-semibold">Demo Password: admin123</span>
-                    )}
+                    ) : mode === 'signin' ? (
+                      <span className="text-[10px] text-stone-500">
+                        {loginPersona === 'customer' ? 'Demo: password123' : 'Demo: artisan123'}
+                      </span>
+                    ) : null}
                   </div>
                   <div className="relative">
                     <Lock className="w-4 h-4 text-stone-400 absolute left-3 top-2.5" />
@@ -370,12 +462,17 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                     </>
                   ) : mode === 'signin' ? (
                     <>
-                      <span>Sign In with Supabase</span>
+                      {loginPersona === 'artisan' ? (
+                        <Briefcase className="w-4 h-4 text-amber-300" />
+                      ) : (
+                        <Users className="w-4 h-4 text-emerald-300" />
+                      )}
+                      <span>Log In as {loginPersona === 'artisan' ? 'Artisan' : 'Customer'}</span>
                       <ArrowRight className="w-4 h-4" />
                     </>
                   ) : (
                     <>
-                      <span>Create Cooperative Account</span>
+                      <span>Create Customer Account</span>
                       <Sparkles className="w-4 h-4 text-amber-300" />
                     </>
                   )}
@@ -402,7 +499,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                     className="text-xs font-semibold text-stone-500 hover:text-stone-800 inline-flex items-center gap-1.5 transition-colors"
                   >
                     <Users className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Back to Customer & Artisan Sign In</span>
+                    <span>Back to Customer & Artisan Log In</span>
                   </button>
                 )}
               </div>
