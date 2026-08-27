@@ -105,8 +105,8 @@ export const LiveOrderTrackingModal: React.FC<LiveOrderTrackingModalProps> = ({
                   Estimated Delivery & Arrival
                 </p>
                 <div className="flex items-baseline gap-2">
-                  <h2 className="text-3xl sm:text-4xl font-black font-['Outfit'] tracking-tight text-white flex items-center gap-2">
-                    <span className="text-amber-400">⚡</span> {mins > 0 ? `${mins} MINS` : 'ARRIVING NOW!'}
+                  <h2 className="text-2xl sm:text-3xl font-black font-['Outfit'] tracking-tight text-white flex items-center gap-2">
+                    <span className="text-amber-400">⚡</span> {mins > 0 ? `Artisan Arriving in ${mins} Minutes` : 'Artisan Arriving Now!'}
                   </h2>
                   <span className="text-sm sm:text-base font-mono text-emerald-200 font-bold">
                     ({etaFormatted})

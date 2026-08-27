@@ -718,8 +718,8 @@ export const BookingFlow: React.FC = () => {
                     <span className="text-[10px] text-emerald-200 uppercase font-bold tracking-wider block">
                       Estimated Arrival Time
                     </span>
-                    <h3 className="text-2xl sm:text-3xl font-black font-['Outfit'] text-white flex items-center gap-1.5">
-                      <span className="text-amber-400">⚡</span> 14 MINS
+                    <h3 className="text-xl sm:text-2xl font-black font-['Outfit'] text-white flex items-center gap-1.5">
+                      <span className="text-amber-400">⚡</span> Artisan Arriving in 14 Minutes
                     </h3>
                   </div>
                   <div className="text-right">
