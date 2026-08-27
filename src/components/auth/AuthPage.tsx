@@ -8,14 +8,14 @@ import {
   CheckCircle2,
   ArrowRight,
   Sparkles,
-  KeyRound,
-  Send,
   Loader2,
   Users,
   Briefcase,
-  Building,
   ArrowLeft,
-  Award,
+  Crown,
+  KeyRound,
+  Building2,
+  AlertTriangle,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { UserRole } from '../../lib/database.types';
@@ -23,7 +23,7 @@ import { AuthPage3DVisual } from './AuthPage3DVisual';
 import { TiltCard } from '../3d/TiltCard';
 
 interface AuthPageProps {
-  initialMode?: 'signin' | 'signup' | 'magic_link';
+  initialMode?: 'signin' | 'signup' | 'admin';
   onNavigateHome: () => void;
   onLoginSuccess: () => void;
 }
@@ -33,28 +33,55 @@ export const AuthPage: React.FC<AuthPageProps> = ({
   onNavigateHome,
   onLoginSuccess,
 }) => {
-  const { signInWithSupabase, signUpWithSupabase, signInWithOtp, loadingAuth } = useAuth();
+  const { signInWithSupabase, signUpWithSupabase, loadingAuth } = useAuth();
 
-  const [mode, setMode] = useState<'signin' | 'signup' | 'magic_link'>(initialMode);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [mode, setMode] = useState<'signin' | 'signup' | 'admin'>(initialMode);
+  const [email, setEmail] = useState(initialMode === 'admin' ? 'admin@gmail.com' : '');
+  const [password, setPassword] = useState(initialMode === 'admin' ? 'admin123' : '');
   const [name, setName] = useState('');
   const [contact, setContact] = useState('');
   const [role, setRole] = useState<UserRole>('customer');
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
+  const handleModeSwitch = (newMode: 'signin' | 'signup' | 'admin') => {
+    setMode(newMode);
+    setErrorMsg('');
+    setSuccessMsg('');
+    if (newMode === 'admin') {
+      setEmail('admin@gmail.com');
+      setPassword('admin123');
+    } else if (email === 'admin@gmail.com') {
+      setEmail('');
+      setPassword('');
+    }
+  };
+
+  const handleFillAdminCredentials = () => {
+    setEmail('admin@gmail.com');
+    setPassword('admin123');
+    setSuccessMsg('Admin credentials auto-filled! Click "Access Admin Command Center" to authenticate.');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
     setSuccessMsg('');
 
-    if (mode === 'magic_link') {
-      const res = await signInWithOtp(email);
+    if (mode === 'admin') {
+      const cleanEmail = email.trim().toLowerCase();
+      if (cleanEmail !== 'admin@gmail.com') {
+        setErrorMsg('Invalid administrator email. Authorized cooperative administrator email is admin@gmail.com.');
+        return;
+      }
+      const res = await signInWithSupabase(cleanEmail, password);
       if (res.error) {
         setErrorMsg(res.error);
       } else {
-        setSuccessMsg(res.message || 'Magic login link dispatched to your email!');
+        setSuccessMsg('Cooperative Administrator authenticated successfully! Redirecting...');
+        setTimeout(() => {
+          onLoginSuccess();
+        }, 600);
       }
       return;
     }
@@ -74,7 +101,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         setSuccessMsg(res.message || 'Account created successfully! Welcome to SAHYOG.');
         setTimeout(() => {
           onLoginSuccess();
-        }, 1500);
+        }, 1200);
       }
     }
   };
@@ -135,11 +162,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
             <div className="flex border-b border-stone-200 bg-stone-50 text-xs font-bold">
               <button
                 type="button"
-                onClick={() => {
-                  setMode('signin');
-                  setErrorMsg('');
-                  setSuccessMsg('');
-                }}
+                onClick={() => handleModeSwitch('signin')}
                 className={`flex-1 py-3.5 transition-all flex items-center justify-center gap-1.5 ${
                   mode === 'signin'
                     ? 'text-[#0C3B2E] border-b-2 border-[#0C3B2E] bg-white shadow-xs font-extrabold'
@@ -152,11 +175,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
               <button
                 type="button"
-                onClick={() => {
-                  setMode('signup');
-                  setErrorMsg('');
-                  setSuccessMsg('');
-                }}
+                onClick={() => handleModeSwitch('signup')}
                 className={`flex-1 py-3.5 transition-all flex items-center justify-center gap-1.5 ${
                   mode === 'signup'
                     ? 'text-[#0C3B2E] border-b-2 border-[#0C3B2E] bg-white shadow-xs font-extrabold'
@@ -169,54 +188,61 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
               <button
                 type="button"
-                onClick={() => {
-                  setMode('magic_link');
-                  setErrorMsg('');
-                  setSuccessMsg('');
-                }}
+                onClick={() => handleModeSwitch('admin')}
                 className={`flex-1 py-3.5 transition-all flex items-center justify-center gap-1.5 ${
-                  mode === 'magic_link'
-                    ? 'text-[#0C3B2E] border-b-2 border-[#0C3B2E] bg-white shadow-xs font-extrabold'
-                    : 'text-stone-500 hover:text-stone-800'
+                  mode === 'admin'
+                    ? 'text-teal-900 border-b-2 border-teal-700 bg-teal-50/70 shadow-xs font-extrabold'
+                    : 'text-stone-500 hover:text-teal-800 hover:bg-teal-50/40'
                 }`}
               >
-                <KeyRound className="w-3.5 h-3.5" />
-                <span>Magic OTP</span>
+                <Crown className="w-3.5 h-3.5 text-amber-500" />
+                <span>Admin Login</span>
               </button>
             </div>
 
             {/* Form Body */}
             <div className="p-6 sm:p-8 space-y-4">
-              {errorMsg && (
-                <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs space-y-2 animate-in fade-in">
-                  <div className="flex items-start gap-2">
-                    <span className="font-bold flex-shrink-0">⚠️ Authentication Notice:</span>
-                    <span>{errorMsg}</span>
-                  </div>
-                  {mode === 'signin' && (
-                    <div className="pt-2 border-t border-rose-200/70 flex flex-wrap items-center justify-between gap-2">
-                      <span className="text-[11px] text-rose-700 font-medium">Entered wrong password?</span>
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          if (!email.trim()) {
-                            setErrorMsg('Please enter your email address in the field below first.');
-                            return;
-                          }
-                          const res = await signInWithOtp(email.trim());
-                          if (res.error) {
-                            setErrorMsg(res.error);
-                          } else {
-                            setSuccessMsg(`OTP verification link dispatched to ${email}! Check your email inbox.`);
-                            setErrorMsg('');
-                          }
-                        }}
-                        className="px-2.5 py-1 rounded-lg bg-white border border-rose-300 text-[#0C3B2E] font-bold text-[11px] hover:bg-rose-100/50 shadow-xs transition-colors"
-                      >
-                        🔑 Verify via OTP / Magic Link
-                      </button>
+              {/* Admin Mode Spotlight Banner */}
+              {mode === 'admin' && (
+                <div className="p-3.5 rounded-2xl bg-gradient-to-r from-teal-900 via-[#0C3B2E] to-teal-950 text-white text-xs border border-teal-500/40 space-y-2 animate-in fade-in">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-amber-400 text-teal-950 flex items-center justify-center font-black">
+                        🏛️
+                      </div>
+                      <div>
+                        <p className="font-extrabold text-white text-xs">Cooperative Admin Command Portal</p>
+                        <p className="text-[10px] text-teal-200">Federation Governance & Welfare Audit</p>
+                      </div>
                     </div>
-                  )}
+                    <span className="text-[9px] bg-amber-400/20 text-amber-300 font-mono px-2 py-0.5 rounded-full font-bold border border-amber-400/30">
+                      SUPER ADMIN
+                    </span>
+                  </div>
+
+                  <div className="pt-2 border-t border-teal-700/60 flex items-center justify-between gap-2">
+                    <span className="text-[11px] text-teal-200">Default: <strong className="text-white">admin@gmail.com</strong></span>
+                    <button
+                      type="button"
+                      onClick={handleFillAdminCredentials}
+                      className="px-2.5 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-teal-950 font-black text-[11px] transition-colors flex items-center gap-1 shadow-sm"
+                    >
+                      <Sparkles className="w-3 h-3 text-teal-950" />
+                      <span>Auto-Fill Admin</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {errorMsg && (
+                <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs space-y-1 animate-in fade-in">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold">Authentication Notice: </span>
+                      <span>{errorMsg}</span>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -300,51 +326,69 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 )}
 
                 <div>
-                  <label className="block font-bold text-stone-700 mb-1">Email Address</label>
+                  <label className="block font-bold text-stone-700 mb-1">
+                    {mode === 'admin' ? 'Administrator Email' : 'Email Address'}
+                  </label>
                   <div className="relative">
                     <Mail className="w-4 h-4 text-stone-400 absolute left-3 top-2.5" />
                     <input
                       type="email"
                       required
-                      placeholder="your.email@example.com"
+                      placeholder={mode === 'admin' ? 'admin@gmail.com' : 'your.email@example.com'}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2.5 border border-stone-300 rounded-xl focus:ring-2 focus:ring-[#0C3B2E] focus:outline-none bg-stone-50/50"
+                      className={`w-full pl-9 pr-3 py-2.5 border rounded-xl focus:ring-2 focus:outline-none ${
+                        mode === 'admin'
+                          ? 'border-teal-400 bg-teal-50/30 focus:ring-teal-700 font-semibold'
+                          : 'border-stone-300 rounded-xl focus:ring-[#0C3B2E] bg-stone-50/50'
+                      }`}
                     />
                   </div>
                 </div>
 
-                {mode !== 'magic_link' && (
-                  <div>
-                    <label className="block font-bold text-stone-700 mb-1">Password</label>
-                    <div className="relative">
-                      <Lock className="w-4 h-4 text-stone-400 absolute left-3 top-2.5" />
-                      <input
-                        type="password"
-                        required
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2.5 border border-stone-300 rounded-xl focus:ring-2 focus:ring-[#0C3B2E] focus:outline-none bg-stone-50/50"
-                      />
-                    </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block font-bold text-stone-700">Password</label>
+                    {mode === 'admin' && (
+                      <span className="text-[10px] text-teal-700 font-semibold">Demo Password: admin123</span>
+                    )}
                   </div>
-                )}
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-stone-400 absolute left-3 top-2.5" />
+                    <input
+                      type="password"
+                      required
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className={`w-full pl-9 pr-3 py-2.5 border rounded-xl focus:ring-2 focus:outline-none ${
+                        mode === 'admin'
+                          ? 'border-teal-400 bg-teal-50/30 focus:ring-teal-700'
+                          : 'border-stone-300 rounded-xl focus:ring-[#0C3B2E] bg-stone-50/50'
+                      }`}
+                    />
+                  </div>
+                </div>
 
                 <button
                   type="submit"
                   disabled={loadingAuth}
-                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#0C3B2E] to-[#164E3F] hover:from-[#164E3F] hover:to-[#0C3B2E] text-white font-extrabold text-xs shadow-lg transition-all flex items-center justify-center gap-2 transform active:scale-95"
+                  className={`w-full py-3.5 rounded-xl font-extrabold text-xs shadow-lg transition-all flex items-center justify-center gap-2 transform active:scale-95 text-white ${
+                    mode === 'admin'
+                      ? 'bg-gradient-to-r from-teal-800 via-[#0C3B2E] to-teal-900 hover:from-teal-900 hover:to-[#0C3B2E] border border-teal-600/40'
+                      : 'bg-gradient-to-r from-[#0C3B2E] to-[#164E3F] hover:from-[#164E3F] hover:to-[#0C3B2E]'
+                  }`}
                 >
                   {loadingAuth ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
                       <span>Authenticating with Supabase...</span>
                     </>
-                  ) : mode === 'magic_link' ? (
+                  ) : mode === 'admin' ? (
                     <>
-                      <Send className="w-4 h-4 text-amber-300" />
-                      <span>Send Magic Link to Inbox</span>
+                      <Crown className="w-4 h-4 text-amber-300" />
+                      <span>Access Admin Command Center</span>
+                      <ArrowRight className="w-4 h-4" />
                     </>
                   ) : mode === 'signin' ? (
                     <>
@@ -359,6 +403,31 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   )}
                 </button>
               </form>
+
+              {/* Bottom Quick Switch for Admin / Customer */}
+              <div className="pt-3 border-t border-stone-100 text-center">
+                {mode === 'signin' && (
+                  <button
+                    type="button"
+                    onClick={() => handleModeSwitch('admin')}
+                    className="text-xs font-bold text-[#0C3B2E] hover:text-teal-800 inline-flex items-center gap-1.5 transition-colors"
+                  >
+                    <Building2 className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Cooperative Administrator? Access Admin Portal →</span>
+                  </button>
+                )}
+
+                {mode === 'admin' && (
+                  <button
+                    type="button"
+                    onClick={() => handleModeSwitch('signin')}
+                    className="text-xs font-semibold text-stone-500 hover:text-stone-800 inline-flex items-center gap-1.5 transition-colors"
+                  >
+                    <Users className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Back to Customer & Artisan Sign In</span>
+                  </button>
+                )}
+              </div>
             </div>
           </TiltCard>
         </div>

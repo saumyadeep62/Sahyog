@@ -14,9 +14,9 @@ interface AuthContextType {
   updateUserProfile: (updates: { name?: string; contact?: string; avatar_url?: string; area?: string; city?: string; bio?: string }) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   isAuthModalOpen: boolean;
-  openAuthModal: (initialMode?: 'signin' | 'signup') => void;
+  openAuthModal: (initialMode?: 'signin' | 'signup' | 'admin') => void;
   closeAuthModal: () => void;
-  authModalMode: 'signin' | 'signup';
+  authModalMode: 'signin' | 'signup' | 'admin';
   isChangePasswordOpen: boolean;
   openChangePasswordModal: () => void;
   closeChangePasswordModal: () => void;
@@ -52,7 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin');
+  const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup' | 'admin'>('signin');
   const [loadingAuth, setLoadingAuth] = useState(false);
 
   // Sync state to localStorage
@@ -138,7 +138,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const openAuthModal = (initialMode: 'signin' | 'signup' = 'signin') => {
+  const openAuthModal = (initialMode: 'signin' | 'signup' | 'admin' = 'signin') => {
     setAuthModalMode(initialMode);
     setIsAuthModalOpen(true);
   };

@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
-  Shield,
   Lock,
   Mail,
   User,
@@ -9,9 +8,11 @@ import {
   CheckCircle2,
   ArrowRight,
   Sparkles,
-  KeyRound,
-  Send,
   Loader2,
+  Crown,
+  AlertTriangle,
+  Users,
+  Briefcase,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { UserRole } from '../../lib/database.types';
@@ -23,11 +24,10 @@ export const AuthModal: React.FC = () => {
     authModalMode,
     signInWithSupabase,
     signUpWithSupabase,
-    signInWithOtp,
     loadingAuth,
   } = useAuth();
 
-  const [mode, setMode] = useState<'signin' | 'signup' | 'magic_link'>(authModalMode);
+  const [mode, setMode] = useState<'signin' | 'signup' | 'admin'>(authModalMode || 'signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -36,19 +36,56 @@ export const AuthModal: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
+  useEffect(() => {
+    if (authModalMode) {
+      setMode(authModalMode);
+      if (authModalMode === 'admin') {
+        setEmail('admin@gmail.com');
+        setPassword('admin123');
+      }
+    }
+  }, [authModalMode]);
+
   if (!isAuthModalOpen) return null;
+
+  const handleModeSwitch = (newMode: 'signin' | 'signup' | 'admin') => {
+    setMode(newMode);
+    setErrorMsg('');
+    setSuccessMsg('');
+    if (newMode === 'admin') {
+      setEmail('admin@gmail.com');
+      setPassword('admin123');
+    } else if (email === 'admin@gmail.com') {
+      setEmail('');
+      setPassword('');
+    }
+  };
+
+  const handleFillAdminCredentials = () => {
+    setEmail('admin@gmail.com');
+    setPassword('admin123');
+    setSuccessMsg('Admin credentials auto-filled!');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
     setSuccessMsg('');
 
-    if (mode === 'magic_link') {
-      const res = await signInWithOtp(email);
+    if (mode === 'admin') {
+      const cleanEmail = email.trim().toLowerCase();
+      if (cleanEmail !== 'admin@gmail.com') {
+        setErrorMsg('Invalid administrator email. Authorized cooperative administrator email is admin@gmail.com.');
+        return;
+      }
+      const res = await signInWithSupabase(cleanEmail, password);
       if (res.error) {
         setErrorMsg(res.error);
       } else {
-        setSuccessMsg(res.message || 'Magic link sent to your email!');
+        setSuccessMsg('Administrator authenticated successfully!');
+        setTimeout(() => {
+          closeAuthModal();
+        }, 500);
       }
       return;
     }
@@ -57,6 +94,8 @@ export const AuthModal: React.FC = () => {
       const res = await signInWithSupabase(email, password);
       if (res.error) {
         setErrorMsg(res.error);
+      } else {
+        closeAuthModal();
       }
     } else {
       const res = await signUpWithSupabase(email, password, name, role, contact);
@@ -64,28 +103,41 @@ export const AuthModal: React.FC = () => {
         setErrorMsg(res.error);
       } else {
         setSuccessMsg(res.message || 'Registration successful!');
+        setTimeout(() => {
+          closeAuthModal();
+        }, 1000);
       }
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-md animate-in fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-md animate-in fade-in">
       <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-stone-200 flex flex-col max-h-[92vh]">
         {/* Modal Header */}
-        <div className="bg-gradient-to-r from-[#0C3B2E] via-[#144537] to-[#1D5C4B] text-white p-4 sm:p-6 flex items-center justify-between">
+        <div className={`p-4 sm:p-5 flex items-center justify-between text-white ${
+          mode === 'admin'
+            ? 'bg-gradient-to-r from-teal-950 via-[#0C3B2E] to-teal-900'
+            : 'bg-gradient-to-r from-[#0C3B2E] via-[#144537] to-[#1D5C4B]'
+        }`}>
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-[#D4A373] to-[#E0A96D] flex items-center justify-center text-[#0C3B2E] font-extrabold text-lg sm:text-xl shadow-md">
-              स
+            <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center font-extrabold text-lg sm:text-xl shadow-md ${
+              mode === 'admin'
+                ? 'bg-gradient-to-tr from-amber-400 to-amber-300 text-teal-950'
+                : 'bg-gradient-to-tr from-[#D4A373] to-[#E0A96D] text-[#0C3B2E]'
+            }`}>
+              {mode === 'admin' ? '🏛️' : 'स'}
             </div>
             <div>
               <h3 className="font-extrabold text-sm sm:text-base font-['Outfit']">
                 {mode === 'signin'
                   ? 'Sign In to SAHYOG'
-                  : mode === 'magic_link'
-                  ? 'Passwordless Magic Login'
+                  : mode === 'admin'
+                  ? 'Cooperative Admin Portal'
                   : 'Join Cooperative Network'}
               </h3>
-              <p className="text-[10px] sm:text-[11px] text-emerald-200">Supabase Auth Connected</p>
+              <p className="text-[10px] sm:text-[11px] text-emerald-200">
+                {mode === 'admin' ? 'Federation Governance Console' : 'Supabase Auth Protected'}
+              </p>
             </div>
           </div>
           <button
@@ -99,86 +151,71 @@ export const AuthModal: React.FC = () => {
         {/* Mode Tabs */}
         <div className="flex border-b border-stone-200 bg-stone-50 text-xs font-bold">
           <button
-            onClick={() => {
-              setMode('signin');
-              setErrorMsg('');
-              setSuccessMsg('');
-            }}
-            className={`flex-1 py-3 transition-colors ${
+            type="button"
+            onClick={() => handleModeSwitch('signin')}
+            className={`flex-1 py-3 transition-colors flex items-center justify-center gap-1.5 ${
               mode === 'signin'
-                ? 'text-[#0C3B2E] border-b-2 border-[#0C3B2E] bg-white'
+                ? 'text-[#0C3B2E] border-b-2 border-[#0C3B2E] bg-white shadow-xs font-extrabold'
                 : 'text-stone-500 hover:text-stone-800'
             }`}
           >
-            Email Login
+            <Lock className="w-3.5 h-3.5" />
+            <span>Sign In</span>
           </button>
           <button
-            onClick={() => {
-              setMode('magic_link');
-              setErrorMsg('');
-              setSuccessMsg('');
-            }}
-            className={`flex-1 py-3 transition-colors ${
-              mode === 'magic_link'
-                ? 'text-[#0C3B2E] border-b-2 border-[#0C3B2E] bg-white'
-                : 'text-stone-500 hover:text-stone-800'
-            }`}
-          >
-            Magic Link OTP
-          </button>
-          <button
-            onClick={() => {
-              setMode('signup');
-              setErrorMsg('');
-              setSuccessMsg('');
-            }}
-            className={`flex-1 py-3 transition-colors ${
+            type="button"
+            onClick={() => handleModeSwitch('signup')}
+            className={`flex-1 py-3 transition-colors flex items-center justify-center gap-1.5 ${
               mode === 'signup'
-                ? 'text-[#0C3B2E] border-b-2 border-[#0C3B2E] bg-white'
+                ? 'text-[#0C3B2E] border-b-2 border-[#0C3B2E] bg-white shadow-xs font-extrabold'
                 : 'text-stone-500 hover:text-stone-800'
             }`}
           >
-            Sign Up
+            <User className="w-3.5 h-3.5" />
+            <span>Register</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleModeSwitch('admin')}
+            className={`flex-1 py-3 transition-colors flex items-center justify-center gap-1.5 ${
+              mode === 'admin'
+                ? 'text-teal-900 border-b-2 border-teal-700 bg-teal-50 shadow-xs font-extrabold'
+                : 'text-stone-500 hover:text-teal-800 hover:bg-teal-50/40'
+            }`}
+          >
+            <Crown className="w-3.5 h-3.5 text-amber-500" />
+            <span>Admin</span>
           </button>
         </div>
 
         {/* Modal Body */}
-        <div className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
-          {errorMsg && (
-            <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs space-y-2 animate-in fade-in">
-              <div className="flex items-start gap-2">
-                <span className="font-bold flex-shrink-0">⚠️ Authentication Notice:</span>
-                <span>{errorMsg}</span>
+        <div className="p-5 sm:p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+          {mode === 'admin' && (
+            <div className="p-3 rounded-xl bg-teal-900 text-white text-xs flex items-center justify-between gap-2 animate-in fade-in border border-teal-600/40">
+              <div>
+                <p className="font-bold text-white text-xs">Federation Admin Console</p>
+                <p className="text-[10px] text-teal-200">Default: admin@gmail.com</p>
               </div>
-              {mode === 'signin' && (
-                <div className="pt-2 border-t border-rose-200/70 flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-[11px] text-rose-700 font-medium">Wrong password or forgot credentials?</span>
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      if (!email.trim()) {
-                        setErrorMsg('Please enter your email address in the field below first.');
-                        return;
-                      }
-                      const res = await signInWithOtp(email.trim());
-                      if (res.error) {
-                        setErrorMsg(res.error);
-                      } else {
-                        setSuccessMsg(`OTP verification reset link dispatched to ${email}! Check your inbox.`);
-                        setErrorMsg('');
-                      }
-                    }}
-                    className="px-2.5 py-1 rounded-lg bg-white border border-rose-300 text-[#0C3B2E] font-bold text-[11px] hover:bg-rose-100/50 shadow-xs transition-colors"
-                  >
-                    🔑 Verify via OTP / Reset Link
-                  </button>
-                </div>
-              )}
+              <button
+                type="button"
+                onClick={handleFillAdminCredentials}
+                className="px-2 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-teal-950 font-black text-[10px] transition-colors flex items-center gap-1"
+              >
+                <Sparkles className="w-3 h-3" />
+                <span>Auto-Fill</span>
+              </button>
+            </div>
+          )}
+
+          {errorMsg && (
+            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-start gap-2 animate-in fade-in">
+              <AlertTriangle className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
+              <span>{errorMsg}</span>
             </div>
           )}
 
           {successMsg && (
-            <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2 animate-in fade-in">
+            <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2 animate-in fade-in">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
               <span className="font-medium">{successMsg}</span>
             </div>
@@ -222,24 +259,26 @@ export const AuthModal: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setRole('customer')}
-                      className={`p-2.5 rounded-xl border font-semibold text-center transition-all ${
+                      className={`p-2.5 rounded-xl border font-semibold text-center transition-all flex items-center justify-center gap-1.5 ${
                         role === 'customer'
                           ? 'border-[#0C3B2E] bg-[#0C3B2E] text-white shadow-xs'
                           : 'border-stone-200 bg-stone-50 text-stone-700 hover:bg-stone-100'
                       }`}
                     >
-                      Household Customer
+                      <Users className="w-3.5 h-3.5" />
+                      <span>Customer</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setRole('worker')}
-                      className={`p-2.5 rounded-xl border font-semibold text-center transition-all ${
+                      className={`p-2.5 rounded-xl border font-semibold text-center transition-all flex items-center justify-center gap-1.5 ${
                         role === 'worker'
                           ? 'border-[#0C3B2E] bg-[#0C3B2E] text-white shadow-xs'
                           : 'border-stone-200 bg-stone-50 text-stone-700 hover:bg-stone-100'
                       }`}
                     >
-                      Cooperative Worker
+                      <Briefcase className="w-3.5 h-3.5" />
+                      <span>Artisan</span>
                     </button>
                   </div>
                 </div>
@@ -247,51 +286,69 @@ export const AuthModal: React.FC = () => {
             )}
 
             <div>
-              <label className="block font-bold text-stone-700 mb-1">Email Address</label>
+              <label className="block font-bold text-stone-700 mb-1">
+                {mode === 'admin' ? 'Administrator Email' : 'Email Address'}
+              </label>
               <div className="relative">
                 <Mail className="w-4 h-4 text-stone-400 absolute left-3 top-2.5" />
                 <input
                   type="email"
                   required
-                  placeholder="your.email@example.com"
+                  placeholder={mode === 'admin' ? 'admin@gmail.com' : 'your.email@example.com'}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-[#0C3B2E] focus:outline-none"
+                  className={`w-full pl-9 pr-3 py-2 border rounded-xl focus:ring-2 focus:outline-none ${
+                    mode === 'admin'
+                      ? 'border-teal-400 bg-teal-50/40 focus:ring-teal-700 font-semibold'
+                      : 'border-stone-300 focus:ring-[#0C3B2E]'
+                  }`}
                 />
               </div>
             </div>
 
-            {mode !== 'magic_link' && (
-              <div>
-                <label className="block font-bold text-stone-700 mb-1">Password</label>
-                <div className="relative">
-                  <Lock className="w-4 h-4 text-stone-400 absolute left-3 top-2.5" />
-                  <input
-                    type="password"
-                    required
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-[#0C3B2E] focus:outline-none"
-                  />
-                </div>
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block font-bold text-stone-700">Password</label>
+                {mode === 'admin' && (
+                  <span className="text-[10px] text-teal-700 font-semibold">Demo: admin123</span>
+                )}
               </div>
-            )}
+              <div className="relative">
+                <Lock className="w-4 h-4 text-stone-400 absolute left-3 top-2.5" />
+                <input
+                  type="password"
+                  required
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className={`w-full pl-9 pr-3 py-2 border rounded-xl focus:ring-2 focus:outline-none ${
+                    mode === 'admin'
+                      ? 'border-teal-400 bg-teal-50/40 focus:ring-teal-700'
+                      : 'border-stone-300 focus:ring-[#0C3B2E]'
+                  }`}
+                />
+              </div>
+            </div>
 
             <button
               type="submit"
               disabled={loadingAuth}
-              className="w-full py-3 rounded-xl bg-[#0C3B2E] hover:bg-[#164E3F] text-white font-bold shadow-md transition-all flex items-center justify-center gap-2 transform active:scale-95"
+              className={`w-full py-3 rounded-xl text-white font-bold shadow-md transition-all flex items-center justify-center gap-2 transform active:scale-95 ${
+                mode === 'admin'
+                  ? 'bg-gradient-to-r from-teal-800 to-[#0C3B2E] hover:from-teal-900 hover:to-[#144537]'
+                  : 'bg-[#0C3B2E] hover:bg-[#164E3F]'
+              }`}
             >
               {loadingAuth ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
                   <span>Connecting to Supabase...</span>
                 </>
-              ) : mode === 'magic_link' ? (
+              ) : mode === 'admin' ? (
                 <>
-                  <Send className="w-4 h-4" />
-                  <span>Send Magic Link to Email</span>
+                  <Crown className="w-4 h-4 text-amber-300" />
+                  <span>Authenticate Admin Command</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </>
               ) : mode === 'signin' ? (
                 <>
