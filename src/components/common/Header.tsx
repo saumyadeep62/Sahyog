@@ -74,77 +74,74 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
   return (
     <header className="sticky top-0 z-50 bg-[#0C3B2E]/95 backdrop-blur-xl text-white shadow-2xl border-b border-[#1D5C4B]/60 transition-all">
       {/* Top Banner: Status Indicator & Cooperative Guarantee */}
-      <div className="bg-[#07241C] text-[11px] py-1.5 px-4 sm:px-8 border-b border-[#144537]/80 text-stone-300">
-        <div className="max-w-[1700px] mx-auto flex items-center justify-between gap-4 overflow-hidden">
-          <div className="flex items-center gap-3 whitespace-nowrap overflow-x-auto no-scrollbar">
+      <div className="bg-[#07241C] text-[11px] py-1 px-3 sm:px-8 border-b border-[#144537]/80 text-stone-300 overflow-hidden">
+        <div className="max-w-[1700px] mx-auto flex items-center justify-between gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-3 whitespace-nowrap overflow-x-auto no-scrollbar py-0.5">
             {/* Active Mode Pill */}
             {currentUser ? (
-              <span className="inline-flex items-center gap-1.5 font-bold px-2.5 py-0.5 rounded-full bg-[#164E3F] text-[#D4A373] border border-[#297762]">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="inline-flex items-center gap-1.5 font-bold px-2 py-0.5 rounded-full bg-[#164E3F] text-[#D4A373] border border-[#297762] text-[10px] sm:text-[11px] flex-shrink-0">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                 {currentUser.email === 'admin@gmail.com'
-                  ? '🏛️ Cooperative Admin Command'
+                  ? '🏛️ Admin HQ'
                   : currentRole === 'worker'
-                  ? '⚡ Artisan Workstation'
-                  : '🏠 Household Customer Portal'}
+                  ? '⚡ Workstation'
+                  : '🏠 Customer Portal'}
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 font-bold px-2.5 py-0.5 rounded-full bg-[#164E3F] text-[#D4A373] border border-[#297762]">
-                <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                🌐 Public Cooperative Marketplace
+              <span className="inline-flex items-center gap-1.5 font-bold px-2 py-0.5 rounded-full bg-[#164E3F] text-[#D4A373] border border-[#297762] text-[10px] sm:text-[11px] flex-shrink-0">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                🌐 Public Utility
               </span>
             )}
             <span className="text-stone-500">•</span>
-            <span className="text-stone-300 hidden sm:inline">
+            <span className="text-stone-300 text-[10px] sm:text-[11px] truncate max-w-[200px] sm:max-w-none">
               {t('top_cuts', '0% Aggregator Cuts — 100% Floor Wage to Artisans')}
-            </span>
-            <span className="text-stone-500 hidden md:inline">•</span>
-            <span className="text-stone-400 hidden md:inline text-[10px]">
-              Secured under Multi-State Co-op Societies Act, 2002
             </span>
           </div>
 
-          <div className="flex items-center gap-4 text-xs">
+          <div className="flex items-center gap-2 sm:gap-4 text-[10px] sm:text-xs flex-shrink-0">
             <a
               href="tel:1800724964"
-              className="text-emerald-300 hover:text-white transition-colors flex items-center gap-1.5 font-bold"
+              className="text-emerald-300 hover:text-white transition-colors flex items-center gap-1 font-bold whitespace-nowrap"
               title="24/7 National Toll-Free Customer Care"
             >
               <PhoneCall className="w-3 h-3 text-emerald-400" />
-              <span>Helpline: 1800-SAHYOG (724-964)</span>
+              <span className="hidden sm:inline">Helpline: </span>
+              <span>1800-SAHYOG</span>
             </a>
-            <span className="text-stone-600 hidden sm:inline">|</span>
-            <span className="text-stone-300 hidden sm:flex items-center gap-1 font-mono">
-              <span className="text-[#D4A373] font-bold">24x7 SOS:</span> 1800-SAHYOG-99
+            <span className="text-stone-600 hidden md:inline">|</span>
+            <span className="text-stone-300 hidden md:flex items-center gap-1 font-mono">
+              <span className="text-[#D4A373] font-bold">SOS:</span> 1800-SAHYOG-99
             </span>
           </div>
         </div>
       </div>
 
       {/* Main Navigation Bar */}
-      <div className="max-w-[1700px] mx-auto px-3 sm:px-8 py-2.5 sm:py-3.5 flex items-center justify-between gap-3 sm:gap-4">
+      <div className="max-w-[1700px] mx-auto px-3 sm:px-6 lg:px-8 py-2 sm:py-3 flex items-center justify-between gap-2 sm:gap-4 relative">
         {/* 1. Left: Brand Identity */}
         <div
           onClick={() => setActiveTab('home')}
-          className="flex items-center gap-2 sm:gap-3 cursor-pointer group select-none flex-shrink-0"
+          className="flex items-center gap-2 sm:gap-2.5 cursor-pointer group select-none flex-shrink-0"
         >
-          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-[#D4A373] via-[#E0A96D] to-[#FAEDCD] flex items-center justify-center text-[#0C3B2E] font-black text-base sm:text-xl shadow-lg border border-[#D4A373]/50 group-hover:scale-105 transition-transform">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-[#D4A373] via-[#E0A96D] to-[#FAEDCD] flex items-center justify-center text-[#0C3B2E] font-black text-base sm:text-lg shadow-md border border-[#D4A373]/50 group-hover:scale-105 transition-transform flex-shrink-0">
             स
           </div>
           <div>
             <div className="flex items-center gap-1">
-              <span className="font-extrabold text-base sm:text-xl tracking-tight font-['Outfit'] text-white">
+              <span className="font-black text-base sm:text-xl tracking-tight font-['Outfit'] text-white">
                 SAHYOG
               </span>
-              <span className="text-[#D4A373] text-[10px] sm:text-xs font-semibold">(सहयोग)</span>
+              <span className="hidden sm:inline text-[#D4A373] text-[10px] sm:text-xs font-semibold">(सहयोग)</span>
             </div>
-            <p className="hidden sm:block text-[10px] text-stone-300 tracking-wider uppercase font-medium">
+            <p className="hidden md:block text-[9px] text-stone-300 tracking-wider uppercase font-medium">
               Cooperative Service Marketplace
             </p>
           </div>
         </div>
 
-        {/* 2. Middle: Navigation Links */}
-        <nav className="hidden xl:flex items-center gap-1 bg-[#08281F]/90 p-1.5 rounded-2xl border border-[#1D5C4B]">
+        {/* 2. Middle: Navigation Links (Desktop: >=1024px) */}
+        <nav className="hidden lg:flex items-center gap-1 bg-[#08281F]/90 p-1.5 rounded-2xl border border-[#1D5C4B]">
           {/* If Master Admin: Pure Governance HQ Navigation */}
           {currentUser?.email === 'admin@gmail.com' ? (
             <button
@@ -334,20 +331,20 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
         </nav>
 
         {/* 3. Right: Action Toolbar */}
-        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 flex-shrink-0">
           {/* Emergency SOS Button */}
           <button
             onClick={openEmergencyModal}
-            className="bg-gradient-to-r from-red-600 via-red-500 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-black text-[11px] sm:text-xs px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl shadow-lg flex items-center gap-1 sm:gap-1.5 transition-all transform hover:scale-105 active:scale-95 whitespace-nowrap border border-red-400/30"
+            className="bg-gradient-to-r from-red-600 via-red-500 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-black text-[11px] sm:text-xs px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl shadow-lg flex items-center gap-1 sm:gap-1.5 transition-all transform hover:scale-105 active:scale-95 whitespace-nowrap border border-red-400/30 flex-shrink-0"
             title="Fast-track Emergency Artisan Dispatch"
           >
             <Zap className="w-3.5 h-3.5 text-amber-300 fill-amber-300 animate-bounce" />
-            <span>SOS Urgent</span>
+            <span>SOS<span className="hidden sm:inline"> Urgent</span></span>
           </button>
 
-          {/* Verified Role Pill (Desktop only) */}
+          {/* Verified Role Pill (Desktop only: >=1024px) */}
           {currentUser && (
-            <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#144537] border border-[#297762] text-xs font-semibold text-stone-200">
+            <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#144537] border border-[#297762] text-xs font-semibold text-stone-200 whitespace-nowrap">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               <span className="text-stone-400 text-[10px]">Verified:</span>
               <span className="font-bold text-white capitalize">
@@ -360,8 +357,8 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
             </div>
           )}
 
-          {/* Language Selector (Desktop only) */}
-          <div className="relative hidden md:block">
+          {/* Language Selector (Desktop only: >=1024px) */}
+          <div className="relative hidden lg:block">
             <button
               onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
               className="p-2 rounded-xl bg-[#144537] hover:bg-[#1D5C4B] border border-[#297762] text-stone-200 transition-colors flex items-center gap-1.5 text-xs font-bold uppercase whitespace-nowrap"
@@ -372,7 +369,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
             </button>
 
             {isLangDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-44 bg-white text-stone-800 rounded-2xl shadow-xl border border-stone-200 py-1.5 z-50">
+              <div className="absolute right-0 mt-2 w-44 bg-white text-stone-800 rounded-2xl shadow-xl border border-stone-200 py-1.5 z-50 animate-in fade-in">
                 <div className="px-3 py-1 text-[11px] font-bold text-stone-400 uppercase">Select Language</div>
                 {languages.map((l) => (
                   <button
@@ -393,9 +390,9 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
             )}
           </div>
 
-          {/* Notifications Dropdown (When Logged In - Desktop only) */}
+          {/* Notifications Dropdown (Desktop only: >=1024px) */}
           {currentUser && (
-            <div className="relative hidden md:block">
+            <div className="relative hidden lg:block">
               <button
                 onClick={() => setIsNotifDropdownOpen(!isNotifDropdownOpen)}
                 className="p-2 rounded-xl bg-[#144537] hover:bg-[#1D5C4B] border border-[#297762] text-stone-200 relative transition-colors"
@@ -410,7 +407,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
               </button>
 
               {isNotifDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white text-stone-800 rounded-2xl shadow-2xl border border-stone-200 py-2 z-50">
+                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white text-stone-800 rounded-2xl shadow-2xl border border-stone-200 py-2 z-50 animate-in fade-in">
                   <div className="px-4 py-2 border-b border-stone-100 flex items-center justify-between">
                     <span className="font-bold text-xs text-[#0C3B2E]">Notifications ({unreadCount} new)</span>
                     <span className="text-[11px] text-[#297762] font-medium">Cooperative Alerts</span>
@@ -443,9 +440,9 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
             </div>
           )}
 
-          {/* User Profile Dropdown (Desktop only) */}
+          {/* User Profile Dropdown (Desktop only: >=1024px) */}
           {currentUser ? (
-            <div className="relative hidden md:block">
+            <div className="relative hidden lg:block">
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 className="flex items-center gap-2 bg-[#164E3F] hover:bg-[#1D5C4B] border border-[#297762] px-3 py-1.5 rounded-xl text-xs transition-all shadow-xs whitespace-nowrap"
@@ -516,17 +513,17 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
           ) : (
             <button
               onClick={() => setActiveTab('auth')}
-              className="hidden md:block px-4 py-2 rounded-xl bg-gradient-to-r from-[#D4A373] to-[#E0A96D] text-[#0C3B2E] font-bold text-xs shadow-md hover:opacity-95 transition-opacity"
+              className="hidden lg:block px-4 py-2 rounded-xl bg-gradient-to-r from-[#D4A373] to-[#E0A96D] text-[#0C3B2E] font-bold text-xs shadow-md hover:opacity-95 transition-opacity whitespace-nowrap"
             >
               Sign In
             </button>
           )}
 
-          {/* Mobile / Tablet Quick Profile Icon */}
+          {/* Mobile / Tablet Quick Profile Icon (Mobile only: <1024px) */}
           {currentUser ? (
             <button
               onClick={openEditProfileModal}
-              className="xl:hidden p-1.5 rounded-xl bg-[#144537] border border-[#297762] text-stone-200 hover:bg-[#1D5C4B] transition-colors relative"
+              className="lg:hidden p-1.5 rounded-xl bg-[#144537] border border-[#297762] text-stone-200 hover:bg-[#1D5C4B] transition-colors relative flex-shrink-0"
               title="Click to Edit Profile & Photo"
             >
               {currentUser.avatar_url ? (
@@ -538,32 +535,33 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
               ) : (
                 <User className="w-4 h-4 text-amber-300" />
               )}
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 border border-[#0C3B2E]" />
+              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-400 border border-[#0C3B2E]" />
             </button>
           ) : (
             <button
               onClick={() => setActiveTab('auth')}
-              className="xl:hidden p-2 rounded-xl bg-[#144537] border border-[#297762] text-stone-200 hover:bg-[#1D5C4B] transition-colors"
+              className="lg:hidden p-1.5 rounded-xl bg-[#144537] border border-[#297762] text-stone-200 hover:bg-[#1D5C4B] transition-colors flex-shrink-0"
               title="Sign In"
             >
               <User className="w-4 h-4 text-amber-300" />
             </button>
           )}
 
-          {/* Mobile / Tablet Menu Drawer Toggle Button */}
+          {/* Mobile / Tablet Menu Drawer Toggle Button (Mobile only: <1024px) */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="xl:hidden p-2 rounded-xl bg-[#144537] border border-[#297762] text-stone-200 hover:bg-[#1D5C4B] transition-colors"
+            className="lg:hidden p-1.5 sm:p-2 rounded-xl bg-[#144537] border border-[#297762] text-stone-200 hover:bg-[#1D5C4B] transition-colors flex-shrink-0"
             title="Toggle Menu"
+            aria-label="Toggle Menu"
           >
-            {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {isMenuOpen ? <X className="w-5 h-5 text-amber-300" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
       </div>
 
-      {/* Structured Mobile Navigation Drawer */}
+      {/* Structured Mobile Navigation Drawer (<1024px) */}
       {isMenuOpen && (
-        <div className="xl:hidden bg-[#08281F] border-t border-[#1D5C4B] px-4 py-5 space-y-4 animate-in fade-in max-h-[85vh] overflow-y-auto">
+        <div className="lg:hidden fixed inset-x-0 top-full bg-[#08281F]/98 backdrop-blur-2xl border-t border-b border-[#1D5C4B] px-4 py-5 space-y-4 animate-in slide-in-from-top-2 duration-200 max-h-[82vh] overflow-y-auto shadow-2xl z-50">
           {/* User Profile Card (if authenticated) */}
           {currentUser ? (
             <div className="bg-[#0C3B2E] p-3.5 rounded-2xl border border-[#1D5C4B] space-y-3">
