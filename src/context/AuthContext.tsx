@@ -35,7 +35,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (parsed?.id) return parsed;
+        if (parsed?.id) {
+          const savedAvatar =
+            localStorage.getItem(`sahyog_avatar_${parsed.id}`) ||
+            localStorage.getItem(`sahyog_avatar_${parsed.email}`);
+          if (savedAvatar) {
+            parsed.avatar_url = savedAvatar;
+          }
+          return parsed;
+        }
       } catch {
         // fallback
       }
@@ -51,6 +59,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     if (currentUser) {
       localStorage.setItem('sahyog_user', JSON.stringify(currentUser));
+      if (currentUser.avatar_url) {
+        localStorage.setItem(`sahyog_avatar_${currentUser.id}`, currentUser.avatar_url);
+        localStorage.setItem(`sahyog_avatar_${currentUser.email}`, currentUser.avatar_url);
+      }
     } else {
       localStorage.removeItem('sahyog_user');
     }
@@ -80,6 +92,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const syncUserProfile = async (authUser: any) => {
     try {
+      const savedAvatar =
+        localStorage.getItem(`sahyog_avatar_${authUser.id}`) ||
+        localStorage.getItem(`sahyog_avatar_${authUser.email}`) ||
+        authUser.user_metadata?.avatar_url;
+
       const { data: profile } = await supabase
         .from('users')
         .select('*')
@@ -92,6 +109,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (authUser.email !== 'admin@gmail.com') {
             profile.role = 'customer';
           }
+        }
+        if (savedAvatar) {
+          profile.avatar_url = savedAvatar;
         }
         setCurrentUser(profile);
       } else {
@@ -106,6 +126,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           name: userMeta?.name || authUser.email?.split('@')[0] || 'Member',
           email: authUser.email || '',
           contact: userMeta?.contact || '+91 98765 43210',
+          avatar_url: savedAvatar || userMeta?.avatar_url,
           language_preference: 'en',
           status: 'active',
           created_at: authUser.created_at || new Date().toISOString(),
@@ -360,15 +381,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!currentUser) return { success: false, error: 'No active session' };
 
     setLoadingAuth(true);
+    const newAvatar = updates.avatar_url !== undefined ? updates.avatar_url : currentUser.avatar_url;
+
     const updatedProfile: UserProfile = {
       ...currentUser,
       name: updates.name?.trim() || currentUser.name,
       contact: updates.contact?.trim() || currentUser.contact,
-      avatar_url: updates.avatar_url || currentUser.avatar_url,
+      avatar_url: newAvatar,
     };
 
     setCurrentUser(updatedProfile);
     localStorage.setItem('sahyog_user', JSON.stringify(updatedProfile));
+    if (newAvatar) {
+      localStorage.setItem(`sahyog_avatar_${currentUser.id}`, newAvatar);
+      localStorage.setItem(`sahyog_avatar_${currentUser.email}`, newAvatar);
+    }
 
     try {
       await supabase

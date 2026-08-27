@@ -19,13 +19,14 @@ import { SahyogChatbot } from './components/common/SahyogChatbot';
 import { ChangePasswordModal } from './components/common/ChangePasswordModal';
 import { EditProfileModal } from './components/common/EditProfileModal';
 import { LiveOrderTrackingModal } from './components/booking/LiveOrderTrackingModal';
+import { CustomerCareSection } from './components/care/CustomerCareSection';
 import { ServiceCategory, Worker } from './lib/database.types';
 
 const MainAppContent: React.FC = () => {
   const { currentUser, currentRole } = useAuth();
   const { openBookingFlow, selectedBookingForTracking, closeTrackingModal } = useMarketplace();
 
-  const [activeTab, setActiveTab] = useState<'home' | 'services' | 'dashboard' | 'auth'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'services' | 'care' | 'dashboard' | 'auth'>('home');
   const [browserCategory, setBrowserCategory] = useState<ServiceCategory | null>(null);
 
   const handleSelectCategoryFromLanding = (cat: ServiceCategory) => {
@@ -66,6 +67,10 @@ const MainAppContent: React.FC = () => {
               <LandingPage
                 onSelectCategory={handleSelectCategoryFromLanding}
                 onExploreServices={handleExploreServices}
+                onNavigateCare={() => {
+                  setActiveTab('care');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
               />
             )}
 
@@ -75,6 +80,10 @@ const MainAppContent: React.FC = () => {
                 onSelectWorkerForBooking={handleSelectWorkerForBooking}
                 onNavigateHome={() => setActiveTab('home')}
               />
+            )}
+
+            {activeTab === 'care' && (
+              <CustomerCareSection onNavigateHome={() => setActiveTab('home')} />
             )}
 
             {activeTab === 'auth' && (
@@ -122,7 +131,7 @@ const MainAppContent: React.FC = () => {
       <SahyogChatbot onNavigateTab={(tab: any) => setActiveTab(tab)} />
 
       {/* Footer */}
-      <Footer />
+      <Footer onNavigateTab={(tab: any) => setActiveTab(tab)} />
     </div>
   );
 };

@@ -15,6 +15,12 @@ import {
   Users,
   ShieldCheck,
   Scale,
+  Headphones,
+  PhoneCall,
+  MessageSquare,
+  Mail,
+  ExternalLink,
+  Bot,
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useMarketplace } from '../../context/MarketplaceContext';
@@ -27,9 +33,10 @@ import { AnimatedMarquee3D } from '../3d/AnimatedMarquee3D';
 interface LandingPageProps {
   onSelectCategory: (cat: ServiceCategory) => void;
   onExploreServices: () => void;
+  onNavigateCare?: () => void;
 }
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onSelectCategory, onExploreServices }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ onSelectCategory, onExploreServices, onNavigateCare }) => {
   const { t, language } = useLanguage();
   const { categories, workers, openWorkerModal, openEmergencyModal, openBookingFlow } = useMarketplace();
   const [monthlyGrossIncome, setMonthlyGrossIncome] = React.useState<number>(40000);
@@ -482,7 +489,88 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectCategory, onEx
         </div>
       </section>
 
-      {/* 7. INSTITUTIONAL & HOUSEHOLD CTA */}
+      {/* 7. 24/7 CUSTOMER CARE & HELPLINE SPOTLIGHT SECTION */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-gradient-to-r from-[#08281F] via-[#0C3B2E] to-[#144537] rounded-3xl p-6 sm:p-10 border border-[#297762]/60 shadow-2xl text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-[#D4A373]/10 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
+            <div className="lg:col-span-7 space-y-4 text-center lg:text-left">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#164E3F] text-[#D4A373] text-xs font-bold border border-[#297762]">
+                <Headphones className="w-4 h-4 text-[#D4A373]" />
+                <span>24/7 Multi-Lingual Customer Support & Grievance Tribunal</span>
+              </div>
+
+              <h2 className="text-2xl sm:text-4xl font-extrabold font-['Outfit'] leading-tight">
+                Need Help or Have a Query? We are Always Here.
+              </h2>
+
+              <p className="text-xs sm:text-sm text-stone-300 leading-relaxed max-w-xl">
+                Direct human assistance, zero automated bot walls, under 15-minute emergency SOS dispatch, and democratic 24-hour dispute arbitration under the Multi-State Co-op Societies Act.
+              </p>
+
+              {/* Quick Contact Action Pills */}
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-2">
+                <a
+                  href="tel:1800724964"
+                  className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-xs font-bold text-white flex items-center gap-2 transition-all shadow-md"
+                >
+                  <PhoneCall className="w-4 h-4 text-emerald-400" />
+                  <span>Toll-Free: 1800-SAHYOG (724-964)</span>
+                </a>
+
+                <a
+                  href="https://wa.me/919820072496?text=Hello%20Sahyog%20Support"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2.5 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/40 border border-emerald-500/40 text-xs font-bold text-emerald-200 flex items-center gap-2 transition-all shadow-md"
+                >
+                  <MessageSquare className="w-4 h-4 text-emerald-400" />
+                  <span>WhatsApp: +91 98200-SAHYOG</span>
+                  <ExternalLink className="w-3 h-3 text-stone-300" />
+                </a>
+
+                <button
+                  onClick={onNavigateCare}
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#D4A373] to-[#E0A96D] text-[#0C3B2E] text-xs font-black flex items-center gap-2 hover:opacity-95 transition-opacity shadow-lg"
+                >
+                  <Headphones className="w-4 h-4" />
+                  <span>Open Full Customer Care Desk →</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Right: SLA Highlights Card */}
+            <div className="lg:col-span-5 grid grid-cols-2 gap-3">
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 space-y-1">
+                <span className="text-[10px] uppercase font-bold text-[#D4A373]">Emergency Response</span>
+                <p className="font-extrabold text-sm text-white">&lt; 15 Mins</p>
+                <p className="text-[10px] text-stone-300">Rapid local artisan radar</p>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 space-y-1">
+                <span className="text-[10px] uppercase font-bold text-emerald-300">Billing & Refunds</span>
+                <p className="font-extrabold text-sm text-white">&lt; 2 Hours</p>
+                <p className="text-[10px] text-stone-300">100% 0% fee refund window</p>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 space-y-1">
+                <span className="text-[10px] uppercase font-bold text-amber-300">Tribunal Arbitration</span>
+                <p className="font-extrabold text-sm text-white">&lt; 24 Hours</p>
+                <p className="text-[10px] text-stone-300">Democratic grievance hearing</p>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 space-y-1">
+                <span className="text-[10px] uppercase font-bold text-sky-300">Multi-Lingual Care</span>
+                <p className="font-extrabold text-sm text-white">7 Languages</p>
+                <p className="text-[10px] text-stone-300">Voice & text 3D AI Sahayak</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 8. INSTITUTIONAL & HOUSEHOLD CTA */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <TiltCard maxTilt={4} className="bg-gradient-to-r from-[#0C3B2E] via-[#144537] to-[#164E3F] rounded-3xl p-8 sm:p-12 text-white shadow-2xl relative overflow-hidden">
           <div className="relative z-10 max-w-2xl space-y-4">
