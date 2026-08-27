@@ -24,6 +24,8 @@ import {
   Navigation,
   Check,
   ChevronRight,
+  User,
+  Wallet,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useAuth } from '../../context/AuthContext';
@@ -619,75 +621,345 @@ export const WorkerDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* 4. SECONDARY TAB: FAIR WAGE EARNINGS */}
+      {/* 4. SECONDARY TAB: FAIR WAGE EARNINGS & WORK HISTORY */}
       {activeWorkTab === 'earnings' && (
         <div className="bg-white rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-md space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <h3 className="text-lg font-black text-stone-900 font-['Outfit']">Fair Wage Breakdown & Lifetime Payouts</h3>
                 <span className="bg-emerald-100 text-emerald-900 text-[10px] font-black px-2.5 py-0.5 rounded-full border border-emerald-300">
-                  Flat ₹1,000/mo Plan Active
+                  🛡️ 100% Floor Wage Retained
+                </span>
+                <span className="bg-amber-100 text-amber-900 text-[10px] font-black px-2.5 py-0.5 rounded-full border border-amber-300">
+                  ⚡ 0% Aggregator Commission
                 </span>
               </div>
-              <p className="text-xs text-stone-500 mt-0.5">
-                0% Commission • 100% Unlimited Earnings with ₹5 Lakh Accidental Cover included.
+              <p className="text-xs text-stone-500 mt-1">
+                Zero private aggregator commission cuts. Complete transparent work history and itemized earnings ledger.
               </p>
             </div>
-            <div className="text-left sm:text-right">
-              <span className="text-xs text-stone-400 block">Total Lifetime Earnings</span>
-              <span className="text-2xl font-black text-emerald-700 font-['Outfit']">
-                ₹{(completedJobs.length * 550 + 24500).toLocaleString('en-IN')}
+            <div className="text-left sm:text-right bg-emerald-50 sm:bg-transparent p-3 sm:p-0 rounded-2xl border sm:border-0 border-emerald-200">
+              <span className="text-xs text-stone-500 block font-medium">Total Lifetime Disbursed Payouts</span>
+              <span className="text-2xl sm:text-3xl font-black text-emerald-700 font-['Outfit']">
+                ₹{(completedJobs.length * 850 + 48250).toLocaleString('en-IN')}
               </span>
             </div>
           </div>
 
-          {/* Plan & Savings Callout Box */}
-          <div className="bg-gradient-to-r from-[#2C1810] via-[#3E2317] to-[#1C3B2E] text-white p-5 rounded-2xl space-y-3 shadow-lg border border-amber-900/30">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-400/20 text-amber-300 border border-amber-400/30 flex items-center justify-center font-bold text-lg">
-                  🛡️
-                </div>
-                <div>
-                  <h4 className="font-extrabold text-sm text-white">SAHYOG Cooperative Solidarity Membership</h4>
-                  <p className="text-[11px] text-amber-200">Flat ₹1,000 / month • Zero Commission • Unlimited Jobs</p>
-                </div>
+          {/* 4 Metrics Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+            <div className="bg-emerald-50/80 p-4 rounded-2xl border border-emerald-200 space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-emerald-800 uppercase">This Month's Earnings</span>
+                <Wallet className="w-4 h-4 text-emerald-600" />
               </div>
-              <div className="text-left sm:text-right">
-                <span className="text-[10px] text-stone-300 uppercase font-bold block">Estimated Monthly Savings vs Aggregators</span>
-                <span className="text-base font-black text-emerald-300 font-mono">+₹11,400 / month</span>
-              </div>
+              <span className="text-xl font-black text-emerald-950 block">₹38,450</span>
+              <p className="text-[10px] text-emerald-700 font-medium">100% Disbursed to Bank Account</p>
             </div>
 
-            <div className="pt-2 border-t border-white/10 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-stone-200">
-              <div className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-                <span>₹5 Lakh Universal Accidental Shield</span>
+            <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200 space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-stone-700 uppercase">Platform Commission Cut</span>
+                <Shield className="w-4 h-4 text-emerald-600" />
               </div>
-              <div className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-                <span>Ayushman Health & Pension Pool</span>
+              <span className="text-xl font-black text-emerald-700 block">₹0 (0% Cut)</span>
+              <p className="text-[10px] text-stone-500 font-medium">Zero Aggregator Intermediary Extraction</p>
+            </div>
+
+            <div className="bg-amber-50/80 p-4 rounded-2xl border border-amber-200 space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-amber-900 uppercase">Completed Deliveries</span>
+                <CheckCircle2 className="w-4 h-4 text-amber-700" />
               </div>
-              <div className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-                <span>Annual Co-op Surplus Dividend Share</span>
+              <span className="text-xl font-black text-amber-950 block">{completedJobs.length + 24} Verified Jobs</span>
+              <p className="text-[10px] text-amber-800 font-medium">100% Customer Satisfaction Rate</p>
+            </div>
+
+            <div className="bg-teal-50/80 p-4 rounded-2xl border border-teal-200 space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-teal-900 uppercase">Average Hourly Floor Wage</span>
+                <TrendingUp className="w-4 h-4 text-teal-700" />
+              </div>
+              <span className="text-xl font-black text-teal-950 block">₹480 / hr</span>
+              <p className="text-[10px] text-teal-800 font-medium">Statutory Multi-State Co-op Rate Card</p>
+            </div>
+          </div>
+
+          {/* Multi-State Co-op Fair Wage Protection Box */}
+          <div className="bg-gradient-to-r from-[#0C3B2E] via-[#144537] to-[#1D5C4B] text-white p-4 sm:p-5 rounded-2xl space-y-3 shadow-md border border-emerald-500/20">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-400/20 text-amber-300 border border-amber-400/30 flex items-center justify-center font-bold text-lg flex-shrink-0">
+                  🏛️
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-sm text-white">Cooperative Direct Payout & Multi-Benefit Guarantee</h4>
+                  <p className="text-[11px] text-emerald-200">Protected under Multi-State Cooperative Societies Act, 2002</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] bg-emerald-400/20 text-emerald-300 px-2.5 py-1 rounded-full font-bold border border-emerald-400/30">
+                  🟢 Direct UPI Transfer
+                </span>
+                <span className="text-[10px] bg-amber-400/20 text-amber-300 px-2.5 py-1 rounded-full font-bold border border-amber-400/30">
+                  ₹5 Lakh Accidental Cover
+                </span>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-200">
-              <span className="text-[10px] font-bold text-emerald-800 uppercase block">This Month's Gross Wage</span>
-              <span className="text-xl font-black text-emerald-900">₹38,450</span>
+          {/* WORK HISTORY & DETAILED EARNINGS LEDGER */}
+          <div className="space-y-4 pt-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-stone-200 pb-3">
+              <div>
+                <h4 className="text-base font-black text-stone-900 font-['Outfit'] flex items-center gap-2">
+                  <Briefcase className="w-4 h-4 text-[#0C3B2E]" />
+                  <span>Artisan Work History & Itemized Earnings</span>
+                </h4>
+                <p className="text-xs text-stone-500">Every completed trade service, customer address, hours clocked, and net payout breakdown.</p>
+              </div>
+              <span className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-xl w-fit">
+                {completedJobs.length + 5} Completed Service Records
+              </span>
             </div>
-            <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200">
-              <span className="text-[10px] font-bold text-stone-700 uppercase block">Monthly Solidarity Subscription</span>
-              <span className="text-xl font-black text-stone-900">₹1,000</span>
-            </div>
-            <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-200">
-              <span className="text-[10px] font-bold text-emerald-800 uppercase block">Platform Commission Cut</span>
-              <span className="text-xl font-black text-emerald-700">₹0 (0% Cut)</span>
+
+            {/* List of Work History Cards */}
+            <div className="space-y-3">
+              {/* Live completed jobs from marketplace context */}
+              {completedJobs.map((job) => (
+                <div
+                  key={job.id}
+                  className="p-4 sm:p-5 rounded-2xl border border-stone-200 hover:border-emerald-500/50 bg-stone-50/50 hover:bg-emerald-50/20 transition-all space-y-3"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                    <div className="space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-mono text-xs font-bold text-stone-500 bg-stone-200/70 px-2 py-0.5 rounded-md">
+                          {job.booking_code || job.id.substring(0, 13)}
+                        </span>
+                        <h5 className="font-extrabold text-sm text-stone-900">{job.service_task || job.service_category_name || 'Trade Service Delivery'}</h5>
+                        <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">
+                          {job.service_category_name || 'Trade Work'}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-stone-600">
+                        <span className="flex items-center gap-1">
+                          <User className="w-3.5 h-3.5 text-stone-400" />
+                          <strong className="text-stone-800">{job.customer_name || 'Customer'}</strong>
+                        </span>
+                        <span>•</span>
+                        <span className="flex items-center gap-1 text-stone-500">
+                          <MapPin className="w-3.5 h-3.5 text-stone-400" />
+                          <span>{job.location?.address || 'Household Location'}</span>
+                        </span>
+                        <span>•</span>
+                        <span className="flex items-center gap-1 text-stone-500">
+                          <Clock className="w-3.5 h-3.5 text-stone-400" />
+                          <span>{new Date(job.created_at).toLocaleDateString([], { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="text-left sm:text-right">
+                      <span className="text-[10px] text-stone-400 uppercase font-bold block">Net Disbursed Payout</span>
+                      <span className="text-lg sm:text-xl font-black text-emerald-700 font-['Outfit']">
+                        ₹{(job.price_breakdown?.worker_wage || job.price_breakdown?.total_amount || 650).toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Wage Breakdown Bar */}
+                  <div className="pt-2 border-t border-stone-200/80 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                    <div className="bg-white p-2 rounded-xl border border-stone-200">
+                      <span className="text-[10px] text-stone-400 block font-medium">Base Floor Wage</span>
+                      <span className="font-bold text-stone-800">₹{(job.price_breakdown?.worker_wage || 550).toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="bg-white p-2 rounded-xl border border-stone-200">
+                      <span className="text-[10px] text-stone-400 block font-medium">Platform Fee Cut</span>
+                      <span className="font-bold text-emerald-700">₹0 (0% Cut)</span>
+                    </div>
+                    <div className="bg-white p-2 rounded-xl border border-stone-200">
+                      <span className="text-[10px] text-stone-400 block font-medium">Settlement Route</span>
+                      <span className="font-bold text-stone-800 text-[11px] truncate block">UPI Instant Payout</span>
+                    </div>
+                    <div className="bg-emerald-100/60 p-2 rounded-xl border border-emerald-300 flex items-center justify-between">
+                      <div>
+                        <span className="text-[10px] text-emerald-800 block font-bold">Status</span>
+                        <span className="font-black text-emerald-900 text-[11px]">Disbursed 🟢</span>
+                      </div>
+                      <button
+                        onClick={() => openInvoiceModal(job)}
+                        className="px-2 py-1 bg-white hover:bg-emerald-50 text-[#0C3B2E] rounded-lg border border-emerald-300 font-bold text-[10px] shadow-xs flex items-center gap-1 transition-colors"
+                        title="View Official Cooperative Rate Card Invoice"
+                      >
+                        <FileText className="w-3 h-3 text-emerald-700" />
+                        <span>Invoice</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {/* Historical Completed Work Records */}
+              {[
+                {
+                  id: 'JOB-2026-9941',
+                  title: 'Main Circuit Breaker Diagnostic & Complete Rewiring',
+                  category: 'Electrical',
+                  customerName: 'Saumyadeep Sutradhar',
+                  locality: 'Bandra West, Mumbai',
+                  date: '27 Aug 2026',
+                  time: '04:15 PM',
+                  duration: '2.5 hrs',
+                  baseWage: 1200,
+                  surcharge: 350,
+                  tip: 150,
+                  deduction: 0,
+                  netPayout: 1700,
+                  txnId: 'TXN-COOP-994182',
+                  status: 'Disbursed',
+                },
+                {
+                  id: 'JOB-2026-9812',
+                  title: 'Concealed Pipe Leak Detection & Copper Joint Welder',
+                  category: 'Plumbing',
+                  customerName: 'Pooja Sharma',
+                  locality: 'Powai Hiranandani, Mumbai',
+                  date: '26 Aug 2026',
+                  time: '11:30 AM',
+                  duration: '3.0 hrs',
+                  baseWage: 1450,
+                  surcharge: 200,
+                  tip: 200,
+                  deduction: 0,
+                  netPayout: 1850,
+                  txnId: 'TXN-COOP-981240',
+                  status: 'Disbursed',
+                },
+                {
+                  id: 'JOB-2026-9730',
+                  title: 'Modular Kitchen Cabinet Alignment & Soft Hinge Fitting',
+                  category: 'Carpentry',
+                  customerName: 'Vikram Malhotra',
+                  locality: 'Andheri East, Mumbai',
+                  date: '25 Aug 2026',
+                  time: '02:45 PM',
+                  duration: '4.0 hrs',
+                  baseWage: 1800,
+                  surcharge: 300,
+                  tip: 250,
+                  deduction: 0,
+                  netPayout: 2350,
+                  txnId: 'TXN-COOP-973091',
+                  status: 'Disbursed',
+                },
+                {
+                  id: 'JOB-2026-9654',
+                  title: 'Dual Split AC High-Pressure Jet Pump Coil Cleaning',
+                  category: 'Appliance Repair',
+                  customerName: 'Meenakshi Iyer',
+                  locality: 'Chembur, Mumbai',
+                  date: '24 Aug 2026',
+                  time: '01:00 PM',
+                  duration: '2.0 hrs',
+                  baseWage: 1100,
+                  surcharge: 150,
+                  tip: 100,
+                  deduction: 0,
+                  netPayout: 1350,
+                  txnId: 'TXN-COOP-965418',
+                  status: 'Disbursed',
+                },
+                {
+                  id: 'JOB-2026-9520',
+                  title: 'Water Purifier RO Membrane & Booster Pump Overhaul',
+                  category: 'Plumbing',
+                  customerName: 'Anil Deshpande',
+                  locality: 'Dadar West, Mumbai',
+                  date: '22 Aug 2026',
+                  time: '05:20 PM',
+                  duration: '1.5 hrs',
+                  baseWage: 850,
+                  surcharge: 100,
+                  tip: 50,
+                  deduction: 0,
+                  netPayout: 1000,
+                  txnId: 'TXN-COOP-952011',
+                  status: 'Disbursed',
+                },
+              ].map((item) => (
+                <div
+                  key={item.id}
+                  className="p-4 sm:p-5 rounded-2xl border border-stone-200 hover:border-emerald-500/50 bg-stone-50/50 hover:bg-emerald-50/20 transition-all space-y-3"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                    <div className="space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-mono text-xs font-bold text-stone-500 bg-stone-200/70 px-2 py-0.5 rounded-md">
+                          {item.id}
+                        </span>
+                        <h5 className="font-extrabold text-sm text-stone-900">{item.title}</h5>
+                        <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">
+                          {item.category}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-stone-600">
+                        <span className="flex items-center gap-1">
+                          <User className="w-3.5 h-3.5 text-stone-400" />
+                          <strong className="text-stone-800">{item.customerName}</strong>
+                        </span>
+                        <span>•</span>
+                        <span className="flex items-center gap-1 text-stone-500">
+                          <MapPin className="w-3.5 h-3.5 text-stone-400" />
+                          <span>{item.locality}</span>
+                        </span>
+                        <span>•</span>
+                        <span className="flex items-center gap-1 text-stone-500">
+                          <Clock className="w-3.5 h-3.5 text-stone-400" />
+                          <span>{item.date}, {item.time} ({item.duration})</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="text-left sm:text-right">
+                      <span className="text-[10px] text-stone-400 uppercase font-bold block">Net Disbursed Payout</span>
+                      <span className="text-lg sm:text-xl font-black text-emerald-700 font-['Outfit']">
+                        ₹{item.netPayout.toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Wage Breakdown Bar */}
+                  <div className="pt-2 border-t border-stone-200/80 grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
+                    <div className="bg-white p-2 rounded-xl border border-stone-200">
+                      <span className="text-[10px] text-stone-400 block font-medium">Base Floor Wage</span>
+                      <span className="font-bold text-stone-800">₹{item.baseWage.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="bg-white p-2 rounded-xl border border-stone-200">
+                      <span className="text-[10px] text-stone-400 block font-medium">Overtime / Diagnostic</span>
+                      <span className="font-bold text-amber-700">+₹{item.surcharge.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="bg-white p-2 rounded-xl border border-stone-200">
+                      <span className="text-[10px] text-stone-400 block font-medium">Direct Tip</span>
+                      <span className="font-bold text-emerald-700">+₹{item.tip.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="bg-white p-2 rounded-xl border border-stone-200">
+                      <span className="text-[10px] text-stone-400 block font-medium">Platform Cut</span>
+                      <span className="font-bold text-emerald-700">₹0 (0% Cut)</span>
+                    </div>
+                    <div className="bg-emerald-100/60 p-2 rounded-xl border border-emerald-300 flex items-center justify-between col-span-2 sm:col-span-1">
+                      <div>
+                        <span className="text-[10px] text-emerald-800 block font-bold">Status</span>
+                        <span className="font-black text-emerald-900 text-[11px]">Disbursed 🟢</span>
+                      </div>
+                      <span className="text-[9px] font-mono text-emerald-800 bg-white/80 px-1.5 py-0.5 rounded">
+                        UPI Bank
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
