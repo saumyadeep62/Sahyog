@@ -253,34 +253,18 @@ export const AuthModal: React.FC = () => {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block font-bold text-stone-700 mb-1">Register As</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setRole('customer')}
-                      className={`p-2.5 rounded-xl border font-semibold text-center transition-all flex items-center justify-center gap-1.5 ${
-                        role === 'customer'
-                          ? 'border-[#0C3B2E] bg-[#0C3B2E] text-white shadow-xs'
-                          : 'border-stone-200 bg-stone-50 text-stone-700 hover:bg-stone-100'
-                      }`}
-                    >
-                      <Users className="w-3.5 h-3.5" />
-                      <span>Customer</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setRole('worker')}
-                      className={`p-2.5 rounded-xl border font-semibold text-center transition-all flex items-center justify-center gap-1.5 ${
-                        role === 'worker'
-                          ? 'border-[#0C3B2E] bg-[#0C3B2E] text-white shadow-xs'
-                          : 'border-stone-200 bg-stone-50 text-stone-700 hover:bg-stone-100'
-                      }`}
-                    >
-                      <Briefcase className="w-3.5 h-3.5" />
-                      <span>Artisan</span>
-                    </button>
+                {/* Customer Account Indicator */}
+                <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-emerald-700" />
+                    <div>
+                      <p className="font-bold text-xs text-[#0C3B2E]">Customer Account</p>
+                      <p className="text-[10px] text-stone-500">Book certified trade services</p>
+                    </div>
                   </div>
+                  <span className="text-[10px] bg-emerald-600 text-white font-bold px-2 py-0.5 rounded-md">
+                    Customer
+                  </span>
                 </div>
               </>
             )}

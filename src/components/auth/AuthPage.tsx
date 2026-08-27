@@ -285,42 +285,20 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                       </div>
                     </div>
 
-                    {/* Role Selector Radio Cards */}
-                    <div>
-                      <label className="block font-bold text-stone-700 mb-1">Account Role</label>
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setRole('customer')}
-                          className={`p-3 rounded-xl border text-left transition-all flex items-center gap-2.5 ${
-                            role === 'customer'
-                              ? 'border-[#0C3B2E] bg-emerald-50/80 text-[#0C3B2E] ring-2 ring-[#0C3B2E]/20'
-                              : 'border-stone-200 bg-stone-50 text-stone-600 hover:bg-stone-100'
-                          }`}
-                        >
-                          <Users className="w-4 h-4 text-emerald-700 flex-shrink-0" />
-                          <div>
-                            <p className="font-bold text-xs">Customer</p>
-                            <p className="text-[10px] text-stone-500">Book services</p>
-                          </div>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setRole('worker')}
-                          className={`p-3 rounded-xl border text-left transition-all flex items-center gap-2.5 ${
-                            role === 'worker'
-                              ? 'border-[#0C3B2E] bg-amber-50/80 text-amber-900 ring-2 ring-[#0C3B2E]/20'
-                              : 'border-stone-200 bg-stone-50 text-stone-600 hover:bg-stone-100'
-                          }`}
-                        >
-                          <Briefcase className="w-4 h-4 text-amber-700 flex-shrink-0" />
-                          <div>
-                            <p className="font-bold text-xs">Artisan</p>
-                            <p className="text-[10px] text-stone-500">Earn fair wages</p>
-                          </div>
-                        </button>
+                    {/* Customer Account Indicator */}
+                    <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-[#0C3B2E] text-[#D4A373] flex items-center justify-center font-bold flex-shrink-0">
+                          <Users className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-xs text-[#0C3B2E]">Household Customer Account</p>
+                          <p className="text-[10px] text-stone-500">Book verified trade masters & track services at 0% markup</p>
+                        </div>
                       </div>
+                      <span className="text-[10px] bg-emerald-600 text-white font-bold px-2.5 py-0.5 rounded-md flex-shrink-0">
+                        Customer
+                      </span>
                     </div>
                   </>
                 )}
